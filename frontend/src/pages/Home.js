@@ -1,0 +1,293 @@
+// src/pages/Home.js
+import { useState, useEffect } from "react";
+import { db, auth } from "../firebase";
+import { collection, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
+
+const FONT = "DM Sans, sans-serif";
+const GREEN = "#2d6a4f";
+const DARK = "#1b4332";
+
+const TYPE_COLORS = {
+  sowing: "#2d6a4f", watering: "#1a6985", fertilizing: "#e09f3e",
+  weeding: "#6b4f2a", pest_control: "#c0392b", monitoring: "#8e44ad", harvesting: "#e67e22",
+};
+
+const TYPE_ICONS = {
+  sowing: "🌱", watering: "💧", fertilizing: "🧪",
+  weeding: "🌿", pest_control: "🐛", monitoring: "👁️", harvesting: "🌾",
+};
+
+function Home({ user }) {
+  const [timelines, setTimelines] = useState([]);
+  const [calView, setCalView] = useState("today");
+  const [selectedTimeline, setSelectedTimeline] = useState("all");
+  const [noteInput, setNoteInput] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [expandedTask, setExpandedTask] = useState(null);
+
+  useEffect(() => { loadTimelines(); }, []);
+
+  const loadTimelines = async () => {
+    const q = query(collection(db, "timelines"), where("userId", "==", auth.currentUser.uid), where("status", "==", "active"));
+    const snap = await getDocs(q);
+    setTimelines(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    setLoading(false);
+  };
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const getAllTasks = () => {
+    const tls = selectedTimeline === "all" ? timelines : timelines.filter(t => t.id === selectedTimeline);
+    return tls.flatMap(tl => (tl.tasks || []).map(task => ({ ...task, timelineId: tl.id, crop: tl.crop, landName: tl.landName })));
+  };
+
+  const getFilteredTasks = () => {
+    const allTasks = getAllTasks();
+    const now = new Date();
+    if (calView === "today") return allTasks.filter(t => t.date === today);
+    if (calView === "weekly") { const e = new Date(now); e.setDate(now.getDate() + 7); return allTasks.filter(t => { const d = new Date(t.date); return d >= now && d <= e; }); }
+    if (calView === "monthly") { const e = new Date(now); e.setDate(now.getDate() + 30); return allTasks.filter(t => { const d = new Date(t.date); return d >= now && d <= e; }); }
+    return allTasks;
+  };
+
+  const handleComplete = async (timelineId, taskId, notes) => {
+    const tl = timelines.find(t => t.id === timelineId);
+    if (!tl) return;
+    const updatedTasks = tl.tasks.map(task =>
+      task.id === taskId ? { ...task, completed: true, notes, completedAt: new Date().toISOString() } : task
+    );
+    await updateDoc(doc(db, "timelines", timelineId), { tasks: updatedTasks });
+    loadTimelines();
+    setNoteInput(prev => ({ ...prev, [taskId]: "" }));
+    setExpandedTask(null);
+  };
+
+  const handleUndo = async (timelineId, taskId) => {
+    const tl = timelines.find(t => t.id === timelineId);
+    if (!tl) return;
+    const updatedTasks = tl.tasks.map(task =>
+      task.id === taskId ? { ...task, completed: false, notes: "", completedAt: null } : task
+    );
+    await updateDoc(doc(db, "timelines", timelineId), { tasks: updatedTasks });
+    loadTimelines();
+  };
+
+  const todayTasks = getAllTasks().filter(t => t.date === today);
+  const pendingToday = todayTasks.filter(t => !t.completed).length;
+  const filteredTasks = getFilteredTasks();
+
+  const groupByDate = (tasks) => {
+    const groups = {};
+    tasks.forEach(task => { if (!groups[task.date]) groups[task.date] = []; groups[task.date].push(task); });
+    return Object.entries(groups).sort(([a], [b]) => new Date(a) - new Date(b));
+  };
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
+
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "300px", fontFamily: FONT }}>
+      <div style={{ color: GREEN, fontSize: "16px" }}>🌱 Loading your farm dashboard...</div>
+    </div>
+  );
+
+  return (
+    <div style={{ fontFamily: FONT, width: "100%" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
+        .view-btn.active { background: ${GREEN} !important; color: white !important; }
+        .view-btn:hover { background: #f0f7f4 !important; }
+        .task-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important; }
+        .complete-btn:hover { background: #1b4332 !important; }
+        .undo-btn:hover { background: #f3f4f6 !important; }
+      `}</style>
+
+      {/* Welcome Banner */}
+      <div style={{ background: `linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%)`, borderRadius: "16px", padding: "28px 36px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        <div>
+          <p style={{ color: "rgba(255,255,255,0.6)", margin: "0 0 4px 0", fontSize: "13px" }}>
+            {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          </p>
+          <h2 style={{ fontFamily: "Playfair Display, serif", color: "white", margin: "0 0 6px 0", fontSize: "26px" }}>
+            {greeting}, {user?.displayName?.split(" ")[0] || "Farmer"}! 🌱
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "14px" }}>
+            {timelines.length > 0 ? `You have ${timelines.length} active crop${timelines.length > 1 ? "s" : ""} growing.` : "No active crops yet. Start planning!"}
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: "20px" }}>
+          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "16px 24px" }}>
+            <div style={{ fontSize: "32px", fontWeight: "700", color: pendingToday > 0 ? "#fbbf24" : "#6ee7b7", fontFamily: "Playfair Display, serif" }}>{pendingToday}</div>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>Tasks Today</div>
+          </div>
+          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "16px 24px" }}>
+            <div style={{ fontSize: "32px", fontWeight: "700", color: "#6ee7b7", fontFamily: "Playfair Display, serif" }}>{timelines.length}</div>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>Active Crops</div>
+          </div>
+        </div>
+      </div>
+
+      {timelines.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "80px 40px", background: "white", borderRadius: "16px", border: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: "64px", marginBottom: "16px" }}>🌾</div>
+          <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, fontSize: "24px", margin: "0 0 8px 0" }}>No active crops yet</h3>
+          <p style={{ color: "#6b7280", margin: 0 }}>Head to Crop Recommendation to plan your first crop!</p>
+        </div>
+      ) : (
+        <>
+          {/* Crop summary cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "14px", marginBottom: "24px" }}>
+            {timelines.map(tl => {
+              const progress = Math.max(0, Math.min(100, Math.round(((new Date() - new Date(tl.startDate)) / (new Date(tl.harvestDate) - new Date(tl.startDate))) * 100)));
+              const daysLeft = Math.max(0, Math.ceil((new Date(tl.harvestDate) - new Date()) / (1000 * 60 * 60 * 24)));
+              const completed = tl.tasks?.filter(t => t.completed).length || 0;
+              const todayCount = tl.tasks?.filter(t => t.date === today && !t.completed).length || 0;
+
+              return (
+                <div key={tl.id} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "14px", padding: "18px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                    <div>
+                      <h4 style={{ fontFamily: "Playfair Display, serif", color: DARK, margin: "0 0 2px 0", fontSize: "16px" }}>🌾 {tl.crop}</h4>
+                      <p style={{ margin: 0, fontSize: "12px", color: "#6b7280" }}>🗺️ {tl.landName}</p>
+                    </div>
+                    {todayCount > 0 && (
+                      <span style={{ background: "#fef3c7", color: "#d97706", padding: "3px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "600" }}>
+                        {todayCount} today
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ marginBottom: "6px" }}>
+                    <div style={{ background: "#e5e7eb", borderRadius: "6px", height: "6px" }}>
+                      <div style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${GREEN}, #52b788)`, height: "6px", borderRadius: "6px" }} />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#9ca3af" }}>
+                    <span>{progress}% done</span><span>{daysLeft}d left</span>
+                  </div>
+                  <p style={{ margin: "6px 0 0 0", fontSize: "11px", color: "#6b7280" }}>✅ {completed}/{tl.tasks?.length || 0} tasks</p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Calendar controls */}
+          <div style={{ display: "flex", gap: "12px", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", background: "white", padding: "14px 16px", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
+            <div style={{ display: "flex", gap: "6px" }}>
+              {[["today", "Today"], ["weekly", "7 Days"], ["monthly", "30 Days"], ["full", "Full Timeline"]].map(([v, l]) => (
+                <button key={v} className={`view-btn${calView === v ? " active" : ""}`}
+                  onClick={() => setCalView(v)}
+                  style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #e5e7eb", background: "white", color: "#6b7280", cursor: "pointer", fontFamily: FONT, fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <div style={{ marginLeft: "auto" }}>
+              <select value={selectedTimeline} onChange={e => setSelectedTimeline(e.target.value)}
+                style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #e5e7eb", fontFamily: FONT, fontSize: "13px", color: "#374151", background: "white" }}>
+                <option value="all">All Crops</option>
+                {timelines.map(tl => <option key={tl.id} value={tl.id}>{tl.crop} — {tl.landName}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Task list */}
+          {filteredTasks.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px", background: "white", borderRadius: "14px", border: "1px solid #e5e7eb", color: "#9ca3af" }}>
+              🎉 No tasks for this period!
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              {groupByDate(filteredTasks).map(([date, tasks]) => (
+                <div key={date}>
+                  {/* Date header */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
+                    <div style={{ background: date === today ? GREEN : "#f3f4f6", color: date === today ? "white" : "#6b7280", borderRadius: "8px", padding: "6px 14px", fontSize: "13px", fontWeight: "600" }}>
+                      {date === today ? "📅 Today" : new Date(date + 'T00:00:00').toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
+                    </div>
+                    <div style={{ flex: 1, height: "1px", background: "#e5e7eb" }} />
+                    <span style={{ fontSize: "12px", color: "#9ca3af" }}>{tasks.filter(t => t.completed).length}/{tasks.length} done</span>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "10px" }}>
+                    {tasks.map((task, i) => (
+                      <div key={i} className="task-card" style={{
+                        background: task.completed ? "#fafafa" : "white",
+                        border: "1px solid #e5e7eb",
+                        borderLeft: `4px solid ${task.completed ? "#d1d5db" : (TYPE_COLORS[task.type] || "#888")}`,
+                        borderRadius: "10px", padding: "14px 16px",
+                        opacity: task.completed ? 0.75 : 1,
+                        transition: "all 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px" }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
+                              <span style={{ fontSize: "16px" }}>{TYPE_ICONS[task.type] || "📋"}</span>
+                              <strong style={{ fontSize: "14px", color: task.completed ? "#9ca3af" : "#374151", textDecoration: task.completed ? "line-through" : "none" }}>
+                                {task.title}
+                              </strong>
+                              <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: (TYPE_COLORS[task.type] || "#888") + "22", color: TYPE_COLORS[task.type] || "#888", fontWeight: "600" }}>
+                                {task.type}
+                              </span>
+                              {task.priority === "high" && !task.completed && <span style={{ fontSize: "10px", color: "#dc2626", fontWeight: "600" }}>⚠️ High</span>}
+                              {task.weatherSensitive && !task.completed && <span style={{ fontSize: "10px", color: "#1a6985" }}>🌧 Weather</span>}
+                            </div>
+                            <p style={{ margin: "0 0 4px 0", fontSize: "12px", color: "#6b7280" }}>{task.description}</p>
+                            <p style={{ margin: 0, fontSize: "11px", color: "#9ca3af" }}>🌾 {task.crop} • 🗺️ {task.landName}</p>
+                            {task.completed && task.notes && (
+                              <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: GREEN, fontStyle: "italic", background: "#f0f7f4", padding: "6px 10px", borderRadius: "6px" }}>
+                                📝 {task.notes}
+                              </p>
+                            )}
+                            {task.completed && task.completedAt && (
+                              <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: "#d1d5db" }}>
+                                ✅ {new Date(task.completedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            {task.completed ? (
+                              <button className="undo-btn" onClick={() => handleUndo(task.timelineId, task.id)}
+                                style={{ padding: "6px 12px", background: "#f3f4f6", color: "#6b7280", border: "1px solid #e5e7eb", borderRadius: "8px", cursor: "pointer", fontFamily: FONT, fontSize: "12px", whiteSpace: "nowrap", transition: "all 0.2s" }}>
+                                ↩️ Undo
+                              </button>
+                            ) : (
+                              <button className="complete-btn"
+                                onClick={() => setExpandedTask(expandedTask === `${task.timelineId}-${task.id}` ? null : `${task.timelineId}-${task.id}`)}
+                                style={{ padding: "6px 12px", background: GREEN, color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: FONT, fontSize: "12px", whiteSpace: "nowrap", transition: "all 0.2s" }}>
+                                ✅ Mark Done
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Expand note input */}
+                        {!task.completed && expandedTask === `${task.timelineId}-${task.id}` && (
+                          <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+                            <input
+                              type="text"
+                              placeholder="Add a note (optional)..."
+                              value={noteInput[task.id] || ""}
+                              onChange={e => setNoteInput(prev => ({ ...prev, [task.id]: e.target.value }))}
+                              style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "13px", fontFamily: FONT }}
+                              onKeyDown={e => e.key === "Enter" && handleComplete(task.timelineId, task.id, noteInput[task.id] || "")}
+                            />
+                            <button onClick={() => handleComplete(task.timelineId, task.id, noteInput[task.id] || "")}
+                              style={{ padding: "8px 16px", background: GREEN, color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: FONT, fontSize: "13px", fontWeight: "600" }}>
+                              Done
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+export default Home;
