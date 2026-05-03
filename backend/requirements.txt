@@ -2,7 +2,6 @@ flask
 flask-cors
 requests
 google-generativeai
-tensorflow
-numpygunicorn
-gunicorn
+tensorflow-cpu
+numpy
 gunicorn
