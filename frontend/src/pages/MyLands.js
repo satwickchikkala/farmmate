@@ -18,7 +18,7 @@ import {
 } from "firebase/firestore";
 import axios from "axios";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyBGmzk4M-3u9uGDKKcH9I22DxgVSbYsCDM"; // your key here
+const GOOGLE_MAPS_API_KEY = "YOUR_API_KEY"; // your key here
 const LIBRARIES = ["places"];
 
 const mapContainerStyle = {
