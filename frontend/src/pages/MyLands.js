@@ -17,7 +17,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import axios from "axios";
-
+import API_URL from "../config";
 const GOOGLE_MAPS_API_KEY = "YOUR_API_KEY"; // your key here
 const LIBRARIES = ["places"];
 
@@ -158,7 +158,7 @@ function MyLands({ user }) {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/weather-coords?lat=${markerPos.lat}&lng=${markerPos.lng}`
+        `${API_URL}/weather-coords?lat=${markerPos.lat}&lng=${markerPos.lng}`
       );
       setWeather(res.data);
       setWeatherFetched(true);
@@ -172,7 +172,7 @@ function MyLands({ user }) {
   const refreshWeather = async (land) => {
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/weather-coords?lat=${land.latitude}&lng=${land.longitude}`
+        `${API_URL}/weather-coords?lat=${land.latitude}&lng=${land.longitude}`
       );
       const updated = res.data;
       await updateDoc(doc(db, "lands", land.id), {

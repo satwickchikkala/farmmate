@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import axios from "axios";
-
+import API_URL from "../config";
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
@@ -52,8 +52,8 @@ function WeatherOverview() {
     setLoading(true); setError("");
     try {
       const [wres, fres] = await Promise.all([
-        axios.get(`${process.env.REACT_APP_API_URL}/weather-coords?lat=${land.latitude}&lng=${land.longitude}`),
-        axios.get(`${process.env.REACT_APP_API_URL}/weather-forecast?lat=${land.latitude}&lng=${land.longitude}`)
+        axios.get(`${API_URL}/weather-coords?lat=${land.latitude}&lng=${land.longitude}`),
+        axios.get(`${API_URL}/weather-forecast?lat=${land.latitude}&lng=${land.longitude}`)
       ]);
       setCurrentWeather(wres.data);
       setForecast(fres.data);

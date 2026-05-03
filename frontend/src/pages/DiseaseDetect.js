@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import axios from 'axios';
-
+import API_URL from "../config";
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
@@ -50,7 +50,7 @@ function DiseaseDetect() {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.post("${process.env.REACT_APP_API_URL}/detect-disease", formData, {
+      const res = await axios.post('${API_URL}/detect-disease', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setResult(res.data);

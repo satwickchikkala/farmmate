@@ -1,3 +1,4 @@
+import API_URL from "../config";
 // src/pages/CropRec.js
 import { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
@@ -95,7 +96,7 @@ function CropRec() {
     if (!rainfall) { setError("Please enter estimated rainfall."); return; }
     setLoading(true);
     try {
-      const res = await axios.post("${process.env.REACT_APP_API_URL}/recommend-crops", {
+      const res = await axios.post('${API_URL}/recommend-crops', {
         landName: selectedLand.landName, soilType: selectedLand.soilType,
         temperature: selectedLand.temperature, humidity: selectedLand.humidity,
         rainfall: parseFloat(rainfall), N: parseFloat(soilValues.N),
@@ -112,7 +113,7 @@ function CropRec() {
     if (!startDate) { setError("Please select a start date."); return; }
     setLoading(true);
     try {
-      const res = await axios.post("${process.env.REACT_APP_API_URL}/generate-timeline", {
+      const res = await axios.post('${API_URL}/generate-timeline', {
         crop: selectedCrop.name, startDate, soilType: selectedLand.soilType,
         temperature: selectedLand.temperature, humidity: selectedLand.humidity,
         city: selectedLand.city, landName: selectedLand.landName,
