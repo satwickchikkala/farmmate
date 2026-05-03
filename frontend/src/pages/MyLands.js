@@ -158,7 +158,7 @@ function MyLands({ user }) {
     setLoading(true);
     try {
       const res = await axios.get(
-        `http://localhost:5001/weather-coords?lat=${markerPos.lat}&lng=${markerPos.lng}`
+        `${process.env.REACT_APP_API_URL}/weather-coords?lat=${markerPos.lat}&lng=${markerPos.lng}`
       );
       setWeather(res.data);
       setWeatherFetched(true);
@@ -172,7 +172,7 @@ function MyLands({ user }) {
   const refreshWeather = async (land) => {
     try {
       const res = await axios.get(
-        `http://localhost:5001/weather-coords?lat=${land.latitude}&lng=${land.longitude}`
+        `${process.env.REACT_APP_API_URL}/weather-coords?lat=${land.latitude}&lng=${land.longitude}`
       );
       const updated = res.data;
       await updateDoc(doc(db, "lands", land.id), {

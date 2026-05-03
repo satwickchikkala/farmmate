@@ -52,8 +52,8 @@ function WeatherOverview() {
     setLoading(true); setError("");
     try {
       const [wres, fres] = await Promise.all([
-        axios.get(`http://localhost:5001/weather-coords?lat=${land.latitude}&lng=${land.longitude}`),
-        axios.get(`http://localhost:5001/weather-forecast?lat=${land.latitude}&lng=${land.longitude}`)
+        axios.get(`${process.env.REACT_APP_API_URL}/weather-coords?lat=${land.latitude}&lng=${land.longitude}`),
+        axios.get(`${process.env.REACT_APP_API_URL}/weather-forecast?lat=${land.latitude}&lng=${land.longitude}`)
       ]);
       setCurrentWeather(wres.data);
       setForecast(fres.data);
@@ -63,7 +63,7 @@ function WeatherOverview() {
 
   const fetchAllWeathers = async (landList) => {
     const results = await Promise.all(landList.map(async land => {
-      try { const res = await axios.get(`http://localhost:5001/weather-coords?lat=${land.latitude}&lng=${land.longitude}`); return { ...land, weather: res.data }; }
+      try { const res = await axios.get(`${process.env.REACT_APP_API_URL}/weather-coords?lat=${land.latitude}&lng=${land.longitude}`); return { ...land, weather: res.data }; }
       catch { return { ...land, weather: null }; }
     }));
     setAllWeathers(results);

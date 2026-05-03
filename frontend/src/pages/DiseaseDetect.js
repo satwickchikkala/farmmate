@@ -50,7 +50,7 @@ function DiseaseDetect() {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.post("http://localhost:5001/detect-disease", formData, {
+      const res = await axios.post("${process.env.REACT_APP_API_URL}/detect-disease", formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setResult(res.data);
