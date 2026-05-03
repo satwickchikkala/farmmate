@@ -12,18 +12,46 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-OPENWEATHER_API_KEY = "REPLACED_KEY"
-GEMINI_API_KEY = "REPLACED_KEY"
+OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-3-flash-preview")
 
-# Load the model and class labels
-model_path = "leaf_disease_resnet50_final.h5"
+import os
+import requests as req_lib
+
+# Auto-download model from Google Drive if not present
+MODEL_PATH = "leaf_disease_resnet50_final.h5"
+GDRIVE_FILE_ID = "1akPRuBqAgXyJQ2u9OqtNS-zS8in3NWGX"  # paste your file ID here
+
+def download_model():
+    if not os.path.exists(MODEL_PATH):
+        print("Downloading model from Google Drive...")
+        url = f"https://drive.google.com/uc?export=download&id={GDRIVE_FILE_ID}"
+        session = req_lib.Session()
+        response = session.get(url, stream=True)
+        
+        # Handle Google Drive large file warning
+        for key, value in response.cookies.items():
+            if key.startswith("download_warning"):
+                url = f"https://drive.google.com/uc?export=download&confirm={value}&id={GDRIVE_FILE_ID}"
+                response = session.get(url, stream=True)
+                break
+        
+        with open(MODEL_PATH, "wb") as f:
+            for chunk in response.iter_content(chunk_size=32768):
+                if chunk:
+                    f.write(chunk)
+        print("Model downloaded successfully!")
+
+download_model()
+
+# Load disease classes
 with open("disease_classes.json", "r") as f:
     label_map = json.load(f)
 
-disease_model = tf.keras.models.load_model(model_path)
+disease_model = tf.keras.models.load_model(MODEL_PATH)
 
 # Default soil nutrient values based on soil type
 SOIL_DEFAULTS = {
