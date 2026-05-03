@@ -18,7 +18,7 @@ import {
 } from "firebase/firestore";
 import axios from "axios";
 import API_URL from "../config";
-const GOOGLE_MAPS_API_KEY = "YOUR_API_KEY"; // your key here
+const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY; // your key here
 const LIBRARIES = ["places"];
 
 const mapContainerStyle = {
