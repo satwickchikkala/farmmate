@@ -10,8 +10,12 @@ import numpy as np
 import os
 
 app = Flask(__name__)
-CORS(app)
-
+# Fixed ✅
+CORS(app, origins=[
+    "https://farmmate-three.vercel.app",
+    "https://farmmate.vercel.app",
+    "http://localhost:3000"
+])
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
