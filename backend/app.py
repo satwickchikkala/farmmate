@@ -4,8 +4,6 @@ import requests
 from google import genai
 import json
 import re
-import tensorflow as tf
-from tensorflow.keras.preprocessing import image
 import numpy as np
 import os
 import tempfile
@@ -45,12 +43,32 @@ GDRIVE_FILE_ID = "1akPRuBqAgXyJQ2u9OqtNS-zS8in3NWGX"  # paste your file ID here
 disease_model = None
 label_map = None
 model_lock = threading.Lock()
+tf = None
+keras_image = None
 
-try:
-    # Render free/starter instances are CPU-only; avoid extra GPU init overhead.
-    tf.config.set_visible_devices([], "GPU")
-except Exception:
-    pass
+def ensure_tf_runtime_loaded():
+    global tf, keras_image
+    if tf is not None and keras_image is not None:
+        return
+
+    import tensorflow as tf_module
+    from tensorflow.keras.preprocessing import image as image_module
+
+    tf = tf_module
+    keras_image = image_module
+
+    try:
+        # Render starter instances are CPU-only; avoid GPU probing overhead.
+        tf.config.set_visible_devices([], "GPU")
+    except Exception:
+        pass
+
+    try:
+        # Keep TensorFlow thread count minimal for lower memory footprint.
+        tf.config.threading.set_inter_op_parallelism_threads(1)
+        tf.config.threading.set_intra_op_parallelism_threads(1)
+    except Exception:
+        pass
 
 def download_model():
     if not os.path.exists(MODEL_PATH):
@@ -87,6 +105,7 @@ def ensure_disease_assets_loaded():
         with open(LABELS_PATH, "r") as f:
             label_map = json.load(f)
 
+        ensure_tf_runtime_loaded()
         download_model()
         disease_model = tf.keras.models.load_model(
             MODEL_PATH,
@@ -338,8 +357,8 @@ def detect_disease():
         file.save(img_path)
 
         # 1. Preprocess & Predict using your ResNet50 model
-        img = image.load_img(img_path, target_size=(224, 224))
-        img_array = image.img_to_array(img)
+        img = keras_image.load_img(img_path, target_size=(224, 224))
+        img_array = keras_image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
         img_array = tf.keras.applications.resnet50.preprocess_input(img_array)
 
