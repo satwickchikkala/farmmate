@@ -56,7 +56,10 @@ download_model()
 with open("disease_classes.json", "r") as f:
     label_map = json.load(f)
 
-disease_model = tf.keras.models.load_model(MODEL_PATH)
+disease_model = tf.keras.models.load_model(
+    MODEL_PATH,
+    compile=False
+)
 
 # Default soil nutrient values based on soil type
 SOIL_DEFAULTS = {
