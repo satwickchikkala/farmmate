@@ -1,8 +1,8 @@
-flask
-flask-cors
-requests
-google-genai
-tensorflow-cpu==2.13.0
-numpy
-gunicorn
-pillow
+flask==3.0.3
+flask-cors==4.0.1
+requests==2.31.0
+google-genai==1.0.0
+tensorflow-cpu==2.15.0
+numpy==1.26.4
+gunicorn==21.2.0
+pillow==10.2.0
