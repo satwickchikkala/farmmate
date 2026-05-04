@@ -340,6 +340,8 @@ def detect_disease():
     if 'file' not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
+    file = request.files['file']
+
     try:
         ensure_disease_assets_loaded()
     except Exception as e:
@@ -348,7 +350,6 @@ def detect_disease():
             "error": "Disease model is unavailable on the server. Please try again in a moment."
         }), 503
 
-    file = request.files['file']
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
     img_path = temp_file.name
     temp_file.close()
