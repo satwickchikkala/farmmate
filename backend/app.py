@@ -21,7 +21,12 @@ CORS(app, resources={
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+client = None
+if GEMINI_API_KEY:
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    print("Gemini client ready")
+else:
+    print("No GEMINI_API_KEY - Gemini disabled (cure gen fallback used)")
 
 import os
 import requests as req_lib
@@ -330,18 +335,27 @@ def detect_disease():
     }}
     """
 
-    try:
-        pythonresponse = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=cure_prompt
-        )
-        response = pythonresponse
-        text = response.text.strip()
-        text = re.sub(r'```json|```', '', text).strip()
-        cure_data = json.loads(text)
-    except Exception as e:
-        print("Gemini Cure Error:", str(e))
-        cure_data = {"error": "Cure information currently unavailable."}
+    if client:
+        try:
+            pythonresponse = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=cure_prompt
+            )
+            response = pythonresponse
+            text = response.text.strip()
+            text = re.sub(r'```json|```', '', text).strip()
+            cure_data = json.loads(text)
+        except Exception as e:
+            print("Gemini Cure Error:", str(e))
+            cure_data = {"error": "Cure information currently unavailable."}
+    else:
+        cure_data = {
+            "cause": "Common fungal/bacterial infection from humidity or poor air circulation",
+            "organic": "Neem oil spray (5ml/liter water) weekly or garlic-chilli extract.",
+            "chemical": "Mancozeb or Copper Oxychloride (2g/liter)",
+            "dosage": "Apply early morning, repeat after 7 days. Use mask.",
+            "prevention": "Improve air circulation, avoid overhead watering, remove infected leaves."
+        }
 
     os.remove(img_path) 
 
