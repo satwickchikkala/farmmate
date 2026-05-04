@@ -1,8 +1,1 @@
-# FarmMate Render Deploy Fix: Lazy Model Loading
-
-## Previous Task Complete ✅
-
-## New Steps for Render Compatibility:
-- [ ] Step 1: Create updated TODO.md (current)
-- [x] Step 2: Refactor backend/app.py for lazy model loading in /detect-disease
-- [x] Step 3: Update TODO.md progress\n- [x] Step 4: Test locally and note for Render redeploy\n\n**Next: Trigger Render redeploy to test. Backend now loads model lazily only when /detect-disease is called, avoiding startup crash.**
+# Fix Disease Detection Model Load Error\n\n## Steps:\n\n- [x] **Step 1:** Update `backend/requirements.txt` - TF 2.16.2, numpy 1.26.4, h5py 3.11.0\n- [x] **Step 2:** `backend/app.py` - custom_objects + pre-load\n- [ ] **Step 3:** Local test (retrying deps)\n- [ ] **Step 4:** Endpoint test\n- [ ] **Step 5:** Deploy\n\n**Progress:** Fixed h5py conflict, retrying install+server.
