@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
-import google.generativeai as genai
+from google import genai
 import json
 import re
 import tensorflow as tf
@@ -21,8 +21,7 @@ CORS(app, resources={
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-3-flash-preview")
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 import os
 import requests as req_lib
@@ -158,7 +157,11 @@ Respond ONLY in this exact JSON format, no extra text:
 """
 
     try:
-        response = model.generate_content(prompt)
+        pythonresponse = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
+        response = pythonresponse
         text = response.text.strip()
         text = re.sub(r'```json|```', '', text).strip()
         result = json.loads(text)
@@ -227,7 +230,11 @@ Respond ONLY in this exact JSON format, no extra text:
 
 
     try:
-        response = model.generate_content(pythonprompt)
+        pythonresponse = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=pythonprompt
+        )
+        response = pythonresponse
         text = response.text.strip()
         text = re.sub(r'```json|```', '', text).strip()
         result = json.loads(text)
@@ -314,7 +321,11 @@ def detect_disease():
     """
 
     try:
-        response = model.generate_content(cure_prompt)
+        pythonresponse = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=cure_prompt
+        )
+        response = pythonresponse
         text = response.text.strip()
         text = re.sub(r'```json|```', '', text).strip()
         cure_data = json.loads(text)

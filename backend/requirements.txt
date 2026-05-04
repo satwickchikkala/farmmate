@@ -1,8 +1,8 @@
 flask
 flask-cors
 requests
-google-generativeai
-tensorflow-cpu==2.15.0
+google-genai
+tensorflow-cpu==2.13.0
 numpy
 gunicorn
 pillow
