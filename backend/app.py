@@ -8,18 +8,26 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 import numpy as np
 import os
+import tempfile
+import threading
+
+OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "https://farmmate-three.vercel.app")
 
 app = Flask(__name__)
-# Allow all origins — fixes all CORS issues
+# Allow production frontend + local dev.
 CORS(app, resources={
     r"/*": {
-        "origins": "*",
+        "origins": [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            FRONTEND_ORIGIN
+        ],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
-OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 client = None
 if GEMINI_API_KEY:
@@ -28,12 +36,21 @@ if GEMINI_API_KEY:
 else:
     print("No GEMINI_API_KEY - Gemini disabled (cure gen fallback used)")
 
-import os
 import requests as req_lib
 
 # Auto-download model from Google Drive if not present
 MODEL_PATH = "leaf_disease_resnet50_final.h5"
+LABELS_PATH = "disease_classes.json"
 GDRIVE_FILE_ID = "1akPRuBqAgXyJQ2u9OqtNS-zS8in3NWGX"  # paste your file ID here
+disease_model = None
+label_map = None
+model_lock = threading.Lock()
+
+try:
+    # Render free/starter instances are CPU-only; avoid extra GPU init overhead.
+    tf.config.set_visible_devices([], "GPU")
+except Exception:
+    pass
 
 def download_model():
     if not os.path.exists(MODEL_PATH):
@@ -55,22 +72,28 @@ def download_model():
                     f.write(chunk)
         print("Model downloaded successfully!")
 
-download_model()
+def ensure_disease_assets_loaded():
+    global disease_model, label_map
+    if disease_model is not None and label_map is not None:
+        return
 
-# Load disease classes
-with open("disease_classes.json", "r") as f:
-    label_map = json.load(f)
+    with model_lock:
+        if disease_model is not None and label_map is not None:
+            return
 
-try:
-    disease_model = tf.keras.models.load_model(
-        MODEL_PATH,
-        compile=False,
-        custom_objects={'InputLayer': tf.keras.layers.InputLayer}
-    )
-    print("Model loaded successfully!")
-except Exception as e:
-    print(f"Model load failed: {e}")
-    disease_model = None
+        if not os.path.exists(LABELS_PATH):
+            raise FileNotFoundError(f"Missing labels file: {LABELS_PATH}")
+
+        with open(LABELS_PATH, "r") as f:
+            label_map = json.load(f)
+
+        download_model()
+        disease_model = tf.keras.models.load_model(
+            MODEL_PATH,
+            compile=False,
+            custom_objects={"InputLayer": tf.keras.layers.InputLayer}
+        )
+        print("Disease model loaded successfully!")
 
 # Default soil nutrient values based on soil type
 SOIL_DEFAULTS = {
@@ -297,22 +320,36 @@ def get_forecast():
 def detect_disease():
     if 'file' not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
-    
+
+    try:
+        ensure_disease_assets_loaded()
+    except Exception as e:
+        print(f"Disease model unavailable: {e}")
+        return jsonify({
+            "error": "Disease model is unavailable on the server. Please try again in a moment."
+        }), 503
+
     file = request.files['file']
-    img_path = "temp_image.jpg"
-    file.save(img_path)
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+    img_path = temp_file.name
+    temp_file.close()
 
-    # 1. Preprocess & Predict using your ResNet50 Model
-    img = image.load_img(img_path, target_size=(224, 224))
-    img_array = image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = tf.keras.applications.resnet50.preprocess_input(img_array)
+    try:
+        file.save(img_path)
 
-    global disease_model
-    predictions = disease_model.predict(img_array)
-    result_index = np.argmax(predictions)
-    disease_name = label_map.get(str(result_index), "Unknown Disease")
-    confidence = float(np.max(predictions))
+        # 1. Preprocess & Predict using your ResNet50 model
+        img = image.load_img(img_path, target_size=(224, 224))
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = tf.keras.applications.resnet50.preprocess_input(img_array)
+
+        predictions = disease_model.predict(img_array, verbose=0)
+        result_index = np.argmax(predictions)
+        disease_name = label_map.get(str(result_index), "Unknown Disease")
+        confidence = float(np.max(predictions))
+    finally:
+        if os.path.exists(img_path):
+            os.remove(img_path)
 
     # 2. Ask Gemini for the Cure
     cure_prompt = f"""
@@ -356,8 +393,6 @@ def detect_disease():
             "dosage": "Apply early morning, repeat after 7 days. Use mask.",
             "prevention": "Improve air circulation, avoid overhead watering, remove infected leaves."
         }
-
-    os.remove(img_path) 
 
     return jsonify({
         "disease": disease_name,
