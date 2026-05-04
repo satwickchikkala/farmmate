@@ -3,5 +3,5 @@ services:
     name: farmmate-backend
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --timeout 120 --workers 1 --threads 1
+    startCommand: gunicorn app:app --timeout 120 --workers 1 --threads 1 --max-requests 25 --max-requests-jitter 10
 plan: starter

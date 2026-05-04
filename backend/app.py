@@ -9,6 +9,12 @@ import os
 import tempfile
 import threading
 
+# Keep native thread pools tiny on low-memory instances.
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("TF_NUM_INTEROP_THREADS", "1")
+os.environ.setdefault("TF_NUM_INTRAOP_THREADS", "1")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "https://farmmate-three.vercel.app")
@@ -45,6 +51,7 @@ label_map = None
 model_lock = threading.Lock()
 tf = None
 keras_image = None
+model_load_error = None
 
 def ensure_tf_runtime_loaded():
     global tf, keras_image
@@ -91,7 +98,7 @@ def download_model():
         print("Model downloaded successfully!")
 
 def ensure_disease_assets_loaded():
-    global disease_model, label_map
+    global disease_model, label_map, model_load_error
     if disease_model is not None and label_map is not None:
         return
 
@@ -99,20 +106,25 @@ def ensure_disease_assets_loaded():
         if disease_model is not None and label_map is not None:
             return
 
-        if not os.path.exists(LABELS_PATH):
-            raise FileNotFoundError(f"Missing labels file: {LABELS_PATH}")
+        try:
+            if not os.path.exists(LABELS_PATH):
+                raise FileNotFoundError(f"Missing labels file: {LABELS_PATH}")
 
-        with open(LABELS_PATH, "r") as f:
-            label_map = json.load(f)
+            with open(LABELS_PATH, "r") as f:
+                label_map = json.load(f)
 
-        ensure_tf_runtime_loaded()
-        download_model()
-        disease_model = tf.keras.models.load_model(
-            MODEL_PATH,
-            compile=False,
-            custom_objects={"InputLayer": tf.keras.layers.InputLayer}
-        )
-        print("Disease model loaded successfully!")
+            ensure_tf_runtime_loaded()
+            download_model()
+            disease_model = tf.keras.models.load_model(
+                MODEL_PATH,
+                compile=False,
+                custom_objects={"InputLayer": tf.keras.layers.InputLayer}
+            )
+            model_load_error = None
+            print("Disease model loaded successfully!")
+        except Exception as e:
+            model_load_error = str(e)
+            raise
 
 # Default soil nutrient values based on soil type
 SOIL_DEFAULTS = {
@@ -418,6 +430,16 @@ def detect_disease():
         "disease": disease_name,
         "confidence": round(confidence * 100, 2),
         "treatment": cure_data
+    })
+
+@app.route('/health/disease', methods=['GET'])
+def disease_health():
+    return jsonify({
+        "modelLoaded": disease_model is not None,
+        "labelsLoaded": label_map is not None,
+        "modelFileExists": os.path.exists(MODEL_PATH),
+        "labelsFileExists": os.path.exists(LABELS_PATH),
+        "lastLoadError": model_load_error
     })
 
 if __name__ == '__main__':
