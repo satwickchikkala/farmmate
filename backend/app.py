@@ -56,10 +56,7 @@ download_model()
 with open("disease_classes.json", "r") as f:
     label_map = json.load(f)
 
-disease_model = tf.keras.models.load_model(
-    MODEL_PATH,
-    compile=False
-)
+disease_model = None
 
 # Default soil nutrient values based on soil type
 SOIL_DEFAULTS = {
@@ -297,6 +294,13 @@ def detect_disease():
     img_array = np.expand_dims(img_array, axis=0)
     img_array = tf.keras.applications.resnet50.preprocess_input(img_array)
 
+    global disease_model
+    if disease_model is None:
+        download_model()
+        disease_model = tf.keras.models.load_model(
+            MODEL_PATH,
+            compile=False
+        )
     predictions = disease_model.predict(img_array)
     result_index = np.argmax(predictions)
     disease_name = label_map.get(str(result_index), "Unknown Disease")
