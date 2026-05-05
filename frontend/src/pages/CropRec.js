@@ -7,7 +7,7 @@ import {
   addDoc, deleteDoc, updateDoc, doc
 } from "firebase/firestore";
 import axios from "axios";
-import { useGate } from "../hooks/useGate";
+
 import UpgradePopup from "../components/UpgradePopup";
 import { trackUsage } from "../utils/trackUsage";
 
@@ -40,7 +40,7 @@ const TABS = [
 ];
 
 function CropRec() {
-  const { checkGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
+
   const [tab, setTab] = useState("new");
   const [lands, setLands] = useState([]);
   const [activeLandIds, setActiveLandIds] = useState([]);
@@ -96,7 +96,7 @@ function CropRec() {
   const getActiveTimeline = (landId) => activeTimelines.find(t => t.landId === landId);
 
   const handleGetRecommendations = async () => {
-    if (!checkGate("Crop Recommendations")) return;
+
 
     setError("");
     if (!rainfall) { setError("Please enter estimated rainfall."); return; }
@@ -116,7 +116,7 @@ function CropRec() {
   };
 
   const handleGenerateTimeline = async () => {
-    if (!checkGate("Timeline Generation")) return;
+
 
     setError("");
     if (!startDate) { setError("Please select a start date."); return; }
@@ -515,12 +515,7 @@ function CropRec() {
         </div>
       )}
 
-      {showUpgrade && (
-        <UpgradePopup
-          feature={blockedFeature}
-          onClose={() => setShowUpgrade(false)}
-        />
-      )}
+
     </div>
   );
 }

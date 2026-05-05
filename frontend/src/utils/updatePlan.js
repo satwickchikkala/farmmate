@@ -1,10 +1,10 @@
 // src/utils/updatePlan.js
 import { db } from "../firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc, increment } from "firebase/firestore";
 
 export const updateUserPlan = async (userId, plan, paymentId) => {
   const expiry = new Date();
-  expiry.setFullYear(expiry.getFullYear() + 1); // 1 year from now
+  expiry.setFullYear(expiry.getFullYear() + 1);
 
   await setDoc(doc(db, "users", userId), {
     plan: plan,
@@ -20,11 +20,42 @@ export const getUserPlan = async (userId) => {
 
   if (docSnap.exists()) {
     const data = docSnap.data();
-    // Check if plan is expired
     if (data.planExpiry && new Date(data.planExpiry) < new Date()) {
-      return "free"; // expired
+      return "free";
     }
     return data.plan || "free";
   }
-  return "free"; // default
+  return "free";
+};
+
+// Call this when user CREATES a new land
+export const incrementLandCount = async (userId) => {
+  const docRef = doc(db, "users", userId);
+  const snap = await getDoc(docRef);
+
+  if (snap.exists()) {
+    await updateDoc(docRef, {
+      totalLandsCreated: increment(1),
+    });
+  } else {
+    await setDoc(docRef, {
+      plan: "free",
+      totalLandsCreated: 1,
+    }, { merge: true });
+  }
+};
+
+// Check if free user has exceeded lifetime land limit
+export const canCreateNewLand = async (userId, plan) => {
+  if (plan === "pro") return true; // Pro users unlimited
+
+  const docRef = doc(db, "users", userId);
+  const snap = await getDoc(docRef);
+
+  if (snap.exists()) {
+    const data = snap.data();
+    const totalCreated = data.totalLandsCreated || 0;
+    return totalCreated < 1; // Free users can only ever create 1 land total
+  }
+  return true; // First time user
 };

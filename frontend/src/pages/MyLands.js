@@ -20,6 +20,7 @@ import axios from "axios";
 import API_URL from "../config";
 import { useGate } from "../hooks/useGate";
 import UpgradePopup from "../components/UpgradePopup";
+import { incrementLandCount } from "../utils/updatePlan";
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY; // your key here
 const LIBRARIES = ["places"];
 
@@ -47,7 +48,7 @@ const SOIL_TYPES = [
 const LAND_STATUSES = ["Active", "Fallow", "In Use"];
 
 function MyLands({ user }) {
-  const { canAddLand, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
+  const { checkLandGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
   const [markerPos, setMarkerPos] = useState(defaultCenter);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [searchInput, setSearchInput] = useState("");
@@ -192,8 +193,9 @@ function MyLands({ user }) {
 
   // Save new land to Firestore
   const handleSaveLand = async () => {
-    // Gate check — free users can only add 1 land
-    if (!canAddLand(lands.length)) return;
+    // Lifetime gate check — blocks spam workaround
+    const allowed = await checkLandGate();
+    if (!allowed) return;
 
     if (!landName) { setError("Please enter a land name."); return; }
     if (!landSize) { setError("Please enter land size."); return; }
@@ -218,6 +220,10 @@ function MyLands({ user }) {
         windSpeed: weather.wind_speed,
         createdAt: new Date(),
       });
+
+      // Increment lifetime counter AFTER successful save
+      await incrementLandCount(auth.currentUser.uid);
+
       alert("Land saved successfully!");
       resetForm();
       loadLands();

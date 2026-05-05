@@ -4,6 +4,7 @@ import { auth, db } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { updateProfile, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { getMonthlyUsage } from "../utils/trackUsage";
+import { getUserPlan } from "../utils/updatePlan";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -27,6 +28,7 @@ function Profile({ user }) {
   const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
+  const [currentPlan, setCurrentPlan] = useState("free");
   const [showPwds, setShowPwds] = useState({ current: false, new: false, confirm: false });
   const fileRef = useRef();
 
@@ -34,6 +36,8 @@ function Profile({ user }) {
 
   const loadStats = async () => {
     const uid = auth.currentUser.uid;
+    const plan = await getUserPlan(uid);
+    setCurrentPlan(plan);
     const lsnap = await getDocs(query(collection(db, "lands"), where("userId", "==", uid)));
     setLandsCount(lsnap.size);
     const tsnap = await getDocs(query(collection(db, "timelines"), where("userId", "==", uid), where("status", "==", "active")));
@@ -144,8 +148,15 @@ function Profile({ user }) {
             <span style={{ background: "rgba(255,255,255,0.15)", color: "white", padding: "4px 12px", borderRadius: "20px", fontSize: "12px" }}>
               {isGoogle ? "🔵 Google Account" : "📧 Email Account"}
             </span>
-            <span style={{ background: "rgba(255,255,255,0.15)", color: "white", padding: "4px 12px", borderRadius: "20px", fontSize: "12px" }}>
-              🌿 Free Plan
+            <span style={{
+              background: currentPlan === "pro" ? "rgba(255,215,0,0.2)" : "rgba(255,255,255,0.15)",
+              color: "white",
+              padding: "4px 12px",
+              borderRadius: "20px",
+              fontSize: "12px",
+              border: currentPlan === "pro" ? "1px solid gold" : "none"
+            }}>
+              {currentPlan === "pro" ? "⭐ Pro Plan" : "🌿 Free Plan"}
             </span>
           </div>
         </div>

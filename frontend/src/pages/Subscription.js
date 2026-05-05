@@ -1,8 +1,9 @@
 // src/pages/Subscription.js
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import API_URL from "../config";
 import { auth } from "../firebase";
+import { getUserPlan } from "../utils/updatePlan";
 import { updateUserPlan } from "../utils/updatePlan";
 
 const FONT = "DM Sans, sans-serif";
@@ -20,88 +21,99 @@ const PAYG_FEATURES = [
   { id: "alerts", label: "Weather Alert Notifications", icon: "🔔", unit: "per land/month", price: 2 },
 ];
 
-const PLANS = [
-  {
-    id: "free",
-    name: "Free",
-    price: "₹0",
-    period: "forever",
-    color: "#6b7280",
-    bgColor: "#f9fafb",
-    borderColor: "#e5e7eb",
-    badge: null,
-    current: true,
-    features: [
-      "Up to 2 lands",
-      "5 crop recommendations/month",
-      "Basic weather overview",
-      "3 disease detections/month",
-      "Basic farming timeline",
-      "Community support",
-    ],
-    notIncluded: [
-      "7-day weather forecast",
-      "Unlimited AI recommendations",
-      "Export reports",
-      "Priority support",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Farmer Pro",
-    price: "₹999",
-    period: "per year",
-    subPrice: "₹83/month",
-    color: GREEN,
-    bgColor: "#f0fdf4",
-    borderColor: GREEN,
-    badge: "Most Popular",
-    current: false,
-    features: [
-      "Up to 10 lands",
-      "Unlimited crop recommendations",
-      "Full AI timeline generation",
-      "Unlimited disease detection",
-      "7-day weather forecast",
-      "Weather alert notifications",
-      "Export reports (PDF)",
-      "Priority email support",
-      "Task completion analytics",
-    ],
-    notIncluded: [
-      "Multiple farm managers",
-      "Custom AI model training",
-    ],
-  },
-  {
-    id: "payg",
-    name: "Pay As You Go",
-    price: "Custom",
-    period: "pay per use",
-    subPrice: "No monthly fee",
-    color: "#1a6985",
-    bgColor: "#f0f8ff",
-    borderColor: "#1a6985",
-    badge: "Flexible",
-    current: false,
-    features: [
-      "Unlimited lands",
-      "Pay only for what you use",
-      "All premium features available",
-      "No monthly commitment",
-      "Multiple farm managers",
-      "Export reports (PDF)",
-      "API access",
-      "Dedicated account manager",
-      "Custom AI model training",
-    ],
-    notIncluded: [],
-  },
-];
-
 function Subscription() {
+  const [userPlan, setUserPlan] = useState("free");
   const [paygQty, setPaygQty] = useState({});
   const [showCalculator, setShowCalculator] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      if (auth.currentUser) {
+        const plan = await getUserPlan(auth.currentUser.uid);
+        setUserPlan(plan);
+      }
+    };
+    load();
+  }, []);
+
+  const getPlans = (userPlan) => [
+    {
+      id: "free",
+      name: "Free",
+      price: "₹0",
+      period: "forever",
+      color: "#6b7280",
+      bgColor: "#f9fafb",
+      borderColor: "#e5e7eb",
+      badge: null,
+      current: userPlan === "free",
+      features: [
+        "Up to 2 lands",
+        "5 crop recommendations/month",
+        "Basic weather overview",
+        "3 disease detections/month",
+        "Basic farming timeline",
+        "Community support",
+      ],
+      notIncluded: [
+        "7-day weather forecast",
+        "Unlimited AI recommendations",
+        "Export reports",
+        "Priority support",
+      ],
+    },
+    {
+      id: "pro",
+      name: "Farmer Pro",
+      price: "₹999",
+      period: "per year",
+      subPrice: "₹83/month",
+      color: GREEN,
+      bgColor: "#f0fdf4",
+      borderColor: GREEN,
+      badge: "Most Popular",
+      current: userPlan === "pro",
+      features: [
+        "Up to 10 lands",
+        "Unlimited crop recommendations",
+        "Full AI timeline generation",
+        "Unlimited disease detection",
+        "7-day weather forecast",
+        "Weather alert notifications",
+        "Export reports (PDF)",
+        "Priority email support",
+        "Task completion analytics",
+      ],
+      notIncluded: [
+        "Multiple farm managers",
+        "Custom AI model training",
+      ],
+    },
+    {
+      id: "payg",
+      name: "Pay As You Go",
+      price: "Custom",
+      period: "pay per use",
+      subPrice: "No monthly fee",
+      color: "#1a6985",
+      bgColor: "#f0f8ff",
+      borderColor: "#1a6985",
+      badge: "Flexible",
+      current: false,
+      features: [
+        "Unlimited lands",
+        "Pay only for what you use",
+        "All premium features available",
+        "No monthly commitment",
+        "Multiple farm managers",
+        "Export reports (PDF)",
+        "API access",
+        "Dedicated account manager",
+        "Custom AI model training",
+      ],
+      notIncluded: [],
+    },
+  ];
 
   const paygTotal = PAYG_FEATURES.reduce((sum, f) => sum + (parseInt(paygQty[f.id] || 0) * f.price), 0);
 
@@ -178,7 +190,7 @@ function Subscription() {
 
       {/* Plans grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", marginBottom: "40px" }}>
-        {PLANS.map(plan => (
+        {getPlans(userPlan).map(plan => (
           <div key={plan.id} className="plan-card" style={{
             background: plan.bgColor,
             border: `2px solid ${plan.borderColor}`,
@@ -321,7 +333,7 @@ function Subscription() {
           <thead>
             <tr style={{ background: "#f9fafb" }}>
               <th style={{ padding: "12px 16px", textAlign: "left", color: "#6b7280", fontWeight: "600", borderBottom: "1px solid #e5e7eb" }}>Feature</th>
-              {PLANS.map(p => (
+              {getPlans(userPlan).map(p => (
                 <th key={p.id} style={{ padding: "12px 16px", textAlign: "center", color: p.color, fontWeight: "700", borderBottom: "1px solid #e5e7eb" }}>{p.name}</th>
               ))}
             </tr>

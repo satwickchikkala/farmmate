@@ -1,13 +1,8 @@
 // src/hooks/useGate.js
 import { useState } from "react";
 import { usePlan } from "../context/PlanContext";
-
-const FREE_LIMITS = {
-  lands: 1,
-  cropRec: 5,      // per month
-  disease: 3,      // per month
-  timeline: 1,     // per month
-};
+import { canCreateNewLand } from "../utils/updatePlan";
+import { auth } from "../firebase";
 
 export function useGate() {
   const { plan } = usePlan();
@@ -16,18 +11,23 @@ export function useGate() {
 
   const isPro = plan === "pro";
 
+  // Only for disease detection
   const checkGate = (feature) => {
-    if (isPro) return true; // Pro users pass all gates
-
+    if (isPro) return true;
     setBlockedFeature(feature);
     setShowUpgrade(true);
     return false;
   };
 
-  const canAddLand = (currentLandCount) => {
+  // Lifetime land check — blocks spam workaround
+  const checkLandGate = async () => {
     if (isPro) return true;
-    if (currentLandCount >= FREE_LIMITS.lands) {
-      setBlockedFeature("Adding more than 1 land");
+
+    const allowed = await canCreateNewLand(auth.currentUser.uid, plan);
+    if (!allowed) {
+      setBlockedFeature(
+        "Adding more than 1 land (Free plan allows only 1 land ever — even after deletion)"
+      );
       setShowUpgrade(true);
       return false;
     }
@@ -37,7 +37,7 @@ export function useGate() {
   return {
     isPro,
     checkGate,
-    canAddLand,
+    checkLandGate,
     showUpgrade,
     setShowUpgrade,
     blockedFeature,

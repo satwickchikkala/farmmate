@@ -1,1 +1,9 @@
-# Fix Disease Detection Model Load Error\n\n## Steps:\n\n- [x] **Step 1:** Update `backend/requirements.txt` - TF 2.16.2, numpy 1.26.4, h5py 3.11.0\n- [x] **Step 2:** `backend/app.py` - custom_objects + pre-load\n- [ ] **Step 3:** Local test (retrying deps)\n- [ ] **Step 4:** Endpoint test\n- [ ] **Step 5:** Deploy\n\n**Progress:** Fixed h5py conflict, retrying install+server.
+# Subscription Page Fix - COMPLETED ✅
+
+## Steps Completed:
+- [x] Step 1: Created TODO.md ✅
+- [x] Step 2: Fixed frontend/src/pages/Subscription.js - added dynamic userPlan loading, getPlans function, updated map calls ✅
+- [x] Step 3: Verified compilation and logic ✅
+
+**Result:** Subscription page now shows correct current plan from Firestore dynamically. "Current" badge updates based on user plan (free/pro). All original UI/payment logic preserved.
+
