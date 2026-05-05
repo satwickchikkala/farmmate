@@ -1,5 +1,9 @@
 // src/pages/Subscription.js
 import { useState } from "react";
+import axios from "axios";
+import API_URL from "../config";
+import { auth } from "../firebase";
+import { updateUserPlan } from "../utils/updatePlan";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -101,6 +105,57 @@ function Subscription() {
 
   const paygTotal = PAYG_FEATURES.reduce((sum, f) => sum + (parseInt(paygQty[f.id] || 0) * f.price), 0);
 
+  const handleUpgrade = async (plan) => {
+    try {
+      const orderRes = await axios.post(`${API_URL}/create-order`, { plan });
+      const { orderId, amount, keyId } = orderRes.data;
+
+      const options = {
+        key: keyId,
+        amount: amount,
+        currency: "INR",
+        name: "FarmMate",
+        description: "FarmMate Pro Plan - 1 Year",
+        image: "https://farmmate-three.vercel.app/logo192.png",
+        order_id: orderId,
+        handler: async (response) => {
+          const verifyRes = await axios.post(`${API_URL}/verify-payment`, {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            userId: auth.currentUser.uid,
+            plan: "pro"
+          });
+
+          if (verifyRes.data.success) {
+            await updateUserPlan(
+              auth.currentUser.uid,
+              "pro",
+              response.razorpay_payment_id
+            );
+            alert("Payment successful! You are now on FarmMate Pro!");
+            window.location.reload();
+          } else {
+            alert("Payment verification failed. Contact support.");
+          }
+        },
+        prefill: {
+          email: auth.currentUser?.email,
+          name: auth.currentUser?.displayName || "",
+        },
+        theme: {
+          color: "#2d6a4f"
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error("Payment error:", err);
+      alert("Could not initiate payment. Try again.");
+    }
+  };
+
   return (
     <div style={{ fontFamily: FONT, maxWidth: "1000px", width: "100%" }}>
       <style>{`
@@ -168,7 +223,10 @@ function Subscription() {
             <button
               className="upgrade-btn"
               disabled={plan.current}
-              onClick={() => plan.id === "payg" && setShowCalculator(true)}
+              onClick={() => {
+                if (plan.id === "payg") setShowCalculator(true);
+                if (!plan.current && plan.id === "pro") handleUpgrade("pro");
+              }}
               style={{
                 width: "100%",
                 padding: "13px",
