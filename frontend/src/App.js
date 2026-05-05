@@ -101,7 +101,7 @@ function App() {
       {/* Left panel — visual */}
       <div style={S.leftPanel}>
         <div style={S.leftContent}>
-          <div style={S.logo}>🌾</div>
+<img src="/logo.png" alt="FarmMate Logo" style={{ width: "64px", height: "64px", objectFit: "contain" }} />
           <h1 style={S.brand}>FarmMate</h1>
           <p style={S.tagline}>AI-Powered Smart Farming Assistant</p>
           <div style={S.features}>
@@ -270,7 +270,7 @@ const S = {
     "@media (max-width: 768px)": { display: "none" }
   },
   leftContent: { zIndex: 2, textAlign: "center", maxWidth: "400px" },
-  logo: { fontSize: "64px", marginBottom: "16px", filter: "drop-shadow(0 4px 12px rgba(82,183,136,0.4))" },
+logo: { width: "64px", height: "64px", marginBottom: "16px", objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(82,183,136,0.4))" },
   brand: { fontFamily: "Playfair Display, serif", fontSize: "42px", fontWeight: "700", color: "#fff", margin: "0 0 8px 0", letterSpacing: "-1px" },
   tagline: { color: "#95d5b2", fontSize: "16px", margin: "0 0 40px 0", fontWeight: "300" },
   features: { display: "flex", flexDirection: "column", gap: "12px", textAlign: "left" },

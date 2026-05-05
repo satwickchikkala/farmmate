@@ -22,7 +22,7 @@ function Navbar({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [todayTasks, setTodayTasks] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
+  // const [menuOpen, setMenuOpen] = useState(false); // unused
 
   useEffect(() => { loadTodayTasks(); }, []);
 
@@ -59,7 +59,7 @@ function Navbar({ user }) {
 
         {/* Brand */}
         <Link to="/home" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-          <span style={{ fontSize: "22px" }}>🌾</span>
+<img src="/logo.png" alt="FarmMate" style={{ width: "22px", height: "22px", objectFit: "contain" }} />
           <span style={{ fontFamily: "Playfair Display, serif", fontSize: "20px", fontWeight: "700", color: "white", letterSpacing: "-0.5px" }}>FarmMate</span>
         </Link>
 
