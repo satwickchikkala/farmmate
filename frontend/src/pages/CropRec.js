@@ -7,6 +7,9 @@ import {
   addDoc, deleteDoc, updateDoc, doc
 } from "firebase/firestore";
 import axios from "axios";
+import { useGate } from "../hooks/useGate";
+import UpgradePopup from "../components/UpgradePopup";
+import { trackUsage } from "../utils/trackUsage";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -37,6 +40,7 @@ const TABS = [
 ];
 
 function CropRec() {
+  const { checkGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
   const [tab, setTab] = useState("new");
   const [lands, setLands] = useState([]);
   const [activeLandIds, setActiveLandIds] = useState([]);
@@ -92,6 +96,8 @@ function CropRec() {
   const getActiveTimeline = (landId) => activeTimelines.find(t => t.landId === landId);
 
   const handleGetRecommendations = async () => {
+    if (!checkGate("Crop Recommendations")) return;
+
     setError("");
     if (!rainfall) { setError("Please enter estimated rainfall."); return; }
     setLoading(true);
@@ -103,12 +109,15 @@ function CropRec() {
         P: parseFloat(soilValues.P), K: parseFloat(soilValues.K),
         ph: parseFloat(soilValues.ph), city: selectedLand.city,
       });
+      await trackUsage(auth.currentUser.uid, "cropRec");
       setCrops(res.data.crops); setStep(2);
     } catch { setError("Could not get recommendations. Try again."); }
     setLoading(false);
   };
 
   const handleGenerateTimeline = async () => {
+    if (!checkGate("Timeline Generation")) return;
+
     setError("");
     if (!startDate) { setError("Please select a start date."); return; }
     setLoading(true);
@@ -119,6 +128,7 @@ function CropRec() {
         city: selectedLand.city, landName: selectedLand.landName,
         landSize: selectedLand.landSize, landUnit: selectedLand.landUnit,
       });
+      await trackUsage(auth.currentUser.uid, "timeline");
       setTimeline(res.data); setStep(3);
     } catch { setError("Could not generate timeline. Try again."); }
     setLoading(false);
@@ -503,6 +513,13 @@ function CropRec() {
             )}
           </div>
         </div>
+      )}
+
+      {showUpgrade && (
+        <UpgradePopup
+          feature={blockedFeature}
+          onClose={() => setShowUpgrade(false)}
+        />
       )}
     </div>
   );

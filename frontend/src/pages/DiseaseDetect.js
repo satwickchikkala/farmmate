@@ -4,11 +4,15 @@ import { db, auth } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import axios from 'axios';
 import API_URL from "../config";
+import { useGate } from "../hooks/useGate";
+import UpgradePopup from "../components/UpgradePopup";
+import { trackUsage } from "../utils/trackUsage";
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
 
 function DiseaseDetect() {
+  const { checkGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -44,6 +48,8 @@ function DiseaseDetect() {
   };
 
   const handleUpload = async () => {
+    if (!checkGate("Disease Detection")) return;
+
     if (!selectedFile) { setError("Please select an image first."); return; }
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -53,6 +59,7 @@ function DiseaseDetect() {
       const res = await axios.post(`${API_URL}/detect-disease`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      await trackUsage(auth.currentUser.uid, "disease");
       setResult(res.data);
     } catch (err) {
       setError("Could not analyze image. Make sure the backend is running and the model files are present.");
@@ -208,6 +215,13 @@ function DiseaseDetect() {
           </div>
         )}
       </div>
+
+      {showUpgrade && (
+        <UpgradePopup
+          feature={blockedFeature}
+          onClose={() => setShowUpgrade(false)}
+        />
+      )}
     </div>
   );
 }

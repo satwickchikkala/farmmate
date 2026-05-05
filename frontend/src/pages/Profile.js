@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { auth, db } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { updateProfile, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { getMonthlyUsage } from "../utils/trackUsage";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -20,6 +21,7 @@ function Profile({ user }) {
   const [pastCrops, setPastCrops] = useState(0);
   const [totalTasks, setTotalTasks] = useState(0);
   const [completedTasks, setCompletedTasks] = useState(0);
+  const [usage, setUsage] = useState(null);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState({ text: "", type: "" });
   const [currentPwd, setCurrentPwd] = useState("");
@@ -38,6 +40,8 @@ function Profile({ user }) {
     setActiveCrops(tsnap.size);
     const asnap = await getDocs(query(collection(db, "timelines"), where("userId", "==", uid), where("status", "==", "archived")));
     setPastCrops(asnap.size);
+    const usageData = await getMonthlyUsage(uid);
+    setUsage(usageData);
     let total = 0, completed = 0;
     [...tsnap.docs, ...asnap.docs].forEach(d => {
       const tasks = d.data().tasks || [];
@@ -323,6 +327,27 @@ function Profile({ user }) {
               </div>
               <div style={{ background: "#e5e7eb", borderRadius: "10px", height: "12px" }}>
                 <div style={{ width: `${(completedTasks / totalTasks) * 100}%`, background: `linear-gradient(90deg, ${GREEN}, #52b788)`, height: "12px", borderRadius: "10px", transition: "width 1s" }} />
+              </div>
+            </div>
+          )}
+
+          {usage && (
+            <div style={{ background: "#f9fafb", borderRadius: "10px", padding: "16px", marginTop: "16px" }}>
+              <h4 style={{ margin: "0 0 12px 0", color: DARK, fontSize: "15px" }}>
+                📊 This Month's Usage
+              </h4>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                {[
+                  { label: "Crop Recommendations", value: usage.cropRecCount || 0 },
+                  { label: "Timelines Generated", value: usage.timelineCount || 0 },
+                  { label: "Disease Scans", value: usage.diseaseCount || 0 },
+                  { label: "Estimated Cost", value: `₹${(usage.totalCost || 0).toFixed(2)}` },
+                ].map((item, i) => (
+                  <div key={i} style={{ background: "white", borderRadius: "8px", padding: "10px 12px", border: "1px solid #e5e7eb" }}>
+                    <div style={{ fontSize: "11px", color: "#9ca3af" }}>{item.label}</div>
+                    <div style={{ fontSize: "18px", fontWeight: "700", color: GREEN }}>{item.value}</div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

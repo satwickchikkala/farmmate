@@ -18,6 +18,8 @@ import {
 } from "firebase/firestore";
 import axios from "axios";
 import API_URL from "../config";
+import { useGate } from "../hooks/useGate";
+import UpgradePopup from "../components/UpgradePopup";
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY; // your key here
 const LIBRARIES = ["places"];
 
@@ -45,6 +47,7 @@ const SOIL_TYPES = [
 const LAND_STATUSES = ["Active", "Fallow", "In Use"];
 
 function MyLands({ user }) {
+  const { canAddLand, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
   const [markerPos, setMarkerPos] = useState(defaultCenter);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [searchInput, setSearchInput] = useState("");
@@ -189,6 +192,9 @@ function MyLands({ user }) {
 
   // Save new land to Firestore
   const handleSaveLand = async () => {
+    // Gate check — free users can only add 1 land
+    if (!canAddLand(lands.length)) return;
+
     if (!landName) { setError("Please enter a land name."); return; }
     if (!landSize) { setError("Please enter land size."); return; }
     if (!weatherFetched) { setError("Please fetch weather first."); return; }
@@ -513,6 +519,13 @@ function MyLands({ user }) {
             </button>
           </div>
         </div>
+      )}
+
+      {showUpgrade && (
+        <UpgradePopup
+          feature={blockedFeature}
+          onClose={() => setShowUpgrade(false)}
+        />
       )}
     </div>
   );

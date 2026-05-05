@@ -226,7 +226,7 @@ Respond ONLY in this exact JSON format, no extra text:
 
     try:
         pythonresponse = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=prompt
         )
         response = pythonresponse
@@ -299,7 +299,7 @@ Respond ONLY in this exact JSON format, no extra text:
 
     try:
         pythonresponse = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=pythonprompt
         )
         response = pythonresponse
@@ -407,7 +407,7 @@ def detect_disease():
     if client:
         try:
             pythonresponse = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-flash",
                 contents=cure_prompt
             )
             response = pythonresponse
