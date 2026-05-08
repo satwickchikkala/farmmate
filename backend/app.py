@@ -177,6 +177,13 @@ def get_soil_defaults():
 def recommend_crops():
     data = request.get_json()
 
+    language = data.get('language', 'en')
+    language_map = {
+        'en': 'English', 'te': 'Telugu', 'ta': 'Tamil',
+        'hi': 'Hindi', 'kn': 'Kannada', 'ml': 'Malayalam', 'bn': 'Bengali'
+    }
+    lang_name = language_map.get(language, 'English')
+
     land_name    = data.get('landName', 'the farm')
     soil_type    = data.get('soilType', 'Loamy Soil')
     temperature  = data.get('temperature', 25)
@@ -222,6 +229,8 @@ Respond ONLY in this exact JSON format, no extra text:
     }}
   ]
 }}
+
+IMPORTANT: Respond in {lang_name} language only.
 """
 
     try:
@@ -242,6 +251,13 @@ Respond ONLY in this exact JSON format, no extra text:
 @app.route('/generate-timeline', methods=['POST'])
 def generate_timeline():
     data = request.get_json()
+
+    language = data.get('language', 'en')
+    language_map = {
+        'en': 'English', 'te': 'Telugu', 'ta': 'Tamil',
+        'hi': 'Hindi', 'kn': 'Kannada', 'ml': 'Malayalam', 'bn': 'Bengali'
+    }
+    lang_name = language_map.get(language, 'English')
 
     crop        = data.get('crop')
     start_date  = data.get('startDate')
@@ -294,6 +310,8 @@ Respond ONLY in this exact JSON format, no extra text:
     }}
   ]
 }}
+
+IMPORTANT: Respond in {lang_name} language only.
 """
 
 
@@ -353,6 +371,12 @@ def detect_disease():
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files['file']
+    language = request.form.get('language', 'en')
+    language_map = {
+        'en': 'English', 'te': 'Telugu', 'ta': 'Tamil',
+        'hi': 'Hindi', 'kn': 'Kannada', 'ml': 'Malayalam', 'bn': 'Bengali'
+    }
+    lang_name = language_map.get(language, 'English')
 
     try:
         ensure_disease_assets_loaded()
@@ -402,6 +426,8 @@ def detect_disease():
       "dosage": "...",
       "prevention": "..."
     }}
+
+    IMPORTANT: Respond in {lang_name} language only.
     """
 
     if client:
