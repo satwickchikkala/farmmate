@@ -1,7 +1,7 @@
 // src/pages/Profile.js
 import { useState, useEffect, useRef } from "react";
 import { auth, db } from "../firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, setDoc, getDoc } from "firebase/firestore";
 import { updateProfile, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { getMonthlyUsage } from "../utils/trackUsage";
 import { getUserPlan } from "../utils/updatePlan";
@@ -38,6 +38,17 @@ function Profile({ user }) {
 
   const loadStats = async () => {
     const uid = auth.currentUser.uid;
+
+    // Load profile details from Firestore
+    const profileRef = doc(db, "users", uid);
+    const profileSnap = await getDoc(profileRef);
+    if (profileSnap.exists()) {
+      const data = profileSnap.data();
+      setPhone(data.phone || "");
+      setState(data.state || "");
+      setDistrict(data.district || "");
+      setDisplayName(data.displayName || user?.displayName || "");
+    }
     const plan = await getUserPlan(uid);
     setCurrentPlan(plan);
     const lsnap = await getDocs(query(collection(db, "lands"), where("userId", "==", uid)));
@@ -66,11 +77,29 @@ function Profile({ user }) {
   const handleSaveInfo = async () => {
     setSaving(true);
     try {
+      const uid = auth.currentUser.uid;
+
+      // Save to Firebase Auth (name + photo)
       const updates = { displayName };
-      if (photoPreview && photoPreview !== user?.photoURL) updates.photoURL = photoPreview;
+      if (photoPreview && photoPreview !== user?.photoURL) {
+        updates.photoURL = photoPreview;
+      }
       await updateProfile(auth.currentUser, updates);
+
+      // Save all details to Firestore
+      await setDoc(doc(db, "users", uid), {
+        displayName,
+        phone,
+        state,
+        district,
+        email: auth.currentUser.email,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true }); // merge: true keeps existing fields like plan
+
       showMsg("Profile updated successfully!");
-    } catch (e) { showMsg(e.message, "error"); }
+    } catch (e) {
+      showMsg(e.message, "error");
+    }
     setSaving(false);
   };
 
