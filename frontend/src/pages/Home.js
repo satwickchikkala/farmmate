@@ -140,9 +140,10 @@ function Home({ user }) {
           {/* Crop summary cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "14px", marginBottom: "24px" }}>
             {timelines.map(tl => {
-              const progress = Math.max(0, Math.min(100, Math.round(((new Date() - new Date(tl.startDate)) / (new Date(tl.harvestDate) - new Date(tl.startDate))) * 100)));
-              const daysLeft = Math.max(0, Math.ceil((new Date(tl.harvestDate) - new Date()) / (1000 * 60 * 60 * 24)));
               const completed = tl.tasks?.filter(t => t.completed).length || 0;
+              const totalTasks = tl.tasks?.length || 0;
+              const progress = totalTasks > 0 ? Math.round((completed / totalTasks) * 100) : 0;
+              const daysLeft = Math.max(0, Math.ceil((new Date(tl.harvestDate) - new Date()) / (1000 * 60 * 60 * 24)));
               const todayCount = tl.tasks?.filter(t => t.date === today && !t.completed).length || 0;
 
               return (

@@ -185,11 +185,10 @@ function CropRec() {
   };
 
   const TimelineCard = ({ t, showArchiveActions = false }) => {
-    const progress = Math.max(0, Math.min(100, Math.round(
-      ((new Date() - new Date(t.startDate)) / (new Date(t.harvestDate) - new Date(t.startDate))) * 100
-    )));
-    const daysLeft = Math.max(0, Math.ceil((new Date(t.harvestDate) - new Date()) / (1000 * 60 * 60 * 24)));
     const completed = t.tasks?.filter(tk => tk.completed).length || 0;
+    const totalTasks = t.tasks?.length || 0;
+    const progress = totalTasks > 0 ? Math.round((completed / totalTasks) * 100) : 0;
+    const daysLeft = Math.max(0, Math.ceil((new Date(t.harvestDate) - new Date()) / (1000 * 60 * 60 * 24)));
 
     return (
       <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "14px", padding: "20px", boxShadow: "0 2px 10px rgba(0,0,0,0.04)", opacity: showArchiveActions ? 0.9 : 1 }}>
