@@ -9,3 +9,4 @@ gunicorn==21.2.0
 pillow==10.2.0
 h5py==3.10.0
 razorpay==1.4.2
+python-dotenv==1.2.2

@@ -14,10 +14,25 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("TF_NUM_INTEROP_THREADS", "1")
 os.environ.setdefault("TF_NUM_INTRAOP_THREADS", "1")
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "https://farmmate-three.vercel.app")
+
+import hmac
+import hashlib
+import razorpay
+
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
+
+razorpay_client = None
+if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET:
+    razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 app = Flask(__name__)
 # Allow production frontend + local dev.
@@ -467,6 +482,66 @@ def disease_health():
         "labelsFileExists": os.path.exists(LABELS_PATH),
         "lastLoadError": model_load_error
     })
+
+@app.route('/create-order', methods=['POST'])
+def create_order():
+    if not razorpay_client:
+        return jsonify({"error": "Razorpay not configured on backend"}), 500
+
+    data = request.get_json()
+    plan = data.get('plan')
+    
+    amount = 99900 # Default to pro plan price
+    if plan == 'pro':
+        amount = 99900
+
+    currency = data.get('currency', 'INR')
+    receipt = data.get('receipt', 'order_rcptid_11')
+
+    if not amount or amount < 100:
+        return jsonify({"error": "Amount must be at least 100 paise"}), 400
+
+    try:
+        order = razorpay_client.order.create(dict(
+            amount=amount,
+            currency=currency,
+            receipt=receipt
+        ))
+        return jsonify({
+            "orderId": order['id'],
+            "amount": amount,
+            "keyId": RAZORPAY_KEY_ID
+        })
+    except Exception as e:
+        print("Razorpay create order error:", str(e))
+        return jsonify({"error": "Failed to create order"}), 500
+
+@app.route('/verify-payment', methods=['POST'])
+def verify_payment():
+    if not razorpay_client:
+        return jsonify({"error": "Razorpay not configured on backend"}), 500
+
+    data = request.get_json()
+    razorpay_order_id = data.get('razorpay_order_id')
+    razorpay_payment_id = data.get('razorpay_payment_id')
+    razorpay_signature = data.get('razorpay_signature')
+
+    if not razorpay_order_id or not razorpay_payment_id or not razorpay_signature:
+        return jsonify({"error": "Missing payment fields"}), 400
+
+    try:
+        # Verify the signature
+        razorpay_client.utility.verify_payment_signature({
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature': razorpay_signature
+        })
+        return jsonify({"success": True, "status": "success"})
+    except razorpay.errors.SignatureVerificationError:
+        return jsonify({"success": False, "error": "Signature mismatch"}), 400
+    except Exception as e:
+        print("Razorpay verify error:", str(e))
+        return jsonify({"success": False, "error": "Payment verification failed"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

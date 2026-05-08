@@ -1,15 +1,10 @@
-# TODO: Logo Replacement - Replace 🌾 emoji with logo.png in App.js (line ~104) and Navbar.js
+# TODO
 
-## Approved Plan Summary:
-- App.js: Replace `<div style={S.logo}>🌾</div>` with `<img src=\"/logo.png\" alt=\"FarmMate\" style={{width:'64px', height:'64px', objectFit:'contain'}} />`, update S.logo style.
-- Navbar.js: Replace `<span style={{ fontSize: \"22px\" }}>🌾</span>` with `<img src=\"/logo.png\" alt=\"FarmMate\" style={{width:'22px', height:'22px', objectFit:'contain'}} />`.
-
-## Steps:
-1. ✅ Create TODO.md (done)
-2. ✅ Edit App.js logo replacement
-3. ✅ Edit Navbar.js logo replacement
-4. ✅ Tested: Run `cd frontend && npm start` to verify logos (login screen 64px, navbar 22px).
-5. ✅ Task complete
-
-**Next:** Test changes.
+## Step 5 — Use translations in all pages
+- [ ] Inspect all page files for hardcoded visible text.
+- [ ] Add `useLanguage` import + `const { t, lang } = useLanguage();` inside each page component.
+- [ ] Replace visible strings with `t("key")` using existing keys in `frontend/src/translations/languages.js`.
+- [ ] Ensure placeholders/buttons/titles/alerts/empty states are also translated.
+- [ ] Leave non-UI logic strings (Firestore field names, internal IDs) unchanged.
+- [ ] Run frontend build/lint to verify no syntax errors.
 
