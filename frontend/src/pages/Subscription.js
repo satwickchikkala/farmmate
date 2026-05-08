@@ -105,13 +105,10 @@ function Subscription() {
       features: [
         "Unlimited lands",
         "Pay only for what you use",
-        "All premium features available",
+        "All Pro features available",
         "No monthly commitment",
         "Multiple farm managers",
         "Export reports (PDF)",
-        "API access",
-        "Dedicated account manager",
-        "Custom AI model training",
       ],
       notIncluded: [],
     },
@@ -257,8 +254,8 @@ function Subscription() {
             >
               {plan.current ? `✓ ${t("sub_current")} Plan`
                 : plan.id === "pro" ? `🚀 ${t("sub_upgrade_pro")}`
-                : plan.id === "payg" ? `🧮 ${t("sub_calculate")}`
-                : t("sub_get_started")}
+                  : plan.id === "payg" ? `🧮 ${t("sub_calculate")}`
+                    : t("sub_get_started")}
             </button>
           </div>
         ))}
