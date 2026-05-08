@@ -126,7 +126,7 @@ function Subscription() {
         currency: "INR",
         name: "FarmMate",
         description: "FarmMate Pro Plan - 1 Year",
-        image: "https://farmmate-three.vercel.app/logo192.png",
+        image: "https://farmmate-three.vercel.app/logo.png",
         order_id: orderId,
         handler: async (response) => {
           const verifyRes = await axios.post(`${API_URL}/verify-payment`, {
