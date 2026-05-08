@@ -4,6 +4,7 @@ import { db, auth } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import axios from "axios";
 import API_URL from "../config";
+import { useLanguage } from "../context/LanguageContext";
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
@@ -30,6 +31,7 @@ const getAlerts = (weather) => {
 };
 
 function WeatherOverview() {
+  const { t, lang } = useLanguage();
   const [lands, setLands] = useState([]);
   const [selectedLand, setSelectedLand] = useState(null);
   const [currentWeather, setCurrentWeather] = useState(null);
@@ -76,8 +78,8 @@ function WeatherOverview() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');`}</style>
 
       <div style={{ marginBottom: "24px" }}>
-        <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🌤 Weather Overview</h2>
-        <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>Real-time weather for all your lands</p>
+        <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🌤 {t("weather_title")}</h2>
+        <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>{t("weather_subtitle")}</p>
       </div>
 
       {/* All lands quick cards */}
@@ -94,12 +96,12 @@ function WeatherOverview() {
                 <div style={{ fontSize: "11px", color: "#6b7280", margin: "2px 0" }}>{land.weather.description}</div>
                 <div style={{ fontSize: "11px", color: "#9ca3af" }}>💧 {land.weather.humidity}%</div>
               </>
-            ) : <div style={{ color: "#d1d5db", fontSize: "12px", marginTop: "12px" }}>Loading...</div>}
+            ) : <div style={{ color: "#d1d5db", fontSize: "12px", marginTop: "12px" }}>{t("weather_loading")}</div>}
           </div>
         ))}
         {lands.length === 0 && (
           <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "40px", background: "#f9fafb", borderRadius: "12px", color: "#9ca3af" }}>
-            No lands found. Add lands in My Lands page first.
+            {t("weather_no_lands")}
           </div>
         )}
       </div>
@@ -113,7 +115,7 @@ function WeatherOverview() {
             </div>
           ))}
 
-          {loading && <p style={{ color: "#6b7280" }}>⏳ Fetching weather...</p>}
+          {loading && <p style={{ color: "#6b7280" }}>⏳ {t("weather_fetching")}</p>}
           {error && <p style={{ color: "#dc2626" }}>⚠️ {error}</p>}
 
           {currentWeather && !loading && (
@@ -126,7 +128,7 @@ function WeatherOverview() {
                 <div style={{ fontSize: "48px", fontWeight: "700", fontFamily: "Playfair Display, serif", margin: "4px 0" }}>{Math.round(currentWeather.temperature)}°C</div>
                 <p style={{ margin: "4px 0 20px 0", fontSize: "14px", opacity: 0.8, textTransform: "capitalize" }}>{currentWeather.description}</p>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  {[["💧 Humidity", `${currentWeather.humidity}%`], ["🌬 Wind", `${currentWeather.wind_speed} m/s`]].map(([l, v], i) => (
+                  {[[`💧 ${t("weather_humidity")}`, `${currentWeather.humidity}%`], [`🌬 ${t("weather_wind")}`, `${currentWeather.wind_speed} m/s`]].map(([l, v], i) => (
                     <div key={i} style={{ background: "rgba(255,255,255,0.1)", borderRadius: "10px", padding: "10px" }}>
                       <div style={{ fontSize: "12px", opacity: 0.7 }}>{l}</div>
                       <div style={{ fontSize: "16px", fontWeight: "700" }}>{v}</div>
@@ -137,13 +139,13 @@ function WeatherOverview() {
 
               {/* 7-day forecast */}
               <div>
-                <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, margin: "0 0 16px 0", fontSize: "20px" }}>📅 7-Day Forecast</h3>
+                <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, margin: "0 0 16px 0", fontSize: "20px" }}>📅 {t("weather_forecast")}</h3>
                 {forecast.length > 0 ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {forecast.slice(0, 7).map((day, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: "16px", padding: "12px 16px", background: "white", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
                         <div style={{ width: "80px", fontSize: "13px", fontWeight: "600", color: "#374151" }}>
-                          {i === 0 ? "Today" : new Date(day.date + 'T00:00:00').toLocaleDateString("en-IN", { weekday: "short", day: "numeric" })}
+                          {i === 0 ? t("weather_today") : new Date(day.date + 'T00:00:00').toLocaleDateString("en-IN", { weekday: "short", day: "numeric" })}
                         </div>
                         <div style={{ fontSize: "24px" }}>{weatherIcon(day.day_condition)}</div>
                         <div style={{ flex: 1, fontSize: "13px", color: "#6b7280", textTransform: "capitalize" }}>{day.day_condition}</div>

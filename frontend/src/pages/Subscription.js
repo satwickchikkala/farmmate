@@ -5,6 +5,7 @@ import API_URL from "../config";
 import { auth } from "../firebase";
 import { getUserPlan } from "../utils/updatePlan";
 import { updateUserPlan } from "../utils/updatePlan";
+import { useLanguage } from "../context/LanguageContext";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -22,6 +23,7 @@ const PAYG_FEATURES = [
 ];
 
 function Subscription() {
+  const { t, lang } = useLanguage();
   const [userPlan, setUserPlan] = useState("free");
   const [paygQty, setPaygQty] = useState({});
   const [showCalculator, setShowCalculator] = useState(false);
@@ -181,10 +183,10 @@ function Subscription() {
       {/* Header */}
       <div style={{ marginBottom: "32px" }}>
         <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "32px", fontWeight: "700", color: DARK, margin: "0 0 8px 0" }}>
-          Subscription Plans
+          {t("sub_title")}
         </h2>
         <p style={{ color: "#6b7280", fontSize: "15px", margin: 0 }}>
-          Choose the plan that grows with your farm. Upgrade or downgrade anytime.
+          {t("sub_subtitle")}
         </p>
       </div>
 
@@ -207,7 +209,7 @@ function Subscription() {
             )}
             {plan.current && (
               <div style={{ position: "absolute", top: "16px", right: "16px", background: "#e5e7eb", color: "#6b7280", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600" }}>
-                Current
+                {t("sub_current")}
               </div>
             )}
 
@@ -253,10 +255,10 @@ function Subscription() {
                 transition: "all 0.2s",
               }}
             >
-              {plan.current ? "✓ Current Plan"
-                : plan.id === "pro" ? "🚀 Upgrade to Pro"
-                : plan.id === "payg" ? "🧮 Calculate My Cost"
-                : "Get Started"}
+              {plan.current ? `✓ ${t("sub_current")} Plan`
+                : plan.id === "pro" ? `🚀 ${t("sub_upgrade_pro")}`
+                : plan.id === "payg" ? `🧮 ${t("sub_calculate")}`
+                : t("sub_get_started")}
             </button>
           </div>
         ))}
@@ -302,22 +304,22 @@ function Subscription() {
           {/* Total */}
           <div style={{ background: paygTotal > 999 ? "#fff8f0" : "#f0fdf4", borderRadius: "12px", padding: "20px", border: `2px solid ${paygTotal > 999 ? "#fde8c8" : "#bbf7d0"}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: "14px", color: "#6b7280" }}>Estimated Monthly Total</div>
+              <div style={{ fontSize: "14px", color: "#6b7280" }}>{t("sub_monthly_total")}</div>
               <div style={{ fontSize: "36px", fontWeight: "700", color: paygTotal > 999 ? "#e09f3e" : "#15803d", fontFamily: "Playfair Display, serif" }}>₹{paygTotal}</div>
               {paygTotal > 999 && (
                 <div style={{ fontSize: "13px", color: "#e09f3e", marginTop: "4px" }}>
-                  💡 You'd save ₹{paygTotal - 999} with Farmer Pro (₹999/yr)!
+                  💡 {t("sub_save_tip")}
                 </div>
               )}
               {paygTotal <= 999 && paygTotal > 0 && (
                 <div style={{ fontSize: "13px", color: "#15803d", marginTop: "4px" }}>
-                  ✅ Pay As You Go is cheaper than Pro for your usage.
+                  ✅ {t("sub_payg_cheaper")}
                 </div>
               )}
             </div>
             {paygTotal > 999 && (
               <button style={{ padding: "12px 20px", background: `linear-gradient(135deg, ${GREEN}, ${DARK})`, color: "white", border: "none", borderRadius: "10px", fontSize: "14px", fontWeight: "600", cursor: "pointer", fontFamily: FONT }}>
-                Switch to Pro →
+                {t("sub_switch_pro")}
               </button>
             )}
           </div>
@@ -327,7 +329,7 @@ function Subscription() {
       {/* Feature comparison table */}
       <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "16px", padding: "28px", overflow: "auto" }}>
         <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, margin: "0 0 20px 0", fontSize: "20px" }}>
-          Full Feature Comparison
+          {t("sub_comparison")}
         </h3>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
           <thead>
@@ -365,7 +367,7 @@ function Subscription() {
       </div>
 
       <p style={{ textAlign: "center", color: "#9ca3af", fontSize: "12px", marginTop: "20px" }}>
-        🔒 Secure payments coming soon. Plans shown for preview. • All prices in INR • GST applicable
+        🔒 {t("sub_footer")}
       </p>
     </div>
   );

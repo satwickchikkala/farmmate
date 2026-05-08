@@ -10,6 +10,7 @@ import axios from "axios";
 
 import UpgradePopup from "../components/UpgradePopup";
 import { trackUsage } from "../utils/trackUsage";
+import { useLanguage } from "../context/LanguageContext";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -40,6 +41,8 @@ const TABS = [
 ];
 
 function CropRec() {
+
+  const { t, lang } = useLanguage();
 
   const [tab, setTab] = useState("new");
   const [lands, setLands] = useState([]);
@@ -108,6 +111,7 @@ function CropRec() {
         rainfall: parseFloat(rainfall), N: parseFloat(soilValues.N),
         P: parseFloat(soilValues.P), K: parseFloat(soilValues.K),
         ph: parseFloat(soilValues.ph), city: selectedLand.city,
+        language: lang,
       });
       await trackUsage(auth.currentUser.uid, "cropRec");
       setCrops(res.data.crops); setStep(2);
@@ -127,6 +131,7 @@ function CropRec() {
         temperature: selectedLand.temperature, humidity: selectedLand.humidity,
         city: selectedLand.city, landName: selectedLand.landName,
         landSize: selectedLand.landSize, landUnit: selectedLand.landUnit,
+        language: lang,
       });
       await trackUsage(auth.currentUser.uid, "timeline");
       setTimeline(res.data); setStep(3);
@@ -192,18 +197,18 @@ function CropRec() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
               <h3 style={{ margin: 0, color: DARK, fontSize: "18px", fontFamily: "Playfair Display, serif" }}>🌾 {t.crop}</h3>
-              {showArchiveActions && <span style={{ background: "#f3f4f6", color: "#6b7280", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "600" }}>Archived</span>}
+              {showArchiveActions && <span style={{ background: "#f3f4f6", color: "#6b7280", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "600" }}>{t("crop_archived")}</span>}
             </div>
             <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>🗺️ {t.landName} • 📅 {t.startDate} → {t.harvestDate}</p>
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
             {showArchiveActions ? (
               <>
-                <button onClick={() => handleRestoreTimeline(t.id)} style={{ ...S.smallBtn, background: "#f0f7f4", color: GREEN, borderColor: "#b7e4c7" }}>↩️ Restore</button>
-                <button onClick={() => handlePermanentDelete(t.id, t.crop)} style={{ ...S.smallBtn, background: "#fff5f5", color: "#dc2626", borderColor: "#fecaca" }}>🗑️ Delete</button>
+                <button onClick={() => handleRestoreTimeline(t.id)} style={{ ...S.smallBtn, background: "#f0f7f4", color: GREEN, borderColor: "#b7e4c7" }}>↩️ {t("crop_restore")}</button>
+                <button onClick={() => handlePermanentDelete(t.id, t.crop)} style={{ ...S.smallBtn, background: "#fff5f5", color: "#dc2626", borderColor: "#fecaca" }}>🗑️ {t("common_delete")}</button>
               </>
             ) : (
-              <button onClick={() => handleDeleteTimeline(t.id, t.crop)} style={{ ...S.smallBtn, background: "#fff5f5", color: "#dc2626", borderColor: "#fecaca" }}>🗑️ Remove</button>
+              <button onClick={() => handleDeleteTimeline(t.id, t.crop)} style={{ ...S.smallBtn, background: "#fff5f5", color: "#dc2626", borderColor: "#fecaca" }}>🗑️ {t("crop_remove")}</button>
             )}
           </div>
         </div>
@@ -212,13 +217,13 @@ function CropRec() {
           <>
             <div style={{ marginBottom: "8px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#6b7280", marginBottom: "5px" }}>
-                <span>Progress: {progress}%</span><span>{daysLeft} days remaining</span>
+                <span>{t("crop_progress")}: {progress}%</span><span>{daysLeft} {t("crop_days_remaining")}</span>
               </div>
               <div style={{ background: "#e5e7eb", borderRadius: "8px", height: "8px" }}>
                 <div style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${GREEN}, #52b788)`, height: "8px", borderRadius: "8px", transition: "width 1s" }} />
               </div>
             </div>
-            <p style={{ fontSize: "12px", color: "#6b7280", margin: "6px 0 0 0" }}>✅ {completed}/{t.tasks?.length || 0} tasks completed</p>
+            <p style={{ fontSize: "12px", color: "#6b7280", margin: "6px 0 0 0" }}>✅ {completed}/{t.tasks?.length || 0} {t("crop_tasks_completed")}</p>
           </>
         )}
 
@@ -254,22 +259,22 @@ function CropRec() {
       {/* Page header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
         <div>
-          <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🌾 Crop Recommendation</h2>
-          <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>AI-powered crop suggestions based on your land conditions</p>
+          <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🌾 {t("crop_title")}</h2>
+          <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>{t("crop_subtitle")}</p>
         </div>
         {/* Tab pills */}
         <div style={{ display: "flex", gap: "6px", background: "white", padding: "6px", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
-          {TABS.map(t => (
-            <button key={t.id} className={`cr-tab${tab === t.id ? " active" : ""}`}
-              onClick={() => setTab(t.id)}
-              style={{ padding: "8px 18px", borderRadius: "8px", border: "none", cursor: "pointer", fontFamily: FONT, fontSize: "13px", fontWeight: "500", transition: "all 0.2s", background: "transparent", color: tab === t.id ? "white" : "#6b7280" }}>
-              {t.icon} {t.label}
-              {t.id === "active" && activeTimelines.length > 0 && (
+          {TABS.map(t_tab => (
+            <button key={t_tab.id} className={`cr-tab${tab === t_tab.id ? " active" : ""}`}
+              onClick={() => setTab(t_tab.id)}
+              style={{ padding: "8px 18px", borderRadius: "8px", border: "none", cursor: "pointer", fontFamily: FONT, fontSize: "13px", fontWeight: "500", transition: "all 0.2s", background: "transparent", color: tab === t_tab.id ? "white" : "#6b7280" }}>
+              {t_tab.icon} {t_tab.id === "new" ? t("crop_new") : t_tab.id === "active" ? t("crop_active") : t("crop_archived")}
+              {t_tab.id === "active" && activeTimelines.length > 0 && (
                 <span style={{ marginLeft: "6px", background: tab === "active" ? "rgba(255,255,255,0.3)" : GREEN, color: "white", borderRadius: "10px", padding: "1px 7px", fontSize: "11px" }}>
                   {activeTimelines.length}
                 </span>
               )}
-              {t.id === "archived" && archivedTimelines.length > 0 && (
+              {t_tab.id === "archived" && archivedTimelines.length > 0 && (
                 <span style={{ marginLeft: "6px", background: tab === "archived" ? "rgba(255,255,255,0.3)" : "#6b7280", color: "white", borderRadius: "10px", padding: "1px 7px", fontSize: "11px" }}>
                   {archivedTimelines.length}
                 </span>
@@ -285,8 +290,7 @@ function CropRec() {
           {activeTimelines.length === 0 ? (
             <div style={S.emptyState}>
               <div style={{ fontSize: "48px", marginBottom: "12px" }}>🌱</div>
-              <h3 style={{ color: GREEN, margin: "0 0 8px 0", fontFamily: "Playfair Display, serif" }}>No active crops</h3>
-              <p style={{ color: "#6b7280", margin: 0 }}>Go to "New Crop" tab to start planning!</p>
+              <h3 style={{ color: GREEN, margin: "0 0 8px 0", fontFamily: "Playfair Display, serif" }}>{t("crop_no_active")}</h3>
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "16px" }}>
@@ -300,13 +304,12 @@ function CropRec() {
       {tab === "archived" && (
         <div>
           <div style={{ background: "#fff8f0", border: "1px solid #fde8c8", borderRadius: "10px", padding: "12px 16px", marginBottom: "16px", fontSize: "13px", color: "#92400e" }}>
-            📦 Archived timelines are kept for your records. You can restore or permanently delete them.
+            📦 {t("crop_archived_note")}
           </div>
           {archivedTimelines.length === 0 ? (
             <div style={S.emptyState}>
               <div style={{ fontSize: "48px", marginBottom: "12px" }}>📦</div>
-              <h3 style={{ color: "#6b7280", margin: "0 0 8px 0", fontFamily: "Playfair Display, serif" }}>No archived timelines</h3>
-              <p style={{ color: "#9ca3af", margin: 0 }}>Timelines you archive will appear here.</p>
+              <h3 style={{ color: "#6b7280", margin: "0 0 8px 0", fontFamily: "Playfair Display, serif" }}>{t("crop_no_archived")}</h3>
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "16px" }}>
@@ -325,8 +328,8 @@ function CropRec() {
             {[
               { n: 1, label: "Select Land", icon: "🗺️" },
               { n: 2, label: "Soil Details", icon: "🧪" },
-              { n: 3, label: "Pick Crop", icon: "🌾" },
-              { n: 4, label: "Timeline", icon: "📅" },
+              { n: 3, label: t("crop_step2"), icon: "🌾" },
+              { n: 4, label: t("crop_step3"), icon: "📅" },
             ].map(s => (
               <div key={s.n} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "10px", background: step === s.n ? "#f0f7f4" : step > s.n ? "#f9f9f9" : "white", border: `1px solid ${step === s.n ? GREEN : "#e5e7eb"}` }}>
                 <div style={{ width: "28px", height: "28px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: step > s.n ? GREEN : step === s.n ? GREEN : "#e5e7eb", color: step >= s.n ? "white" : "#9ca3af", fontSize: "13px", fontWeight: "700", flexShrink: 0 }}>
@@ -346,9 +349,9 @@ function CropRec() {
             {/* STEP 1 — Land Selection */}
             {step === 1 && (
               <div style={S.card}>
-                <h3 style={S.cardTitle}>Select Your Land</h3>
+                <h3 style={S.cardTitle}>{t("crop_select_land")}</h3>
                 {lands.length === 0 ? (
-                  <p style={{ color: "#dc2626" }}>No lands found. Add a land in My Lands page first.</p>
+                  <p style={{ color: "#dc2626" }}>{t("crop_no_lands")}</p>
                 ) : (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "10px" }}>
                     {lands.map(land => {
@@ -374,7 +377,7 @@ function CropRec() {
                 {selectedLand && (
                   <>
                     <div style={{ background: "#f0f7f4", border: "1px solid #b7e4c7", borderRadius: "10px", padding: "14px", marginTop: "16px" }}>
-                      <p style={{ margin: "0 0 8px 0", fontWeight: "600", color: GREEN, fontSize: "13px" }}>✅ Auto-filled from saved land</p>
+                      <p style={{ margin: "0 0 8px 0", fontWeight: "600", color: GREEN, fontSize: "13px" }}>✅ {t("crop_autofilled")}</p>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
                         {[["🌡", `${selectedLand.temperature}°C`], ["💧", `${selectedLand.humidity}%`], ["🪨", selectedLand.soilType], ["📐", `${selectedLand.landSize} ${selectedLand.landUnit}`]].map(([ic, v], i) => (
                           <div key={i} style={{ textAlign: "center", background: "white", borderRadius: "8px", padding: "8px" }}>
@@ -384,7 +387,7 @@ function CropRec() {
                         ))}
                       </div>
                     </div>
-                    <button onClick={() => setStep(2)} style={{ ...S.greenBtn, marginTop: "16px" }}>Continue to Soil Details →</button>
+                    <button onClick={() => setStep(2)} style={{ ...S.greenBtn, marginTop: "16px" }}>{t("crop_continue")}</button>
                   </>
                 )}
               </div>
@@ -393,8 +396,8 @@ function CropRec() {
             {/* STEP 2 — Soil Details */}
             {step === 2 && (
               <div style={S.card}>
-                <h3 style={S.cardTitle}>🧪 Soil Details</h3>
-                <p style={{ color: "#6b7280", fontSize: "13px", margin: "0 0 20px 0" }}>Pre-filled based on your soil type. Edit if you have a soil test report.</p>
+                <h3 style={S.cardTitle}>🧪 {t("crop_soil_nutrients")}</h3>
+                <p style={{ color: "#6b7280", fontSize: "13px", margin: "0 0 20px 0" }}>{t("crop_soil_hint")}</p>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "16px" }}>
                   {[{ key: "N", label: "Nitrogen (N)" }, { key: "P", label: "Phosphorus (P)" }, { key: "K", label: "Potassium (K)" }, { key: "ph", label: "Soil pH" }].map(f => (
@@ -405,13 +408,13 @@ function CropRec() {
                   ))}
                 </div>
 
-                <label style={S.label}>Estimated Monthly Rainfall (mm)</label>
+                <label style={S.label}>{t("crop_rainfall")}</label>
                 <input type="number" placeholder="e.g. 150" value={rainfall} onChange={e => setRainfall(e.target.value)} style={S.input} />
 
                 <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
-                  <button onClick={() => setStep(1)} style={S.outlineBtn}>← Back</button>
+                  <button onClick={() => setStep(1)} style={S.outlineBtn}>← {t("crop_back")}</button>
                   <button onClick={handleGetRecommendations} disabled={loading} style={{ ...S.greenBtn, flex: 1 }}>
-                    {loading ? "🤖 Analyzing weather and Location" : "🌱 Get Crop Recommendations"}
+                    {loading ? `🤖 ${t("crop_asking")}` : `🌱 ${t("crop_get_rec")}`}
                   </button>
                 </div>
               </div>
@@ -420,7 +423,7 @@ function CropRec() {
             {/* STEP 3 — Pick Crop */}
             {step === 2 && crops.length > 0 && (
               <div style={{ ...S.card, marginTop: "16px" }}>
-                <h3 style={S.cardTitle}>🌾 Pick Your Crop</h3>
+                <h3 style={S.cardTitle}>🌾 {t("crop_pick")}</h3>
                 <p style={{ color: "#6b7280", fontSize: "13px", margin: "0 0 16px 0" }}>Gemini AI suggests these crops for <strong>{selectedLand?.landName}</strong></p>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
@@ -435,8 +438,8 @@ function CropRec() {
                       </div>
                       <div style={{ textAlign: "center", minWidth: "80px", paddingLeft: "12px" }}>
                         <div style={{ fontSize: "22px", fontWeight: "700", color: crop.match >= 80 ? GREEN : crop.match >= 60 ? "#e09f3e" : "#9ca3af", fontFamily: "Playfair Display, serif" }}>{crop.match}%</div>
-                        <div style={{ fontSize: "11px", color: "#9ca3af" }}>match</div>
-                        <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px" }}>📅 {crop.days}d</div>
+                        <div style={{ fontSize: "11px", color: "#9ca3af" }}>{t("crop_match")}</div>
+                        <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px" }}>📅 {crop.days}{t("crop_days")}</div>
                       </div>
                     </div>
                   ))}
@@ -444,10 +447,10 @@ function CropRec() {
 
                 {selectedCrop && (
                   <div style={{ background: "#f9f9f9", borderRadius: "10px", padding: "16px" }}>
-                    <label style={S.label}>Sowing Start Date</label>
+                    <label style={S.label}>{t("crop_sowing_date")}</label>
                     <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} min={new Date().toISOString().split("T")[0]} style={{ ...S.input, marginBottom: "12px" }} />
                     <button onClick={handleGenerateTimeline} disabled={loading} style={S.greenBtn}>
-                      {loading ? "🤖 Generating timeline..." : `📅 Generate ${selectedCrop.name} Timeline`}
+                      {loading ? `🤖 ${t("crop_generating")}` : `📅 ${t("crop_generate")}`}
                     </button>
                   </div>
                 )}
@@ -457,13 +460,13 @@ function CropRec() {
             {/* STEP 3 — Timeline Preview */}
             {step === 3 && timeline && (
               <div style={S.card}>
-                <h3 style={S.cardTitle}>📅 {timeline.crop} Timeline Preview</h3>
+                <h3 style={S.cardTitle}>📅 {timeline.crop} {t("crop_step3")} Preview</h3>
 
                 <div style={{ background: "#f0f7f4", border: "1px solid #b7e4c7", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
-                  <p style={{ margin: "0 0 10px 0", fontWeight: "600", color: GREEN, fontSize: "14px" }}>📋 Overview</p>
+                  <p style={{ margin: "0 0 10px 0", fontWeight: "600", color: GREEN, fontSize: "14px" }}>📋 {t("crop_overview")}</p>
                   <p style={{ margin: "0 0 12px 0", fontSize: "13px", color: "#555" }}>{timeline.summary}</p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
-                    {[["🌱 Start", startDate], ["🌾 Harvest", timeline.harvestDate], ["📅 Duration", `${timeline.totalDays}d`], ["🗺️ Land", selectedLand?.landName]].map(([l, v], i) => (
+                    {[[`🌱 ${t("crop_start")}`, startDate], [`🌾 ${t("crop_harvest")}`, timeline.harvestDate], [`📅 ${t("crop_duration")}`, `${timeline.totalDays}d`], [`🗺️ ${t("crop_land")}`, selectedLand?.landName]].map(([l, v], i) => (
                       <div key={i} style={{ background: "white", borderRadius: "8px", padding: "8px", textAlign: "center" }}>
                         <div style={{ fontSize: "11px", color: "#6b7280" }}>{l}</div>
                         <div style={{ fontSize: "12px", fontWeight: "600", color: DARK }}>{v}</div>
@@ -474,7 +477,7 @@ function CropRec() {
 
                 {timeline.expectedYield && (
                   <div style={{ background: "#fff8f0", border: "1px solid #fde8c8", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
-                    <p style={{ margin: "0 0 4px 0", fontWeight: "700", color: "#e67e22", fontSize: "13px" }}>🌾 Expected Yield</p>
+                    <p style={{ margin: "0 0 4px 0", fontWeight: "700", color: "#e67e22", fontSize: "13px" }}>🌾 {t("crop_expected_yield")}</p>
                     <p style={{ margin: "0 0 4px 0", fontSize: "22px", fontWeight: "700", color: GREEN, fontFamily: "Playfair Display, serif" }}>
                       {timeline.expectedYield.min}–{timeline.expectedYield.max} {timeline.expectedYield.unit}
                     </p>
@@ -482,7 +485,7 @@ function CropRec() {
                   </div>
                 )}
 
-                <h4 style={{ color: GREEN, margin: "0 0 10px 0", fontSize: "14px" }}>📋 All Tasks ({timeline.tasks?.length})</h4>
+                <h4 style={{ color: GREEN, margin: "0 0 10px 0", fontSize: "14px" }}>📋 {t("crop_all_tasks")} ({timeline.tasks?.length})</h4>
                 <div style={{ maxHeight: "380px", overflowY: "auto", marginBottom: "16px", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
                   {timeline.tasks?.map((task, i) => (
                     <div key={i} style={{ display: "flex", gap: "12px", padding: "12px 16px", borderBottom: "1px solid #f3f4f6", background: i % 2 === 0 ? "white" : "#fafafa" }}>
@@ -504,9 +507,9 @@ function CropRec() {
                 </div>
 
                 <div style={{ display: "flex", gap: "10px" }}>
-                  <button onClick={() => { setStep(2); setTimeline(null); }} style={S.outlineBtn}>← Back</button>
+                  <button onClick={() => { setStep(2); setTimeline(null); }} style={S.outlineBtn}>← {t("crop_back")}</button>
                   <button onClick={handleSaveTimeline} disabled={loading} style={{ ...S.greenBtn, flex: 1 }}>
-                    {loading ? "Saving..." : "💾 Save Timeline to Home Page"}
+                    {loading ? t("crop_saving") : `💾 ${t("crop_save_timeline")}`}
                   </button>
                 </div>
               </div>

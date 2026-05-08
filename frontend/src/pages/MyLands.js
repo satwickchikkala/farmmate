@@ -21,6 +21,7 @@ import API_URL from "../config";
 import { useGate } from "../hooks/useGate";
 import UpgradePopup from "../components/UpgradePopup";
 import { incrementLandCount } from "../utils/updatePlan";
+import { useLanguage } from "../context/LanguageContext";
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY; // your key here
 const LIBRARIES = ["places"];
 
@@ -48,6 +49,7 @@ const SOIL_TYPES = [
 const LAND_STATUSES = ["Active", "Fallow", "In Use"];
 
 function MyLands({ user }) {
+  const { t, lang } = useLanguage();
   const { checkLandGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
   const [markerPos, setMarkerPos] = useState(defaultCenter);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
@@ -311,16 +313,16 @@ function MyLands({ user }) {
   return (
     <div style={{ fontFamily: "sans-serif", maxWidth: "800px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h2 style={{ margin: 0 }}>🗺️ My Lands</h2>
+        <h2 style={{ margin: 0 }}>🗺️ {t("lands_title")}</h2>
         <button onClick={() => { setShowAddForm(!showAddForm); resetForm(); }} style={styles.greenBtn}>
-          {showAddForm ? "✖ Cancel" : "➕ Add New Land"}
+          {showAddForm ? `✖ ${t("lands_cancel")}` : `➕ ${t("lands_add_new")}`}
         </button>
       </div>
 
       {/* ── SAVED LANDS ── */}
       {lands.length === 0 && !showAddForm && (
         <div style={styles.emptyState}>
-          <p>🌱 No lands added yet. Click "Add New Land" to get started!</p>
+          <p>🌱 {t("lands_no_lands")}</p>
         </div>
       )}
 
@@ -330,13 +332,13 @@ function MyLands({ user }) {
             {/* Edit Modal */}
             {editingLand?.id === land.id ? (
               <div>
-                <h4 style={{ marginTop: 0 }}>✏️ Edit Land</h4>
-                <input value={editingLand.landName} onChange={(e) => setEditingLand({ ...editingLand, landName: e.target.value })} placeholder="Land name" style={styles.input} />
+                <h4 style={{ marginTop: 0 }}>✏️ {t("common_edit")}</h4>
+                <input value={editingLand.landName} onChange={(e) => setEditingLand({ ...editingLand, landName: e.target.value })} placeholder={t("lands_land_name")} style={styles.input} />
                 <select value={editingLand.soilType} onChange={(e) => setEditingLand({ ...editingLand, soilType: e.target.value })} style={styles.input}>
                   {SOIL_TYPES.map((s) => <option key={s}>{s}</option>)}
                 </select>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <input type="number" value={editingLand.landSize} onChange={(e) => setEditingLand({ ...editingLand, landSize: e.target.value })} placeholder="Size" style={{ ...styles.input, flex: 1 }} />
+                  <input type="number" value={editingLand.landSize} onChange={(e) => setEditingLand({ ...editingLand, landSize: e.target.value })} placeholder={t("lands_land_size")} style={{ ...styles.input, flex: 1 }} />
                   <select value={editingLand.landUnit} onChange={(e) => setEditingLand({ ...editingLand, landUnit: e.target.value })} style={{ ...styles.input, flex: 1 }}>
                     <option value="cents">Cents</option>
                     <option value="acres">Acres</option>
@@ -345,10 +347,10 @@ function MyLands({ user }) {
                 <select value={editingLand.landStatus} onChange={(e) => setEditingLand({ ...editingLand, landStatus: e.target.value })} style={styles.input}>
                   {LAND_STATUSES.map((s) => <option key={s}>{s}</option>)}
                 </select>
-                <textarea value={editingLand.notes} onChange={(e) => setEditingLand({ ...editingLand, notes: e.target.value })} placeholder="Notes" style={{ ...styles.input, height: "60px", resize: "vertical" }} />
+                <textarea value={editingLand.notes} onChange={(e) => setEditingLand({ ...editingLand, notes: e.target.value })} placeholder={t("lands_notes")} style={{ ...styles.input, height: "60px", resize: "vertical" }} />
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={handleSaveEdit} style={styles.greenBtn}>💾 Save</button>
-                  <button onClick={() => setEditingLand(null)} style={styles.outlineBtn}>Cancel</button>
+                  <button onClick={handleSaveEdit} style={styles.greenBtn}>💾 {t("common_save")}</button>
+                  <button onClick={() => setEditingLand(null)} style={styles.outlineBtn}>{t("common_cancel")}</button>
                 </div>
               </div>
             ) : (
@@ -374,9 +376,9 @@ function MyLands({ user }) {
 
                 {/* Action buttons */}
                 <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
-                  <button onClick={() => refreshWeather(land)} style={styles.smallBtn}>🔄 Refresh Weather</button>
-                  <button onClick={() => handleEdit(land)} style={styles.smallBtn}>✏️ Edit</button>
-                  <button onClick={() => handleDelete(land.id)} style={styles.dangerBtn}>🗑️ Delete</button>
+                  <button onClick={() => refreshWeather(land)} style={styles.smallBtn}>🔄 {t("lands_refresh_weather")}</button>
+                  <button onClick={() => handleEdit(land)} style={styles.smallBtn}>✏️ {t("common_edit")}</button>
+                  <button onClick={() => handleDelete(land.id)} style={styles.dangerBtn}>🗑️ {t("common_delete")}</button>
                 </div>
               </>
             )}
@@ -387,21 +389,21 @@ function MyLands({ user }) {
       {/* ── ADD NEW LAND FORM ── */}
       {showAddForm && (
         <div style={styles.formSection}>
-          <h3 style={{ marginTop: 0 }}>➕ Add New Land</h3>
+          <h3 style={{ marginTop: 0 }}>➕ {t("lands_add_new")}</h3>
 
           {/* Step 1 — Location */}
           <div style={styles.stepBox}>
-            <h4 style={styles.stepTitle}>Step 1 — Choose Location</h4>
+            <h4 style={styles.stepTitle}>{t("lands_step1")}</h4>
 
             <div style={{ display: "flex", gap: "10px", marginBottom: "12px", flexWrap: "wrap" }}>
-              <button onClick={detectLocation} style={styles.greenBtn}>📍 Detect My Location</button>
+              <button onClick={detectLocation} style={styles.greenBtn}>📍 {t("lands_detect")}</button>
             </div>
 
             {/* Search with autocomplete */}
             <div style={{ position: "relative", marginBottom: "12px" }}>
               <input
                 type="text"
-                placeholder="Search village, city, street, building..."
+                placeholder={t("lands_search")}
                 value={searchInput}
                 onChange={(e) => handleSearchInput(e.target.value)}
                 style={styles.input}
@@ -434,29 +436,29 @@ function MyLands({ user }) {
             </GoogleMap>
 
             <p style={{ fontSize: "13px", color: "#666", marginTop: "6px" }}>
-              📌 Pinned at: {markerPos.lat.toFixed(5)}, {markerPos.lng.toFixed(5)}
+              📌 {t("lands_pinned")}: {markerPos.lat.toFixed(5)}, {markerPos.lng.toFixed(5)}
             </p>
           </div>
 
           {/* Step 2 — Land Details */}
           <div style={styles.stepBox}>
-            <h4 style={styles.stepTitle}>Step 2 — Land Details</h4>
+            <h4 style={styles.stepTitle}>{t("lands_step2")}</h4>
 
-            <label style={styles.label}>Land Name *</label>
+            <label style={styles.label}>{t("lands_land_name")} *</label>
             <input
               type="text"
-              placeholder="e.g. My Farm, Father's Field, North Plot"
+              placeholder={t("lands_land_name_ph")}
               value={landName}
               onChange={(e) => setLandName(e.target.value)}
               style={styles.input}
             />
 
-            <label style={styles.label}>Soil Type *</label>
+            <label style={styles.label}>{t("lands_soil_type")} *</label>
             <select value={soilType} onChange={(e) => setSoilType(e.target.value)} style={styles.input}>
               {SOIL_TYPES.map((s) => <option key={s}>{s}</option>)}
             </select>
 
-            <label style={styles.label}>Land Size *</label>
+            <label style={styles.label}>{t("lands_land_size")} *</label>
             <div style={{ display: "flex", gap: "8px" }}>
               <input
                 type="number"
@@ -472,14 +474,14 @@ function MyLands({ user }) {
               </select>
             </div>
 
-            <label style={styles.label}>Land Status</label>
+            <label style={styles.label}>{t("lands_land_status")}</label>
             <select value={landStatus} onChange={(e) => setLandStatus(e.target.value)} style={styles.input}>
               {LAND_STATUSES.map((s) => <option key={s}>{s}</option>)}
             </select>
 
-            <label style={styles.label}>Notes (optional)</label>
+            <label style={styles.label}>{t("lands_notes")}</label>
             <textarea
-              placeholder="e.g. Has a well, irrigation available, rocky terrain..."
+              placeholder={t("lands_notes_ph")}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               style={{ ...styles.input, height: "70px", resize: "vertical" }}
@@ -488,11 +490,11 @@ function MyLands({ user }) {
 
           {/* Step 3 — Fetch Weather */}
           <div style={styles.stepBox}>
-            <h4 style={styles.stepTitle}>Step 3 — Fetch Weather</h4>
+            <h4 style={styles.stepTitle}>{t("lands_step3")}</h4>
             {error && <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>}
 
             <button onClick={fetchWeather} disabled={loading} style={styles.greenBtn}>
-              {loading ? "Fetching..." : "🌤 Fetch Weather for This Location"}
+              {loading ? t("lands_fetching") : `🌤 ${t("lands_fetch_weather")}`}
             </button>
 
             {weather && (
@@ -508,9 +510,9 @@ function MyLands({ user }) {
 
           {/* Step 4 — Save */}
           <div style={styles.stepBox}>
-            <h4 style={styles.stepTitle}>Step 4 — Save Land</h4>
+            <h4 style={styles.stepTitle}>{t("lands_step4")}</h4>
             <p style={{ fontSize: "13px", color: "#888", marginBottom: "10px" }}>
-              Make sure you have fetched weather before saving.
+              {t("lands_save_note")}
             </p>
             <button
               onClick={handleSaveLand}
@@ -521,7 +523,7 @@ function MyLands({ user }) {
                 cursor: weatherFetched ? "pointer" : "not-allowed",
               }}
             >
-              💾 Save Land
+              💾 {t("lands_save")}
             </button>
           </div>
         </div>

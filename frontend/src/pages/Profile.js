@@ -5,12 +5,14 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { updateProfile, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { getMonthlyUsage } from "../utils/trackUsage";
 import { getUserPlan } from "../utils/updatePlan";
+import { useLanguage } from "../context/LanguageContext";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
 
 function Profile({ user }) {
+  const { t, lang } = useLanguage();
   const [tab, setTab] = useState("info");
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [phone, setPhone] = useState("");
@@ -108,9 +110,9 @@ function Profile({ user }) {
   const isGoogle = user?.providerData?.[0]?.providerId === "google.com";
 
   const TABS = [
-    { id: "info", label: "Personal Info", icon: "👤" },
-    { id: "security", label: "Security", icon: "🔒" },
-    { id: "stats", label: "Farm Stats", icon: "📊" },
+    { id: "info", label: t("profile_personal"), icon: "👤" },
+    { id: "security", label: t("profile_security"), icon: "🔒" },
+    { id: "stats", label: t("profile_stats"), icon: "📊" },
   ];
 
   return (
@@ -143,10 +145,10 @@ function Profile({ user }) {
           <p style={{ color: "rgba(255,255,255,0.7)", margin: "0 0 8px 0", fontSize: "14px" }}>{user?.email}</p>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <span style={{ background: "rgba(255,255,255,0.15)", color: "white", padding: "4px 12px", borderRadius: "20px", fontSize: "12px" }}>
-              🗓️ Member since {memberSince}
+              🗓️ {t("profile_member_since")} {memberSince}
             </span>
             <span style={{ background: "rgba(255,255,255,0.15)", color: "white", padding: "4px 12px", borderRadius: "20px", fontSize: "12px" }}>
-              {isGoogle ? "🔵 Google Account" : "📧 Email Account"}
+              {isGoogle ? `🔵 ${t("profile_google_account")}` : `📧 ${t("profile_email_account")}`}
             </span>
             <span style={{
               background: currentPlan === "pro" ? "rgba(255,215,0,0.2)" : "rgba(255,255,255,0.15)",
@@ -156,14 +158,14 @@ function Profile({ user }) {
               fontSize: "12px",
               border: currentPlan === "pro" ? "1px solid gold" : "none"
             }}>
-              {currentPlan === "pro" ? "⭐ Pro Plan" : "🌿 Free Plan"}
+              {currentPlan === "pro" ? `⭐ ${t("profile_pro_plan")}` : `🌿 ${t("profile_free_plan")}`}
             </span>
           </div>
         </div>
 
         {/* Quick stats in header */}
         <div style={{ display: "flex", gap: "20px" }}>
-          {[{ v: landsCount, l: "Lands" }, { v: activeCrops, l: "Active" }, { v: pastCrops, l: "Past" }].map((s, i) => (
+          {[{ v: landsCount, l: t("profile_total_lands") }, { v: activeCrops, l: t("profile_active_crops") }, { v: pastCrops, l: t("profile_past_crops") }].map((s, i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontSize: "26px", fontWeight: "700", color: "white", fontFamily: "Playfair Display, serif" }}>{s.v}</div>
               <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)" }}>{s.l}</div>
@@ -193,32 +195,32 @@ function Profile({ user }) {
       {/* TAB: Personal Info */}
       {tab === "info" && (
         <div style={S.card}>
-          <h3 style={S.cardTitle}>Personal Information</h3>
+          <h3 style={S.cardTitle}>{t("profile_personal")}</h3>
           <p style={S.cardSub}>Update your name and contact details. Click the avatar above to change your photo.</p>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <div>
-              <label style={S.label}>Full Name</label>
+              <label style={S.label}>{t("profile_name")}</label>
               <input className="edit-input" value={displayName} onChange={e => setDisplayName(e.target.value)} style={S.input} placeholder="Your full name" />
             </div>
             <div>
-              <label style={S.label}>Email Address</label>
+              <label style={S.label}>{t("profile_email")}</label>
               <input value={user?.email || ""} disabled style={{ ...S.input, background: "#f9f9f9", color: "#9ca3af", cursor: "not-allowed" }} />
             </div>
             <div>
-              <label style={S.label}>Phone Number</label>
+              <label style={S.label}>{t("profile_phone")}</label>
               <input className="edit-input" value={phone} onChange={e => setPhone(e.target.value)} style={S.input} placeholder="+91 98765 43210" />
             </div>
             <div>
-              <label style={S.label}>State</label>
+              <label style={S.label}>{t("profile_state")}</label>
               <input className="edit-input" value={state} onChange={e => setState(e.target.value)} style={S.input} placeholder="Tamil Nadu" />
             </div>
             <div>
-              <label style={S.label}>District</label>
+              <label style={S.label}>{t("profile_district")}</label>
               <input className="edit-input" value={district} onChange={e => setDistrict(e.target.value)} style={S.input} placeholder="Virudhunagar" />
             </div>
             <div>
-              <label style={S.label}>Member Since</label>
+              <label style={S.label}>{t("profile_member_since")}</label>
               <input value={memberSince} disabled style={{ ...S.input, background: "#f9f9f9", color: "#9ca3af", cursor: "not-allowed" }} />
             </div>
           </div>
@@ -226,7 +228,7 @@ function Profile({ user }) {
           <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
             <button className="save-btn" onClick={handleSaveInfo} disabled={saving}
               style={{ padding: "12px 28px", background: GREEN, color: "white", border: "none", borderRadius: "10px", fontFamily: FONT, fontSize: "14px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s" }}>
-              {saving ? "Saving..." : "💾 Save Changes"}
+              {saving ? t("profile_saving") : `💾 ${t("profile_save")}`}
             </button>
           </div>
         </div>
@@ -235,23 +237,23 @@ function Profile({ user }) {
       {/* TAB: Security */}
       {tab === "security" && (
         <div style={S.card}>
-          <h3 style={S.cardTitle}>Security Settings</h3>
+          <h3 style={S.cardTitle}>{t("profile_security")}</h3>
           <p style={S.cardSub}>Manage your password and account security.</p>
 
           {isGoogle ? (
             <div style={{ padding: "20px", background: "#f0f7f4", borderRadius: "10px", border: "1px solid #b7e4c7" }}>
-              <p style={{ color: GREEN, fontWeight: "600", margin: "0 0 8px 0" }}>🔵 Google Account</p>
+              <p style={{ color: GREEN, fontWeight: "600", margin: "0 0 8px 0" }}>🔵 {t("profile_google_account")}</p>
               <p style={{ color: "#555", fontSize: "14px", margin: 0 }}>Your account uses Google Sign-In. Password management is handled by Google.</p>
             </div>
           ) : (
             <>
               <div style={{ background: "#fafafa", borderRadius: "10px", padding: "20px", border: "1px solid #e5e7eb", marginBottom: "20px" }}>
-                <h4 style={{ margin: "0 0 16px 0", color: DARK, fontSize: "15px" }}>Change Password</h4>
+                <h4 style={{ margin: "0 0 16px 0", color: DARK, fontSize: "15px" }}>{t("profile_change_pwd")}</h4>
                 <div style={{ display: "grid", gap: "14px" }}>
                   {[
-                    { label: "Current Password", val: currentPwd, set: setCurrentPwd, key: "current" },
-                    { label: "New Password", val: newPwd, set: setNewPwd, key: "new" },
-                    { label: "Confirm New Password", val: confirmPwd, set: setConfirmPwd, key: "confirm" },
+                    { label: t("profile_current_pwd"), val: currentPwd, set: setCurrentPwd, key: "current" },
+                    { label: t("profile_new_pwd"), val: newPwd, set: setNewPwd, key: "new" },
+                    { label: t("profile_confirm_pwd"), val: confirmPwd, set: setConfirmPwd, key: "confirm" },
                   ].map(f => (
                     <div key={f.key}>
                       <label style={S.label}>{f.label}</label>
@@ -273,7 +275,7 @@ function Profile({ user }) {
                 </div>
                 <button className="save-btn" onClick={handleChangePassword} disabled={saving}
                   style={{ marginTop: "16px", padding: "12px 24px", background: GREEN, color: "white", border: "none", borderRadius: "10px", fontFamily: FONT, fontSize: "14px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s" }}>
-                  {saving ? "Updating..." : "🔒 Update Password"}
+                  {saving ? t("profile_saving") : `🔒 ${t("profile_update_pwd")}`}
                 </button>
               </div>
 
@@ -281,7 +283,7 @@ function Profile({ user }) {
                 <p style={{ margin: "0 0 8px 0", fontWeight: "600", color: "#92400e", fontSize: "14px" }}>📧 Forgot your password?</p>
                 <p style={{ margin: "0 0 12px 0", fontSize: "13px", color: "#78350f" }}>Send a password reset link to <strong>{user?.email}</strong></p>
                 <button onClick={handleResetEmail} style={{ padding: "8px 18px", background: "#f59e0b", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: FONT, fontSize: "13px", fontWeight: "600" }}>
-                  Send Reset Email
+                  {t("profile_reset_email")}
                 </button>
               </div>
             </>
@@ -309,17 +311,17 @@ function Profile({ user }) {
       {/* TAB: Farm Stats */}
       {tab === "stats" && (
         <div style={S.card}>
-          <h3 style={S.cardTitle}>Your Farming Journey</h3>
-          <p style={S.cardSub}>A summary of your activity on FarmMate.</p>
+          <h3 style={S.cardTitle}>{t("profile_journey")}</h3>
+          <p style={S.cardSub}>{t("profile_journey_sub")}</p>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "16px", marginBottom: "24px" }}>
             {[
-              { icon: "🗺️", label: "Total Lands", value: landsCount, color: "#2d6a4f" },
-              { icon: "🌾", label: "Active Crops", value: activeCrops, color: "#1a6985" },
-              { icon: "📦", label: "Past Crops", value: pastCrops, color: "#e09f3e" },
-              { icon: "📋", label: "Total Tasks", value: totalTasks, color: "#8e44ad" },
-              { icon: "✅", label: "Tasks Done", value: completedTasks, color: "#27ae60" },
-              { icon: "📊", label: "Completion %", value: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) + "%" : "0%", color: "#e67e22" },
+              { icon: "🗺️", label: t("profile_total_lands"), value: landsCount, color: "#2d6a4f" },
+              { icon: "🌾", label: t("profile_active_crops"), value: activeCrops, color: "#1a6985" },
+              { icon: "📦", label: t("profile_past_crops"), value: pastCrops, color: "#e09f3e" },
+              { icon: "📋", label: t("profile_total_tasks"), value: totalTasks, color: "#8e44ad" },
+              { icon: "✅", label: t("profile_tasks_done"), value: completedTasks, color: "#27ae60" },
+              { icon: "📊", label: t("profile_completion"), value: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) + "%" : "0%", color: "#e67e22" },
             ].map((s, i) => (
               <div key={i} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "20px", textAlign: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
                 <div style={{ fontSize: "28px", marginBottom: "8px" }}>{s.icon}</div>
@@ -333,7 +335,7 @@ function Profile({ user }) {
           {totalTasks > 0 && (
             <div style={{ background: "#f9f9f9", borderRadius: "10px", padding: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "13px", color: "#555" }}>
-                <span>Overall Task Completion</span>
+                <span>{t("profile_overall")}</span>
                 <span style={{ fontWeight: "600", color: GREEN }}>{Math.round((completedTasks / totalTasks) * 100)}%</span>
               </div>
               <div style={{ background: "#e5e7eb", borderRadius: "10px", height: "12px" }}>
@@ -345,7 +347,7 @@ function Profile({ user }) {
           {usage && (
             <div style={{ background: "#f9fafb", borderRadius: "10px", padding: "16px", marginTop: "16px" }}>
               <h4 style={{ margin: "0 0 12px 0", color: DARK, fontSize: "15px" }}>
-                📊 This Month's Usage
+                📊 {t("profile_this_month")}
               </h4>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 {[

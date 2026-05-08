@@ -1,5 +1,6 @@
 // src/pages/Home.js
 import { useState, useEffect } from "react";
+import { useLanguage } from "../context/LanguageContext";
 import { db, auth } from "../firebase";
 import { collection, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
 
@@ -18,6 +19,7 @@ const TYPE_ICONS = {
 };
 
 function Home({ user }) {
+  const { t, lang } = useLanguage();
   const [timelines, setTimelines] = useState([]);
   const [calView, setCalView] = useState("today");
   const [selectedTimeline, setSelectedTimeline] = useState("all");
@@ -83,11 +85,11 @@ function Home({ user }) {
   };
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
+  const greeting = hour < 12 ? t("home_good_morning") : hour < 17 ? t("home_good_afternoon") : t("home_good_evening");
 
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "300px", fontFamily: FONT }}>
-      <div style={{ color: GREEN, fontSize: "16px" }}>🌱 Loading your farm dashboard...</div>
+      <div style={{ color: GREEN, fontSize: "16px" }}>🌱 {t("common_loading")}</div>
     </div>
   );
 
@@ -112,17 +114,17 @@ function Home({ user }) {
             {greeting}, {user?.displayName?.split(" ")[0] || "Farmer"}! 🌱
           </h2>
           <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "14px" }}>
-            {timelines.length > 0 ? `You have ${timelines.length} active crop${timelines.length > 1 ? "s" : ""} growing.` : "No active crops yet. Start planning!"}
+            {timelines.length > 0 ? `${timelines.length} ${t("home_active_crops")}` : t("home_no_crops")}
           </p>
         </div>
         <div style={{ display: "flex", gap: "20px" }}>
           <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "16px 24px" }}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: pendingToday > 0 ? "#fbbf24" : "#6ee7b7", fontFamily: "Playfair Display, serif" }}>{pendingToday}</div>
-            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>Tasks Today</div>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>{t("home_tasks_today")}</div>
           </div>
           <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "16px 24px" }}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#6ee7b7", fontFamily: "Playfair Display, serif" }}>{timelines.length}</div>
-            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>Active Crops</div>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>{t("home_active_crops")}</div>
           </div>
         </div>
       </div>
@@ -130,8 +132,8 @@ function Home({ user }) {
       {timelines.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 40px", background: "white", borderRadius: "16px", border: "1px solid #e5e7eb" }}>
           <div style={{ fontSize: "64px", marginBottom: "16px" }}>🌾</div>
-          <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, fontSize: "24px", margin: "0 0 8px 0" }}>No active crops yet</h3>
-          <p style={{ color: "#6b7280", margin: 0 }}>Head to Crop Recommendation to plan your first crop!</p>
+          <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, fontSize: "24px", margin: "0 0 8px 0" }}>{t("home_no_crops")}</h3>
+          <p style={{ color: "#6b7280", margin: 0 }}>{t("home_no_crops_sub")}</p>
         </div>
       ) : (
         <>
@@ -173,7 +175,7 @@ function Home({ user }) {
           {/* Calendar controls */}
           <div style={{ display: "flex", gap: "12px", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", background: "white", padding: "14px 16px", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
             <div style={{ display: "flex", gap: "6px" }}>
-              {[["today", "Today"], ["weekly", "7 Days"], ["monthly", "30 Days"], ["full", "Full Timeline"]].map(([v, l]) => (
+              {[["today", t("home_today")], ["weekly", t("home_7days")], ["monthly", t("home_30days")], ["full", t("home_full")]].map(([v, l]) => (
                 <button key={v} className={`view-btn${calView === v ? " active" : ""}`}
                   onClick={() => setCalView(v)}
                   style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #e5e7eb", background: "white", color: "#6b7280", cursor: "pointer", fontFamily: FONT, fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}>
@@ -184,7 +186,7 @@ function Home({ user }) {
             <div style={{ marginLeft: "auto" }}>
               <select value={selectedTimeline} onChange={e => setSelectedTimeline(e.target.value)}
                 style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #e5e7eb", fontFamily: FONT, fontSize: "13px", color: "#374151", background: "white" }}>
-                <option value="all">All Crops</option>
+                <option value="all">{t("home_all_crops")}</option>
                 {timelines.map(tl => <option key={tl.id} value={tl.id}>{tl.crop} — {tl.landName}</option>)}
               </select>
             </div>
@@ -202,7 +204,7 @@ function Home({ user }) {
                   {/* Date header */}
                   <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
                     <div style={{ background: date === today ? GREEN : "#f3f4f6", color: date === today ? "white" : "#6b7280", borderRadius: "8px", padding: "6px 14px", fontSize: "13px", fontWeight: "600" }}>
-                      {date === today ? "📅 Today" : new Date(date + 'T00:00:00').toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
+                      {date === today ? `📅 ${t("home_today")}` : new Date(date + 'T00:00:00').toLocaleDateString(lang === "en" ? "en-IN" : lang === "hi" ? "hi-IN" : lang === "te" ? "te-IN" : "ta-IN", { weekday: "short", day: "numeric", month: "short" })}
                     </div>
                     <div style={{ flex: 1, height: "1px", background: "#e5e7eb" }} />
                     <span style={{ fontSize: "12px", color: "#9ca3af" }}>{tasks.filter(t => t.completed).length}/{tasks.length} done</span>
@@ -228,8 +230,8 @@ function Home({ user }) {
                               <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: (TYPE_COLORS[task.type] || "#888") + "22", color: TYPE_COLORS[task.type] || "#888", fontWeight: "600" }}>
                                 {task.type}
                               </span>
-                              {task.priority === "high" && !task.completed && <span style={{ fontSize: "10px", color: "#dc2626", fontWeight: "600" }}>⚠️ High</span>}
-                              {task.weatherSensitive && !task.completed && <span style={{ fontSize: "10px", color: "#1a6985" }}>🌧 Weather</span>}
+                              {task.priority === "high" && !task.completed && <span style={{ fontSize: "10px", color: "#dc2626", fontWeight: "600" }}>⚠️ {t("home_high_priority")}</span>}
+                              {task.weatherSensitive && !task.completed && <span style={{ fontSize: "10px", color: "#1a6985" }}>🌧 {t("home_weather_sensitive")}</span>}
                             </div>
                             <p style={{ margin: "0 0 4px 0", fontSize: "12px", color: "#6b7280" }}>{task.description}</p>
                             <p style={{ margin: 0, fontSize: "11px", color: "#9ca3af" }}>🌾 {task.crop} • 🗺️ {task.landName}</p>
@@ -248,13 +250,13 @@ function Home({ user }) {
                             {task.completed ? (
                               <button className="undo-btn" onClick={() => handleUndo(task.timelineId, task.id)}
                                 style={{ padding: "6px 12px", background: "#f3f4f6", color: "#6b7280", border: "1px solid #e5e7eb", borderRadius: "8px", cursor: "pointer", fontFamily: FONT, fontSize: "12px", whiteSpace: "nowrap", transition: "all 0.2s" }}>
-                                ↩️ Undo
+                                ↩️ {t("home_undo")}
                               </button>
                             ) : (
                               <button className="complete-btn"
                                 onClick={() => setExpandedTask(expandedTask === `${task.timelineId}-${task.id}` ? null : `${task.timelineId}-${task.id}`)}
                                 style={{ padding: "6px 12px", background: GREEN, color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: FONT, fontSize: "12px", whiteSpace: "nowrap", transition: "all 0.2s" }}>
-                                ✅ Mark Done
+                                ✅ {t("home_mark_done")}
                               </button>
                             )}
                           </div>
@@ -265,7 +267,7 @@ function Home({ user }) {
                           <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
                             <input
                               type="text"
-                              placeholder="Add a note (optional)..."
+                              placeholder={t("home_add_note")}
                               value={noteInput[task.id] || ""}
                               onChange={e => setNoteInput(prev => ({ ...prev, [task.id]: e.target.value }))}
                               style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "13px", fontFamily: FONT }}
@@ -273,7 +275,7 @@ function Home({ user }) {
                             />
                             <button onClick={() => handleComplete(task.timelineId, task.id, noteInput[task.id] || "")}
                               style={{ padding: "8px 16px", background: GREEN, color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: FONT, fontSize: "13px", fontWeight: "600" }}>
-                              Done
+                              {t("common_save")}
                             </button>
                           </div>
                         )}

@@ -7,11 +7,13 @@ import API_URL from "../config";
 import { useGate } from "../hooks/useGate";
 import UpgradePopup from "../components/UpgradePopup";
 import { trackUsage } from "../utils/trackUsage";
+import { useLanguage } from "../context/LanguageContext";
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
 
 function DiseaseDetect() {
+  const { t, lang } = useLanguage();
   const { checkGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -53,6 +55,7 @@ function DiseaseDetect() {
     if (!selectedFile) { setError("Please select an image first."); return; }
     const formData = new FormData();
     formData.append('file', selectedFile);
+    formData.append('language', lang);
     setLoading(true);
     setError("");
     try {
@@ -74,21 +77,21 @@ function DiseaseDetect() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');`}</style>
 
       <div style={{ marginBottom: "24px" }}>
-        <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🔬 Disease Detection</h2>
-        <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>Upload a photo of your crop leaf — our AI model will diagnose it instantly</p>
+        <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🔬 {t("disease_title")}</h2>
+        <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>{t("disease_subtitle")}</p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: result ? "1fr 1fr" : "600px 1fr", gap: "24px", alignItems: "start" }}>
 
         {/* Upload section */}
         <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "28px", boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}>
-          <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, margin: "0 0 6px 0", fontSize: "20px" }}>Upload Crop Image</h3>
-          <p style={{ color: "#9ca3af", fontSize: "13px", margin: "0 0 20px 0" }}>Supports JPG, PNG. Best results with clear, well-lit photos of affected leaves.</p>
+          <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, margin: "0 0 6px 0", fontSize: "20px" }}>{t("disease_upload_title")}</h3>
+          <p style={{ color: "#9ca3af", fontSize: "13px", margin: "0 0 20px 0" }}>{t("disease_upload_sub")}</p>
 
           {/* Active crops hint */}
           {activeCrops.length > 0 && (
             <div style={{ background: "#f0f7f4", border: "1px solid #b7e4c7", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px", fontSize: "13px", color: "#374151" }}>
-              🌾 Active crops: <strong>{activeCrops.join(", ")}</strong>
+              🌾 {t("disease_active_crops")}: <strong>{activeCrops.join(", ")}</strong>
             </div>
           )}
 
@@ -118,8 +121,8 @@ function DiseaseDetect() {
             ) : (
               <>
                 <div style={{ fontSize: "40px", marginBottom: "12px" }}>📷</div>
-                <p style={{ color: "#6b7280", fontSize: "14px", margin: "0 0 4px 0", fontWeight: "500" }}>Drop your image here or click to browse</p>
-                <p style={{ color: "#d1d5db", fontSize: "12px", margin: 0 }}>JPG, PNG up to 10MB</p>
+                <p style={{ color: "#6b7280", fontSize: "14px", margin: "0 0 4px 0", fontWeight: "500" }}>{t("disease_drop")}</p>
+                <p style={{ color: "#d1d5db", fontSize: "12px", margin: 0 }}>{t("disease_format")}</p>
               </>
             )}
             <input id="fileInput" type="file" accept="image/*" onChange={e => handleFileChange(e.target.files[0])} style={{ display: "none" }} />
@@ -136,7 +139,7 @@ function DiseaseDetect() {
 
           <button onClick={handleUpload} disabled={loading || !selectedFile}
             style={{ width: "100%", padding: "14px", background: loading || !selectedFile ? "#d1d5db" : `linear-gradient(135deg, ${GREEN}, ${DARK})`, color: "white", border: "none", borderRadius: "10px", fontSize: "15px", fontWeight: "600", cursor: loading || !selectedFile ? "not-allowed" : "pointer", fontFamily: FONT, transition: "all 0.2s" }}>
-            {loading ? "🤖 Analyzing with AI..." : "🔍 Detect Disease"}
+            {loading ? `🤖 ${t("disease_analyzing")}` : `🔍 ${t("disease_detect")}`}
           </button>
 
           {loading && (
@@ -155,11 +158,11 @@ function DiseaseDetect() {
                 <h3 style={{ fontFamily: "Playfair Display, serif", color: "#dc2626", fontSize: "22px", margin: "0 0 4px 0" }}>
                   🦠 {result.disease}
                 </h3>
-                <p style={{ color: "#6b7280", fontSize: "13px", margin: 0 }}>Diagnosed by ResNet50 AI Model</p>
+                <p style={{ color: "#6b7280", fontSize: "13px", margin: 0 }}>{t("disease_diagnosed")}</p>
               </div>
               <div style={{ textAlign: "center", background: "#f9fafb", borderRadius: "12px", padding: "12px 16px" }}>
                 <div style={{ fontSize: "24px", fontWeight: "700", color: confidenceColor(result.confidence), fontFamily: "Playfair Display, serif" }}>{result.confidence}%</div>
-                <div style={{ fontSize: "11px", color: "#9ca3af" }}>confidence</div>
+                <div style={{ fontSize: "11px", color: "#9ca3af" }}>{t("disease_confidence")}</div>
               </div>
             </div>
 
@@ -173,11 +176,11 @@ function DiseaseDetect() {
             {result.treatment && typeof result.treatment === 'object' && !result.treatment.error && (
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {[
-                  { icon: "❓", label: "Cause", key: "cause", color: "#f0f8ff", border: "#bfdbfe", text: "#1e40af" },
-                  { icon: "🌿", label: "Organic Remedy", key: "organic", color: "#f0fdf4", border: "#bbf7d0", text: "#15803d" },
-                  { icon: "🧪", label: "Chemical Treatment", key: "chemical", color: "#fff8f0", border: "#fde8c8", text: "#92400e" },
-                  { icon: "⚖️", label: "Dosage & Timing", key: "dosage", color: "#fdf4ff", border: "#e9d5ff", text: "#6b21a8" },
-                  { icon: "🛡️", label: "Prevention", key: "prevention", color: "#f0f7f4", border: "#b7e4c7", text: "#1b4332" },
+                  { icon: "❓", label: t("disease_cause"), key: "cause", color: "#f0f8ff", border: "#bfdbfe", text: "#1e40af" },
+                  { icon: "🌿", label: t("disease_organic"), key: "organic", color: "#f0fdf4", border: "#bbf7d0", text: "#15803d" },
+                  { icon: "🧪", label: t("disease_chemical"), key: "chemical", color: "#fff8f0", border: "#fde8c8", text: "#92400e" },
+                  { icon: "⚖️", label: t("disease_dosage"), key: "dosage", color: "#fdf4ff", border: "#e9d5ff", text: "#6b21a8" },
+                  { icon: "🛡️", label: t("disease_prevention"), key: "prevention", color: "#f0f7f4", border: "#b7e4c7", text: "#1b4332" },
                 ].filter(f => result.treatment[f.key]).map((f, i) => (
                   <div key={i} style={{ background: f.color, border: `1px solid ${f.border}`, borderRadius: "10px", padding: "12px 14px" }}>
                     <p style={{ margin: "0 0 4px 0", fontSize: "12px", fontWeight: "700", color: f.text, textTransform: "uppercase", letterSpacing: "0.5px" }}>{f.icon} {f.label}</p>
@@ -194,13 +197,13 @@ function DiseaseDetect() {
 
             <button onClick={() => { setResult(null); setSelectedFile(null); setPreview(null); }}
               style={{ width: "100%", marginTop: "16px", padding: "12px", background: "#f3f4f6", color: "#374151", border: "none", borderRadius: "10px", cursor: "pointer", fontFamily: FONT, fontSize: "14px", fontWeight: "500" }}>
-              🔄 Scan Another Image
+              🔄 {t("disease_scan_another")}
             </button>
           </div>
         ) : (
           <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "28px", textAlign: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}>
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔬</div>
-            <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, fontSize: "20px", margin: "0 0 8px 0" }}>How it works</h3>
+            <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, fontSize: "20px", margin: "0 0 8px 0" }}>{t("disease_how")}</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left" }}>
               {[["1️⃣", "Upload a clear photo of the affected leaf or crop"], ["2️⃣", "Our ResNet50 deep learning model identifies the disease"], ["3️⃣", " AI provides detailed cure and prevention advice"], ["4️⃣", "Treat your crop early to minimize yield loss"]].map(([n, t], i) => (
                 <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start", padding: "10px 14px", background: "#f9fafb", borderRadius: "8px" }}>
@@ -210,7 +213,7 @@ function DiseaseDetect() {
               ))}
             </div>
             <div style={{ marginTop: "20px", padding: "12px 16px", background: "#fff8f0", border: "1px solid #fde8c8", borderRadius: "10px", fontSize: "12px", color: "#92400e" }}>
-              💡 Tip: For best results, photograph only the affected leaf in good natural lighting
+              💡 {t("disease_tip")}
             </div>
           </div>
         )}

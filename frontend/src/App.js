@@ -9,7 +9,7 @@ import {
   onAuthStateChanged,
   sendPasswordResetEmail,
 } from "firebase/auth";
-
+import { LanguageProvider } from "./context/LanguageContext";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import MyLands from "./pages/MyLands";
@@ -97,9 +97,11 @@ function App() {
   );
 
   if (!user) return (
-    <div style={S.page}>
-      {/* Left panel — visual */}
-      <div style={S.leftPanel}>
+    <LanguageProvider>
+      <div style={S.page}>
+        {/* Left panel — visual */}
+        <div style={S.leftPanel}>
+
         <div style={S.leftContent}>
 <img src="/logo.png" alt="FarmMate Logo" style={{ width: "64px", height: "64px", objectFit: "contain" }} />
           <h1 style={S.brand}>FarmMate</h1>
@@ -238,26 +240,30 @@ function App() {
         </div>
       </div>
     </div>
+    </LanguageProvider>
   );
 
   return (
-    <PlanProvider user={user}>
-      <BrowserRouter>
-        <Navbar user={user} />
-        <div style={{ padding: "24px 40px", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 60px)" }}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/home" />} />
-            <Route path="/home" element={<Home user={user} />} />
-            <Route path="/my-lands" element={<MyLands user={user} />} />
-            <Route path="/crop-recommendation" element={<CropRec user={user} />} />
-            <Route path="/disease-detection" element={<DiseaseDetect user={user} />} />
-            <Route path="/weather" element={<WeatherOverview user={user} />} />
-            <Route path="/profile" element={<Profile user={user} />} />
-            <Route path="/subscription" element={<Subscription user={user} />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </PlanProvider>
+
+    <LanguageProvider>
+      <PlanProvider user={user}>
+        <BrowserRouter>
+          <Navbar user={user} />
+          <div style={{ padding: "24px 40px", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 60px)" }}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/home" />} />
+              <Route path="/home" element={<Home user={user} />} />
+              <Route path="/my-lands" element={<MyLands user={user} />} />
+              <Route path="/crop-recommendation" element={<CropRec user={user} />} />
+              <Route path="/disease-detection" element={<DiseaseDetect user={user} />} />
+              <Route path="/weather" element={<WeatherOverview user={user} />} />
+              <Route path="/profile" element={<Profile user={user} />} />
+              <Route path="/subscription" element={<Subscription user={user} />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </PlanProvider>
+    </LanguageProvider>
   );
 }
 
