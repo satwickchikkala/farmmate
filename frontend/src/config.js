@@ -1,2 +1,2 @@
-const API_URL = "https://Satwickchikkala1-farmmate-backend.hf.space";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5001";
 export default API_URL;
