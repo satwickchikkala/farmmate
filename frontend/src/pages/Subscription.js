@@ -87,8 +87,7 @@ function Subscription() {
         "Task completion analytics",
       ],
       notIncluded: [
-        "Multiple farm managers",
-        "Custom AI model training",
+        "more than 10 lands",
       ],
     },
     {
