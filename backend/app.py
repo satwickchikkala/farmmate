@@ -15,9 +15,13 @@ os.environ.setdefault("TF_NUM_INTEROP_THREADS", "1")
 os.environ.setdefault("TF_NUM_INTRAOP_THREADS", "1")
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # dotenv not installed, assume environment variables are set in the production environment
+    pass
 
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
