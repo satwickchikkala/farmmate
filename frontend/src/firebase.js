@@ -6,7 +6,7 @@ import { getFirestore } from "firebase/firestore";
 // Replace this with YOUR config object from Step 2C
 const firebaseConfig = {
   apiKey: "REPLACED_KEY",
-  authDomain: "https://farmmate-three.vercel.app",
+  authDomain: "farmmate-three.vercel.app",
   projectId: "farmmate-9c4b4",
   storageBucket: "farmmate-9c4b4.firebasestorage.app",
   messagingSenderId: "855751012352",
