@@ -19,6 +19,7 @@ import WeatherOverview from "./pages/WeatherOverview";
 import Profile from "./pages/Profile";
 import Subscription from "./pages/Subscription";
 import { PlanProvider } from "./context/PlanContext";
+import { PopupProvider } from "./context/PopupContext";
 
 // Google Fonts
 const fontLink = document.createElement("link");
@@ -246,23 +247,25 @@ function App() {
   return (
 
     <LanguageProvider>
-      <PlanProvider user={user}>
-        <BrowserRouter>
-          <Navbar user={user} />
-          <div style={{ padding: "24px 40px", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 60px)" }}>
-            <Routes>
-              <Route path="/" element={<Navigate to="/home" />} />
-              <Route path="/home" element={<Home user={user} />} />
-              <Route path="/my-lands" element={<MyLands user={user} />} />
-              <Route path="/crop-recommendation" element={<CropRec user={user} />} />
-              <Route path="/disease-detection" element={<DiseaseDetect user={user} />} />
-              <Route path="/weather" element={<WeatherOverview user={user} />} />
-              <Route path="/profile" element={<Profile user={user} />} />
-              <Route path="/subscription" element={<Subscription user={user} />} />
-            </Routes>
-          </div>
-        </BrowserRouter>
-      </PlanProvider>
+      <PopupProvider>
+        <PlanProvider user={user}>
+          <BrowserRouter>
+            <Navbar user={user} />
+            <div style={{ padding: "24px 40px", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 60px)" }}>
+              <Routes>
+                <Route path="/" element={<Navigate to="/home" />} />
+                <Route path="/home" element={<Home user={user} />} />
+                <Route path="/my-lands" element={<MyLands user={user} />} />
+                <Route path="/crop-recommendation" element={<CropRec user={user} />} />
+                <Route path="/disease-detection" element={<DiseaseDetect user={user} />} />
+                <Route path="/weather" element={<WeatherOverview user={user} />} />
+                <Route path="/profile" element={<Profile user={user} />} />
+                <Route path="/subscription" element={<Subscription user={user} />} />
+              </Routes>
+            </div>
+          </BrowserRouter>
+        </PlanProvider>
+      </PopupProvider>
     </LanguageProvider>
   );
 }

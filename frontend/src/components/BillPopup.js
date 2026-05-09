@@ -4,6 +4,7 @@ import axios from "axios";
 import { auth } from "../firebase";
 import { markBillPaid } from "../utils/billManager";
 import API_URL from "../config";
+import { usePopup } from "../context/PopupContext";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -11,6 +12,7 @@ const DARK = "#1b4332";
 
 function BillPopup({ bill, onPaid }) {
     const [paying, setPaying] = useState(false);
+    const { showAlert } = usePopup();
 
     const isOverdue = new Date() > new Date(bill.dueDate);
     const isStopDate = new Date() > new Date(bill.stopDate);
@@ -39,7 +41,7 @@ function BillPopup({ bill, onPaid }) {
                         bill.id,
                         response.razorpay_payment_id
                     );
-                    alert("✅ Payment successful! Services restored.");
+                    showAlert("✅ Payment successful! Services restored.");
                     onPaid();
                 },
                 prefill: {
@@ -52,7 +54,7 @@ function BillPopup({ bill, onPaid }) {
             const rzp = new window.Razorpay(options);
             rzp.open();
         } catch (err) {
-            alert("Could not initiate payment. Try again.");
+            showAlert("Could not initiate payment. Try again.");
         }
         setPaying(false);
     };

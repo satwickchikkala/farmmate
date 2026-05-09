@@ -7,12 +7,14 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import axios from "axios";
 import API_URL from "../config";
 import { PAYG_PRICES } from "../utils/paygPricing";
+import { usePopup } from "../context/PopupContext";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
 
 function Subscription({ user }) {
+  const { showAlert, showConfirm } = usePopup();
   const [userPlan, setUserPlan] = useState("free");
   const [landCount, setLandCount] = useState(0);
   const [monthlyUsage, setMonthlyUsage] = useState(null);
@@ -69,7 +71,7 @@ function Subscription({ user }) {
               planExpiry: expiry.toISOString(),
               paymentId: response.razorpay_payment_id,
             });
-            alert("🎉 Welcome to FarmMate Pro!");
+            showAlert("🎉 Welcome to FarmMate Pro!");
             loadData();
           }
         },
@@ -83,35 +85,35 @@ function Subscription({ user }) {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      alert("Could not initiate payment. Try again.");
+      showAlert("Could not initiate payment. Try again.");
     }
   };
 
   const handleUpgradePayg = () => {
     if (landCount < 10) {
-      alert("⚠️ Pay As You Go plan is only available when you have reached 10 lands. You currently have " + landCount + " land(s). Add more lands to unlock this plan.");
+      showAlert("⚠️ Pay As You Go plan is only available when you have reached 10 lands. You currently have " + landCount + " land(s). Add more lands to unlock this plan.");
       return;
     }
     setShowLiveBilling(true);
   };
 
-  const confirmUpgradePayg = async () => {
-    const confirm = window.confirm(
+  const confirmUpgradePayg = () => {
+    showConfirm(
       "⚠️ Switching to Pay As You Go means:\n\n" +
       "• You LOSE your Pro plan features\n" +
       "• You pay per use for every feature\n" +
       "• You get a monthly bill on the 1st of each month\n" +
       "• Services stop if bill unpaid by 8th\n\n" +
-      "Are you sure you want to switch?"
+      "Are you sure you want to switch?",
+      async () => {
+        await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          plan: "payg",
+          paygStartDate: new Date().toISOString(),
+        });
+        showAlert("✅ Switched to Pay As You Go plan!");
+        loadData();
+      }
     );
-    if (!confirm) return;
-
-    await updateDoc(doc(db, "users", auth.currentUser.uid), {
-      plan: "payg",
-      paygStartDate: new Date().toISOString(),
-    });
-    alert("✅ Switched to Pay As You Go plan!");
-    loadData();
   };
 
   if (loading) return (

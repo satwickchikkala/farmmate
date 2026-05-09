@@ -11,6 +11,7 @@ import axios from "axios";
 import UpgradePopup from "../components/UpgradePopup";
 import { trackUsage } from "../utils/trackUsage";
 import { useLanguage } from "../context/LanguageContext";
+import { usePopup } from "../context/PopupContext";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -43,6 +44,7 @@ const TABS = [
 function CropRec() {
 
   const { t, lang } = useLanguage();
+  const { showAlert, showConfirm } = usePopup();
 
   const [tab, setTab] = useState("new");
   const [lands, setLands] = useState([]);
@@ -150,38 +152,52 @@ function CropRec() {
         tasks: timeline.tasks.map(t => ({ ...t, completed: false, notes: "" })),
         status: "active", createdAt: new Date(),
       });
-      alert(`✅ ${timeline.crop} timeline saved!`);
+      showAlert(`✅ ${timeline.crop} timeline saved!`);
       setCrops([]); setSelectedCrop(null); setTimeline(null); setStep(1); setRainfall("");
       loadData();
     } catch { setError("Could not save timeline."); }
     setLoading(false);
   };
 
-  const handleDeleteTimeline = async (timelineId, cropName) => {
-    const choice = window.confirm(`Archive or Delete "${cropName}" timeline?\n\nOK = Archive (keep history)\nCancel = Check for permanent delete`);
-    if (choice) {
-      await updateDoc(doc(db, "timelines", timelineId), { status: "archived" });
-      alert("Timeline archived successfully.");
-    } else {
-      if (window.confirm("⚠️ Permanently delete this timeline? This cannot be undone.")) {
-        await deleteDoc(doc(db, "timelines", timelineId));
-        alert("Timeline deleted.");
-      }
-    }
-    loadData();
+  const handleDeleteTimeline = (timelineId, cropName) => {
+    showConfirm(
+      `Do you want to archive "${cropName}"?`,
+      async () => {
+        await updateDoc(doc(db, "timelines", timelineId), { status: "archived" });
+        showAlert("Timeline archived successfully.");
+        loadData();
+      },
+      () => {
+        showConfirm(
+          "⚠️ Permanently delete this timeline? This cannot be undone.",
+          async () => {
+            await deleteDoc(doc(db, "timelines", timelineId));
+            showAlert("Timeline deleted.");
+            loadData();
+          },
+          null,
+          "Delete Timeline",
+          "Delete",
+          "Cancel"
+        );
+      },
+      "Archive or Delete",
+      "Archive",
+      "Delete"
+    );
   };
 
   const handleRestoreTimeline = async (timelineId) => {
     await updateDoc(doc(db, "timelines", timelineId), { status: "active" });
-    alert("Timeline restored to active!");
+    showAlert("Timeline restored to active!");
     loadData();
   };
 
-  const handlePermanentDelete = async (timelineId, cropName) => {
-    if (window.confirm(`Permanently delete "${cropName}" from archives? This cannot be undone.`)) {
+  const handlePermanentDelete = (timelineId, cropName) => {
+    showConfirm(`Permanently delete "${cropName}" from archives? This cannot be undone.`, async () => {
       await deleteDoc(doc(db, "timelines", timelineId));
       loadData();
-    }
+    });
   };
 
   const TimelineCard = ({ t, showArchiveActions = false }) => {

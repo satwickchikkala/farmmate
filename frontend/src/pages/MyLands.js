@@ -22,6 +22,7 @@ import { useGate } from "../hooks/useGate";
 import UpgradePopup from "../components/UpgradePopup";
 import { incrementLandCount } from "../utils/updatePlan";
 import { useLanguage } from "../context/LanguageContext";
+import { usePopup } from "../context/PopupContext";
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY; // your key here
 const LIBRARIES = ["places"];
 
@@ -51,6 +52,7 @@ const LAND_STATUSES = ["Active", "Fallow", "In Use"];
 function MyLands({ user }) {
   const { t, lang } = useLanguage();
   const { checkLandGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
+  const { showAlert, showConfirm } = usePopup();
   const [markerPos, setMarkerPos] = useState(defaultCenter);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [searchInput, setSearchInput] = useState("");
@@ -189,7 +191,7 @@ function MyLands({ user }) {
       });
       loadLands();
     } catch (err) {
-      alert("Could not refresh weather.");
+      showAlert("Could not refresh weather.");
     }
   };
 
@@ -226,7 +228,7 @@ function MyLands({ user }) {
       // Increment lifetime counter AFTER successful save
       await incrementLandCount(auth.currentUser.uid);
 
-      alert("Land saved successfully!");
+      showAlert("Land saved successfully!");
       resetForm();
       loadLands();
       setShowAddForm(false);
@@ -237,10 +239,11 @@ function MyLands({ user }) {
   };
 
   // Delete land
-  const handleDelete = async (landId) => {
-    if (!window.confirm("Are you sure you want to delete this land?")) return;
-    await deleteDoc(doc(db, "lands", landId));
-    loadLands();
+  const handleDelete = (landId) => {
+    showConfirm("Are you sure you want to delete this land?", async () => {
+      await deleteDoc(doc(db, "lands", landId));
+      loadLands();
+    });
   };
 
   // Start editing a land
@@ -250,7 +253,7 @@ function MyLands({ user }) {
 
   // Save edited land
   const handleSaveEdit = async () => {
-    if (!editingLand.landName) { alert("Land name is required."); return; }
+    if (!editingLand.landName) { showAlert("Land name is required."); return; }
     try {
       await updateDoc(doc(db, "lands", editingLand.id), {
         landName: editingLand.landName,
@@ -263,7 +266,7 @@ function MyLands({ user }) {
       setEditingLand(null);
       loadLands();
     } catch (err) {
-      alert("Could not update land.");
+      showAlert("Could not update land.");
     }
   };
 
