@@ -10,6 +10,7 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   query,
   where,
   deleteDoc,
@@ -23,6 +24,7 @@ import UpgradePopup from "../components/UpgradePopup";
 import { incrementLandCount } from "../utils/updatePlan";
 import { useLanguage } from "../context/LanguageContext";
 import { usePopup } from "../context/PopupContext";
+import { usePlan } from "../context/PlanContext";
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY; // your key here
 const LIBRARIES = ["places"];
 
@@ -53,6 +55,7 @@ function MyLands({ user }) {
   const { t, lang } = useLanguage();
   const { checkLandGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
   const { showAlert, showConfirm } = usePopup();
+  const { refreshPlan } = usePlan();
   const [markerPos, setMarkerPos] = useState(defaultCenter);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [searchInput, setSearchInput] = useState("");
@@ -242,8 +245,46 @@ function MyLands({ user }) {
   const handleDelete = (landId) => {
     showConfirm("Are you sure you want to delete this land?", async () => {
       await deleteDoc(doc(db, "lands", landId));
+      await checkPlanDegradation();
       loadLands();
     });
+  };
+
+  const checkPlanDegradation = async () => {
+    const uid = auth.currentUser.uid;
+
+    // Get user's current plan
+    const userSnap = await getDoc(doc(db, "users", uid));
+    if (!userSnap.exists()) return;
+
+    const userData = userSnap.data();
+    if (userData.plan !== "payg") return; // Only applies to PAYG users
+
+    // Count remaining lands AFTER deletion
+    const q = query(
+      collection(db, "lands"),
+      where("userId", "==", uid)
+    );
+    const snap = await getDocs(q);
+    const remainingLands = snap.size; // Database is already updated
+
+    // If lands dropped to 10 or below — degrade to Pro
+    if (remainingLands <= 10) {
+      // Restore Pro plan with 1 year from now
+      const expiry = new Date();
+      expiry.setFullYear(expiry.getFullYear() + 1);
+
+      await updateDoc(doc(db, "users", uid), {
+        plan: "pro",
+        planExpiry: expiry.toISOString(),
+        paygStartDate: null,
+      });
+
+      // Refresh plan in context
+      await refreshPlan();
+
+      showAlert("✅ Your plan has been automatically updated back to Farmer Pro since your land count is now 10 or below!");
+    }
   };
 
   // Start editing a land
