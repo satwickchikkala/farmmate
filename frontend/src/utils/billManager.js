@@ -1,0 +1,112 @@
+// src/utils/billManager.js
+import { db } from "../firebase";
+import {
+    doc, getDoc, setDoc, updateDoc,
+    collection, addDoc, query, where, getDocs
+} from "firebase/firestore";
+import { PAYG_PRICES } from "./paygPricing";
+
+// Generate bill for previous month
+export const generateMonthlyBill = async (userId) => {
+    const now = new Date();
+    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const monthKey = prevMonth.toISOString().slice(0, 7);
+
+    // Check if bill already generated for this month
+    const billQuery = query(
+        collection(db, "bills"),
+        where("userId", "==", userId),
+        where("month", "==", monthKey)
+    );
+    const existing = await getDocs(billQuery);
+    if (!existing.empty) return existing.docs[0].data();
+
+    // Get usage for previous month
+    const usageRef = doc(db, "usage", `${userId}_${monthKey}`);
+    const usageSnap = await getDoc(usageRef);
+
+    if (!usageSnap.exists() || usageSnap.data().totalCost === 0) return null;
+
+    const usage = usageSnap.data();
+
+    // Build bill items
+    const items = [];
+    Object.entries(PAYG_PRICES).forEach(([key, { label, price }]) => {
+        const count = usage[`${key}Count`] || 0;
+        if (count > 0) {
+            items.push({
+                feature: key,
+                label,
+                quantity: count,
+                unitPrice: price,
+                total: count * price,
+            });
+        }
+    });
+
+    const totalAmount = items.reduce((sum, i) => sum + i.total, 0);
+
+    // Due date is 5th of current month
+    const dueDate = new Date(now.getFullYear(), now.getMonth(), 5);
+    // Grace period — stop services after 8th
+    const stopDate = new Date(now.getFullYear(), now.getMonth(), 8);
+
+    const bill = {
+        userId,
+        month: monthKey,
+        generatedDate: now.toISOString(),
+        dueDate: dueDate.toISOString(),
+        stopDate: stopDate.toISOString(),
+        status: "unpaid",
+        items,
+        totalAmount,
+        razorpayOrderId: null,
+        razorpayPaymentId: null,
+    };
+
+    const billRef = await addDoc(collection(db, "bills"), bill);
+
+    // Update user with current bill reference
+    await updateDoc(doc(db, "users", userId), {
+        currentBillId: billRef.id,
+        billStatus: "unpaid",
+        billDueDate: dueDate.toISOString(),
+        billStopDate: stopDate.toISOString(),
+    });
+
+    return { id: billRef.id, ...bill };
+};
+
+// Get unpaid bill for user
+export const getUnpaidBill = async (userId) => {
+    const q = query(
+        collection(db, "bills"),
+        where("userId", "==", userId),
+        where("status", "==", "unpaid")
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return { id: snap.docs[0].id, ...snap.docs[0].data() };
+};
+
+// Check if services should be stopped
+export const isServiceStopped = (userDoc) => {
+    if (userDoc?.plan !== "payg") return false;
+    if (userDoc?.billStatus !== "unpaid") return false;
+    if (!userDoc?.billStopDate) return false;
+
+    return new Date() > new Date(userDoc.billStopDate);
+};
+
+// Mark bill as paid
+export const markBillPaid = async (userId, billId, paymentId) => {
+    await updateDoc(doc(db, "bills", billId), {
+        status: "paid",
+        razorpayPaymentId: paymentId,
+        paidAt: new Date().toISOString(),
+    });
+    await updateDoc(doc(db, "users", userId), {
+        billStatus: "paid",
+        currentBillId: null,
+    });
+};

@@ -2,8 +2,10 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import { db, auth } from "../firebase";
-import { collection, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
-
+import { collection, getDocs, query, where, doc, updateDoc, getDoc } from "firebase/firestore";
+import { getUnpaidBill, generateMonthlyBill, isServiceStopped } from "../utils/billManager";
+import BillPopup from "../components/BillPopup";
+import BillBanner from "../components/BillBanner";
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
@@ -20,6 +22,9 @@ const TYPE_ICONS = {
 
 function Home({ user }) {
   const { t, lang } = useLanguage();
+  const [unpaidBill, setUnpaidBill] = useState(null);
+  const [showBillPopup, setShowBillPopup] = useState(false);
+  const [userDoc, setUserDoc] = useState(null);
   const [timelines, setTimelines] = useState([]);
   const [calView, setCalView] = useState("today");
   const [selectedTimeline, setSelectedTimeline] = useState("all");
@@ -27,7 +32,34 @@ function Home({ user }) {
   const [loading, setLoading] = useState(true);
   const [expandedTask, setExpandedTask] = useState(null);
 
-  useEffect(() => { loadTimelines(); }, []);
+  useEffect(() => {
+    loadTimelines();
+    checkBill();
+  }, []);
+
+  const checkBill = async () => {
+    const uid = auth.currentUser.uid;
+
+    // Load user doc
+    const userSnap = await getDoc(doc(db, "users", uid));
+    const userData = userSnap.exists() ? userSnap.data() : null;
+    setUserDoc(userData);
+
+    if (userData?.plan !== "payg") return;
+
+    // Check if it's the 1st of the month — generate bill
+    const today = new Date();
+    if (today.getDate() === 1) {
+      await generateMonthlyBill(uid);
+    }
+
+    // Check for unpaid bills
+    const bill = await getUnpaidBill(uid);
+    if (bill) {
+      setUnpaidBill(bill);
+      setShowBillPopup(true); // Show popup every time app opens
+    }
+  };
 
   const loadTimelines = async () => {
     const q = query(collection(db, "timelines"), where("userId", "==", auth.currentUser.uid), where("status", "==", "active"));
@@ -128,6 +160,25 @@ function Home({ user }) {
           </div>
         </div>
       </div>
+
+      {/* Bill Banner */}
+      {unpaidBill && !showBillPopup && (
+        <BillBanner
+          bill={unpaidBill}
+          onViewBill={() => setShowBillPopup(true)}
+        />
+      )}
+
+      {/* Bill Popup */}
+      {showBillPopup && unpaidBill && (
+        <BillPopup
+          bill={unpaidBill}
+          onPaid={() => {
+            setUnpaidBill(null);
+            setShowBillPopup(false);
+          }}
+        />
+      )}
 
       {timelines.length === 0 ? (
         <div style={{ textAlign: "center", padding: "80px 40px", background: "white", borderRadius: "16px", border: "1px solid #e5e7eb" }}>

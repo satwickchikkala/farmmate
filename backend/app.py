@@ -489,36 +489,29 @@ def disease_health():
 
 @app.route('/create-order', methods=['POST'])
 def create_order():
-    if not razorpay_client:
-        return jsonify({"error": "Razorpay not configured on backend"}), 500
-
     data = request.get_json()
-    plan = data.get('plan')
-    
-    amount = 99900 # Default to pro plan price
-    if plan == 'pro':
-        amount = 99900
+    plan = data.get('plan', 'pro')
+    amount = data.get('amount', 999)  # amount in rupees
 
-    currency = data.get('currency', 'INR')
-    receipt = data.get('receipt', 'order_rcptid_11')
-
-    if not amount or amount < 100:
-        return jsonify({"error": "Amount must be at least 100 paise"}), 400
+    # Convert to paise
+    amount_paise = int(float(amount) * 100)
 
     try:
-        order = razorpay_client.order.create(dict(
-            amount=amount,
-            currency=currency,
-            receipt=receipt
-        ))
+        order = razorpay_client.order.create({
+            "amount": amount_paise,
+            "currency": "INR",
+            "payment_capture": 1,
+            "notes": {"plan": plan}
+        })
         return jsonify({
-            "orderId": order['id'],
-            "amount": amount,
+            "orderId": order["id"],
+            "amount": amount_paise,
+            "currency": "INR",
             "keyId": RAZORPAY_KEY_ID
         })
     except Exception as e:
-        print("Razorpay create order error:", str(e))
-        return jsonify({"error": "Failed to create order"}), 500
+        print("Razorpay error:", str(e))
+        return jsonify({"error": "Could not create order"}), 500
 
 @app.route('/verify-payment', methods=['POST'])
 def verify_payment():

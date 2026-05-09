@@ -1,132 +1,57 @@
 // src/pages/Subscription.js
 import { useState, useEffect } from "react";
+import { getUserPlan } from "../utils/updatePlan";
+import { getMonthlyUsage } from "../utils/trackUsage";
+import { auth, db } from "../firebase";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import axios from "axios";
 import API_URL from "../config";
-import { auth } from "../firebase";
-import { getUserPlan } from "../utils/updatePlan";
-import { updateUserPlan } from "../utils/updatePlan";
-import { useLanguage } from "../context/LanguageContext";
+import { PAYG_PRICES } from "../utils/paygPricing";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
 
-const PAYG_FEATURES = [
-  { id: "crop_rec", label: "Crop Recommendation", icon: "🌾", unit: "per request", price: 2 },
-  { id: "timeline", label: "Timeline Generation", icon: "📅", unit: "per timeline", price: 5 },
-  { id: "disease", label: "Disease Detection", icon: "🔬", unit: "per scan", price: 3 },
-  { id: "weather", label: "Weather Forecast (7-day)", icon: "🌤️", unit: "per land/month", price: 1 },
-  { id: "lands", label: "Additional Lands (beyond 2)", icon: "🗺️", unit: "per land/month", price: 10 },
-  { id: "ai_chat", label: "AI Farming Assistant Chat", icon: "🤖", unit: "per 10 messages", price: 1 },
-  { id: "export", label: "Export Reports (PDF)", icon: "📄", unit: "per report", price: 4 },
-  { id: "alerts", label: "Weather Alert Notifications", icon: "🔔", unit: "per land/month", price: 2 },
-];
-
-function Subscription() {
-  const { t, lang } = useLanguage();
+function Subscription({ user }) {
   const [userPlan, setUserPlan] = useState("free");
-  const [paygQty, setPaygQty] = useState({});
-  const [showCalculator, setShowCalculator] = useState(false);
+  const [landCount, setLandCount] = useState(0);
+  const [monthlyUsage, setMonthlyUsage] = useState(null);
+  const [showLiveBilling, setShowLiveBilling] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      if (auth.currentUser) {
-        const plan = await getUserPlan(auth.currentUser.uid);
-        setUserPlan(plan);
-      }
-    };
-    load();
+    loadData();
   }, []);
 
-  const getPlans = (userPlan) => [
-    {
-      id: "free",
-      name: "Free",
-      price: "₹0",
-      period: "forever",
-      color: "#6b7280",
-      bgColor: "#f9fafb",
-      borderColor: "#e5e7eb",
-      badge: null,
-      current: userPlan === "free",
-      features: [
-        "Up to 2 lands",
-        "5 crop recommendations/month",
-        "Basic weather overview",
-        "3 disease detections/month",
-        "Basic farming timeline",
-        "Community support",
-      ],
-      notIncluded: [
-        "7-day weather forecast",
-        "Unlimited AI recommendations",
-        "Export reports",
-        "Priority support",
-      ],
-    },
-    {
-      id: "pro",
-      name: "Farmer Pro",
-      price: "₹999",
-      period: "per year",
-      subPrice: "₹83/month",
-      color: GREEN,
-      bgColor: "#f0fdf4",
-      borderColor: GREEN,
-      badge: "Most Popular",
-      current: userPlan === "pro",
-      features: [
-        "Up to 10 lands",
-        "Unlimited crop recommendations",
-        "Full AI timeline generation",
-        "Unlimited disease detection",
-        "7-day weather forecast",
-        "Weather alert notifications",
-        "Export reports (PDF)",
-        "Priority email support",
-        "Task completion analytics",
-      ],
-      notIncluded: [
-        "more than 10 lands",
-      ],
-    },
-    {
-      id: "payg",
-      name: "Pay As You Go",
-      price: "Custom",
-      period: "pay per use",
-      subPrice: "No monthly fee",
-      color: "#1a6985",
-      bgColor: "#f0f8ff",
-      borderColor: "#1a6985",
-      badge: "Flexible",
-      current: false,
-      features: [
-        "Unlimited lands",
-        "Pay only for what you use",
-        "All Pro features available",
-        "No monthly commitment",
-        "Multiple farm managers",
-        "Export reports (PDF)",
-      ],
-      notIncluded: [],
-    },
-  ];
+  const loadData = async () => {
+    const uid = auth.currentUser.uid;
+    const plan = await getUserPlan(uid);
+    setUserPlan(plan);
 
-  const paygTotal = PAYG_FEATURES.reduce((sum, f) => sum + (parseInt(paygQty[f.id] || 0) * f.price), 0);
+    const userSnap = await getDoc(doc(db, "users", uid));
+    if (userSnap.exists()) {
+      setLandCount(userSnap.data().totalLandsCreated || 0);
+    }
 
-  const handleUpgrade = async (plan) => {
+    const usage = await getMonthlyUsage(uid);
+    setMonthlyUsage(usage);
+    setLoading(false);
+  };
+
+  const handleUpgradePro = async () => {
     try {
-      const orderRes = await axios.post(`${API_URL}/create-order`, { plan });
-      const { orderId, amount, keyId } = orderRes.data;
+      const orderRes = await axios.post(`${API_URL}/create-order`, {
+        plan: "pro",
+        amount: 999,
+      });
+      const { orderId, keyId } = orderRes.data;
 
       const options = {
         key: keyId,
-        amount: amount,
+        amount: 99900,
         currency: "INR",
         name: "FarmMate",
         description: "FarmMate Pro Plan - 1 Year",
-        image: "https://farmmate-three.vercel.app/logo.png",
         order_id: orderId,
         handler: async (response) => {
           const verifyRes = await axios.post(`${API_URL}/verify-payment`, {
@@ -134,236 +59,306 @@ function Subscription() {
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
             userId: auth.currentUser.uid,
-            plan: "pro"
+            plan: "pro",
           });
-
           if (verifyRes.data.success) {
-            await updateUserPlan(
-              auth.currentUser.uid,
-              "pro",
-              response.razorpay_payment_id
-            );
-            alert("Payment successful! You are now on FarmMate Pro!");
-            window.location.reload();
-          } else {
-            alert("Payment verification failed. Contact support.");
+            const expiry = new Date();
+            expiry.setFullYear(expiry.getFullYear() + 1);
+            await updateDoc(doc(db, "users", auth.currentUser.uid), {
+              plan: "pro",
+              planExpiry: expiry.toISOString(),
+              paymentId: response.razorpay_payment_id,
+            });
+            alert("🎉 Welcome to FarmMate Pro!");
+            loadData();
           }
         },
         prefill: {
-          email: auth.currentUser?.email,
-          name: auth.currentUser?.displayName || "",
+          email: auth.currentUser.email,
+          name: auth.currentUser.displayName || "",
         },
-        theme: {
-          color: "#2d6a4f"
-        }
+        theme: { color: GREEN },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      console.error("Payment error:", err);
       alert("Could not initiate payment. Try again.");
     }
   };
 
+  const handleUpgradePayg = () => {
+    if (landCount < 10) {
+      alert("⚠️ Pay As You Go plan is only available when you have reached 10 lands. You currently have " + landCount + " land(s). Add more lands to unlock this plan.");
+      return;
+    }
+    setShowLiveBilling(true);
+  };
+
+  const confirmUpgradePayg = async () => {
+    const confirm = window.confirm(
+      "⚠️ Switching to Pay As You Go means:\n\n" +
+      "• You LOSE your Pro plan features\n" +
+      "• You pay per use for every feature\n" +
+      "• You get a monthly bill on the 1st of each month\n" +
+      "• Services stop if bill unpaid by 8th\n\n" +
+      "Are you sure you want to switch?"
+    );
+    if (!confirm) return;
+
+    await updateDoc(doc(db, "users", auth.currentUser.uid), {
+      plan: "payg",
+      paygStartDate: new Date().toISOString(),
+    });
+    alert("✅ Switched to Pay As You Go plan!");
+    loadData();
+  };
+
+  if (loading) return (
+    <div style={{ padding: "40px", fontFamily: FONT, color: "#6b7280" }}>
+      Loading...
+    </div>
+  );
+
   return (
-    <div style={{ fontFamily: FONT, maxWidth: "1000px", width: "100%" }}>
+    <div style={{ fontFamily: FONT, maxWidth: "900px", width: "100%" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
         .plan-card { transition: transform 0.2s, box-shadow 0.2s; }
         .plan-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1) !important; }
-        .upgrade-btn:hover { opacity: 0.88; transform: translateY(-1px); }
-        .payg-input:focus { border-color: #1a6985 !important; outline: none; }
       `}</style>
 
-      {/* Header */}
       <div style={{ marginBottom: "32px" }}>
-        <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "32px", fontWeight: "700", color: DARK, margin: "0 0 8px 0" }}>
-          {t("sub_title")}
+        <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "32px", color: DARK, margin: "0 0 8px 0" }}>
+          Subscription Plans
         </h2>
-        <p style={{ color: "#6b7280", fontSize: "15px", margin: 0 }}>
-          {t("sub_subtitle")}
+        <p style={{ color: "#6b7280", margin: 0 }}>
+          Current plan: <strong style={{ color: userPlan === "payg" ? "#1a6985" : userPlan === "pro" ? GREEN : "#6b7280" }}>
+            {userPlan === "payg" ? "⚡ Pay As You Go" : userPlan === "pro" ? "⭐ Farmer Pro" : "🌿 Free"}
+          </strong>
         </p>
       </div>
 
-      {/* Plans grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", marginBottom: "40px" }}>
-        {getPlans(userPlan).map(plan => (
-          <div key={plan.id} className="plan-card" style={{
-            background: plan.bgColor,
-            border: `2px solid ${plan.borderColor}`,
-            borderRadius: "16px",
-            padding: "28px",
+      {/* FREE PLAN USER — show only Pro plan */}
+      {userPlan === "free" && (
+        <div style={{ maxWidth: "400px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "24px", padding: "16px", background: "#f9fafb", borderRadius: "10px" }}>
+            <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>
+              You are on the <strong>Free Plan</strong> — 1 land, basic features only.
+            </p>
+          </div>
+
+          <div className="plan-card" style={{
+            background: "#f0fdf4", border: `2px solid ${GREEN}`,
+            borderRadius: "16px", padding: "32px",
+            boxShadow: "0 8px 32px rgba(45,106,79,0.15)",
             position: "relative",
-            boxShadow: plan.badge === "Most Popular" ? `0 8px 32px rgba(45,106,79,0.15)` : "0 2px 12px rgba(0,0,0,0.04)",
           }}>
-            {/* Badge */}
-            {plan.badge && (
-              <div style={{ position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)", background: plan.color, color: "white", padding: "4px 16px", borderRadius: "20px", fontSize: "12px", fontWeight: "600", whiteSpace: "nowrap" }}>
-                {plan.badge === "Most Popular" ? "⭐ " : "🔄 "}{plan.badge}
-              </div>
-            )}
-            {plan.current && (
-              <div style={{ position: "absolute", top: "16px", right: "16px", background: "#e5e7eb", color: "#6b7280", padding: "3px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "600" }}>
-                {t("sub_current")}
-              </div>
-            )}
-
-            <h3 style={{ fontFamily: "Playfair Display, serif", color: plan.color, fontSize: "22px", margin: "0 0 8px 0" }}>{plan.name}</h3>
-
-            <div style={{ marginBottom: "4px" }}>
-              <span style={{ fontSize: "36px", fontWeight: "700", color: "#111", fontFamily: "Playfair Display, serif" }}>{plan.price}</span>
+            <div style={{ position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)", background: GREEN, color: "white", padding: "4px 20px", borderRadius: "20px", fontSize: "12px", fontWeight: "700" }}>
+              ⭐ Recommended
             </div>
-            <p style={{ color: "#9ca3af", fontSize: "13px", margin: "0 0 4px 0" }}>{plan.period}</p>
-            {plan.subPrice && <p style={{ color: plan.color, fontSize: "13px", fontWeight: "600", margin: "0 0 20px 0" }}>{plan.subPrice}</p>}
 
-            <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px", marginBottom: "16px" }}>
-              {plan.features.map((f, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "5px 0", fontSize: "13px", color: "#374151" }}>
-                  <span style={{ color: plan.color, fontWeight: "700", flexShrink: 0 }}>✓</span> {f}
-                </div>
-              ))}
-              {plan.notIncluded.map((f, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "5px 0", fontSize: "13px", color: "#d1d5db" }}>
-                  <span style={{ flexShrink: 0 }}>✗</span> {f}
+            <h3 style={{ fontFamily: "Playfair Display, serif", color: GREEN, fontSize: "26px", margin: "0 0 8px 0" }}>
+              Farmer Pro
+            </h3>
+            <div style={{ fontSize: "42px", fontWeight: "700", color: DARK, fontFamily: "Playfair Display, serif" }}>
+              ₹999
+            </div>
+            <p style={{ color: "#9ca3af", margin: "4px 0 4px 0" }}>per year</p>
+            <p style={{ color: GREEN, fontWeight: "600", margin: "0 0 24px 0" }}>Just ₹83/month</p>
+
+            <div style={{ marginBottom: "24px" }}>
+              {[
+                "Up to 10 lands",
+                "Unlimited crop recommendations",
+                "Full AI timeline generation",
+                "Unlimited disease detection",
+                "7-day weather forecast",
+                "Weather alert notifications",
+                "Priority email support",
+              ].map((f, i) => (
+                <div key={i} style={{ display: "flex", gap: "8px", padding: "6px 0", fontSize: "14px", color: "#374151" }}>
+                  <span style={{ color: GREEN, fontWeight: "700" }}>✓</span> {f}
                 </div>
               ))}
             </div>
 
             <button
-              className="upgrade-btn"
-              disabled={plan.current}
-              onClick={() => {
-                if (plan.id === "payg") setShowCalculator(true);
-                if (!plan.current && plan.id === "pro") handleUpgrade("pro");
-              }}
-              style={{
-                width: "100%",
-                padding: "13px",
-                background: plan.current ? "#e5e7eb" : plan.id === "payg" ? `linear-gradient(135deg, #1a6985, #0d4a6b)` : `linear-gradient(135deg, ${GREEN}, ${DARK})`,
-                color: plan.current ? "#9ca3af" : "white",
-                border: "none",
-                borderRadius: "10px",
-                fontSize: "14px",
-                fontWeight: "600",
-                cursor: plan.current ? "default" : "pointer",
-                fontFamily: FONT,
-                transition: "all 0.2s",
-              }}
+              onClick={handleUpgradePro}
+              style={{ width: "100%", padding: "14px", background: `linear-gradient(135deg, ${GREEN}, ${DARK})`, color: "white", border: "none", borderRadius: "10px", fontSize: "15px", fontWeight: "700", cursor: "pointer", fontFamily: FONT }}
             >
-              {plan.current ? `✓ ${t("sub_current")} Plan`
-                : plan.id === "pro" ? `🚀 ${t("sub_upgrade_pro")}`
-                  : plan.id === "payg" ? `🧮 ${t("sub_calculate")}`
-                    : t("sub_get_started")}
+              🚀 Upgrade to Pro — ₹999/year
             </button>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* Pay As You Go Calculator */}
-      {showCalculator && (
-        <div style={{ background: "white", border: "2px solid #1a6985", borderRadius: "16px", padding: "28px", marginBottom: "32px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+      {/* PRO PLAN USER — show PAYG option */}
+      {userPlan === "pro" && (
+        <div>
+          {/* Current Pro status */}
+          <div style={{ background: "#f0fdf4", border: `1px solid ${GREEN}`, borderRadius: "12px", padding: "20px 24px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
             <div>
-              <h3 style={{ fontFamily: "Playfair Display, serif", color: "#1a6985", margin: "0 0 4px 0", fontSize: "22px" }}>
-                💰 Pay As You Go Calculator
-              </h3>
-              <p style={{ color: "#6b7280", fontSize: "13px", margin: 0 }}>Enter your estimated monthly usage to see your cost.</p>
+              <p style={{ margin: "0 0 4px 0", fontWeight: "700", color: GREEN, fontSize: "16px" }}>⭐ You are on Farmer Pro</p>
+              <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>
+                {landCount}/10 lands used •
+                All features unlocked
+              </p>
             </div>
-            <button onClick={() => setShowCalculator(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#9ca3af" }}>✕</button>
+            <div style={{ background: GREEN, color: "white", padding: "8px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: "600" }}>
+              Active Plan
+            </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "12px", marginBottom: "24px" }}>
-            {PAYG_FEATURES.map(f => (
-              <div key={f.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                <span style={{ fontSize: "22px" }}>{f.icon}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#374151" }}>{f.label}</div>
-                  <div style={{ fontSize: "11px", color: "#9ca3af" }}>₹{f.price} {f.unit}</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <input
-                    className="payg-input"
-                    type="number"
-                    min="0"
-                    value={paygQty[f.id] || ""}
-                    onChange={e => setPaygQty(p => ({ ...p, [f.id]: e.target.value }))}
-                    placeholder="0"
-                    style={{ width: "60px", padding: "6px 8px", borderRadius: "6px", border: "1.5px solid #e5e7eb", fontSize: "14px", fontFamily: FONT, textAlign: "center" }}
-                  />
-                  <span style={{ fontSize: "12px", color: "#6b7280" }}>= ₹{(parseInt(paygQty[f.id] || 0) * f.price)}</span>
-                </div>
+          {/* PAYG upgrade option */}
+          <div className="plan-card" style={{
+            background: "#f0f8ff", border: "2px solid #1a6985",
+            borderRadius: "16px", padding: "28px",
+            boxShadow: "0 4px 20px rgba(26,105,133,0.1)",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+              <div>
+                <h3 style={{ fontFamily: "Playfair Display, serif", color: "#1a6985", fontSize: "22px", margin: "0 0 6px 0" }}>
+                  ⚡ Pay As You Go
+                </h3>
+                <p style={{ color: "#6b7280", fontSize: "13px", margin: 0 }}>
+                  For power users needing more than 10 lands
+                </p>
               </div>
-            ))}
-          </div>
-
-          {/* Total */}
-          <div style={{ background: paygTotal > 999 ? "#fff8f0" : "#f0fdf4", borderRadius: "12px", padding: "20px", border: `2px solid ${paygTotal > 999 ? "#fde8c8" : "#bbf7d0"}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <div style={{ fontSize: "14px", color: "#6b7280" }}>{t("sub_monthly_total")}</div>
-              <div style={{ fontSize: "36px", fontWeight: "700", color: paygTotal > 999 ? "#e09f3e" : "#15803d", fontFamily: "Playfair Display, serif" }}>₹{paygTotal}</div>
-              {paygTotal > 999 && (
-                <div style={{ fontSize: "13px", color: "#e09f3e", marginTop: "4px" }}>
-                  💡 {t("sub_save_tip")}
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: "22px", fontWeight: "700", color: "#1a6985", fontFamily: "Playfair Display, serif" }}>
+                  Custom
                 </div>
-              )}
-              {paygTotal <= 999 && paygTotal > 0 && (
-                <div style={{ fontSize: "13px", color: "#15803d", marginTop: "4px" }}>
-                  ✅ {t("sub_payg_cheaper")}
-                </div>
-              )}
+                <div style={{ fontSize: "12px", color: "#9ca3af" }}>pay per use</div>
+              </div>
             </div>
-            {paygTotal > 999 && (
-              <button style={{ padding: "12px 20px", background: `linear-gradient(135deg, ${GREEN}, ${DARK})`, color: "white", border: "none", borderRadius: "10px", fontSize: "14px", fontWeight: "600", cursor: "pointer", fontFamily: FONT }}>
-                {t("sub_switch_pro")}
+
+            {/* Pricing table */}
+            <div style={{ background: "white", borderRadius: "10px", padding: "16px", marginBottom: "20px" }}>
+              <p style={{ margin: "0 0 12px 0", fontWeight: "600", color: DARK, fontSize: "13px" }}>
+                📊 Pricing per use
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                {Object.entries(PAYG_PRICES).map(([key, { label, price }]) => (
+                  <div key={key} style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "#f8fafc", borderRadius: "6px", fontSize: "13px" }}>
+                    <span style={{ color: "#374151" }}>{label}</span>
+                    <span style={{ fontWeight: "700", color: "#1a6985" }}>₹{price}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Live billing toggle */}
+            <button
+              onClick={() => setShowLiveBilling(!showLiveBilling)}
+              style={{ background: showLiveBilling ? "#1a6985" : "white", color: showLiveBilling ? "white" : "#1a6985", border: "1.5px solid #1a6985", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "600", fontFamily: FONT, marginBottom: "12px" }}
+            >
+              📊 {showLiveBilling ? "Hide" : "View"} This Month's Running Total
+            </button>
+
+            {/* Live billing table */}
+            {showLiveBilling && (
+              <div style={{ background: "#f0f8ff", border: "1px solid #bfdbfe", borderRadius: "10px", padding: "16px", marginBottom: "16px" }}>
+                <p style={{ margin: "0 0 10px 0", fontWeight: "600", color: "#1a6985", fontSize: "13px" }}>
+                  📈 Running Total —
+                  {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+                </p>
+                {monthlyUsage ? (
+                  <>
+                    {Object.entries(PAYG_PRICES).map(([key, { label }]) => {
+                      const count = monthlyUsage[`${key}Count`] || 0;
+                      const cost = monthlyUsage[`${key}Cost`] || 0;
+                      if (count === 0) return null;
+                      return (
+                        <div key={key} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: "13px", borderBottom: "1px solid #e0f2fe" }}>
+                          <span style={{ color: "#374151" }}>{label} × {count}</span>
+                          <span style={{ fontWeight: "600", color: "#1a6985" }}>₹{cost}</span>
+                        </div>
+                      );
+                    })}
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 0 0", fontWeight: "700", fontSize: "15px" }}>
+                      <span style={{ color: DARK }}>Total so far</span>
+                      <span style={{ color: "#1a6985" }}>₹{monthlyUsage.totalCost || 0}</span>
+                    </div>
+                  </>
+                ) : (
+                  <p style={{ color: "#9ca3af", fontSize: "13px", margin: 0 }}>
+                    No usage recorded this month yet.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Upgrade button */}
+            {landCount < 10 ? (
+              <div>
+                <button
+                  onClick={handleUpgradePayg}
+                  style={{ width: "100%", padding: "13px", background: "#e5e7eb", color: "#9ca3af", border: "none", borderRadius: "10px", fontSize: "14px", fontWeight: "600", cursor: "not-allowed", fontFamily: FONT }}
+                >
+                  🔒 Upgrade to Pay As You Go
+                </button>
+                <p style={{ textAlign: "center", fontSize: "12px", color: "#9ca3af", margin: "8px 0 0 0" }}>
+                  Available when you reach 10 lands ({landCount}/10 used)
+                </p>
+              </div>
+            ) : (
+              <button
+                onClick={confirmUpgradePayg}
+                style={{ width: "100%", padding: "13px", background: "linear-gradient(135deg, #1a6985, #0d4a6b)", color: "white", border: "none", borderRadius: "10px", fontSize: "14px", fontWeight: "700", cursor: "pointer", fontFamily: FONT }}
+              >
+                ⚡ Upgrade to Pay As You Go
               </button>
             )}
           </div>
         </div>
       )}
 
-      {/* Feature comparison table */}
-      <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "16px", padding: "28px", overflow: "auto" }}>
-        <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, margin: "0 0 20px 0", fontSize: "20px" }}>
-          {t("sub_comparison")}
-        </h3>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-          <thead>
-            <tr style={{ background: "#f9fafb" }}>
-              <th style={{ padding: "12px 16px", textAlign: "left", color: "#6b7280", fontWeight: "600", borderBottom: "1px solid #e5e7eb" }}>Feature</th>
-              {getPlans(userPlan).map(p => (
-                <th key={p.id} style={{ padding: "12px 16px", textAlign: "center", color: p.color, fontWeight: "700", borderBottom: "1px solid #e5e7eb" }}>{p.name}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              ["Max Lands", "2", "10", "Unlimited"],
-              ["Crop Recommendations", "5/month", "Unlimited", "Pay per use"],
-              ["Disease Detection", "3/month", "Unlimited", "Pay per use"],
-              ["AI Timeline Generation", "1/month", "Unlimited", "Pay per use"],
-              ["7-Day Weather Forecast", "❌", "✅", "Pay per use"],
-              ["Weather Alerts", "❌", "✅", "Pay per use"],
-              ["Export Reports", "❌", "✅", "Pay per use"],
-              ["Multiple Managers", "❌", "❌", "✅"],
-              ["API Access", "❌", "❌", "✅"],
-              ["Support", "Community", "Priority Email", "Dedicated Manager"],
-            ].map((row, i) => (
-              <tr key={i} style={{ background: i % 2 === 0 ? "white" : "#fafafa" }}>
-                <td style={{ padding: "12px 16px", color: "#374151", fontWeight: "500", borderBottom: "1px solid #f3f4f6" }}>{row[0]}</td>
-                {row.slice(1).map((cell, j) => (
-                  <td key={j} style={{ padding: "12px 16px", textAlign: "center", color: cell === "❌" ? "#d1d5db" : cell === "✅" ? GREEN : "#374151", fontWeight: cell === "✅" || cell === "❌" ? "700" : "400", borderBottom: "1px solid #f3f4f6" }}>
-                    {cell}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* PAYG USER — show current plan status */}
+      {userPlan === "payg" && (
+        <div>
+          <div style={{ background: "#f0f8ff", border: "2px solid #1a6985", borderRadius: "12px", padding: "24px", marginBottom: "24px" }}>
+            <p style={{ margin: "0 0 4px 0", fontWeight: "700", color: "#1a6985", fontSize: "18px" }}>
+              ⚡ You are on Pay As You Go
+            </p>
+            <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#6b7280" }}>
+              You are billed monthly based on your usage.
+              Bill generates on the 1st, due by 5th (grace till 8th).
+            </p>
 
-      <p style={{ textAlign: "center", color: "#9ca3af", fontSize: "12px", marginTop: "20px" }}>
-        🔒 {t("sub_footer")}
+            {/* Live billing */}
+            <div style={{ background: "white", borderRadius: "10px", padding: "16px" }}>
+              <p style={{ margin: "0 0 12px 0", fontWeight: "600", color: DARK, fontSize: "14px" }}>
+                📈 This Month's Usage —
+                {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+              </p>
+              {monthlyUsage ? (
+                <>
+                  {Object.entries(PAYG_PRICES).map(([key, { label }]) => {
+                    const count = monthlyUsage[`${key}Count`] || 0;
+                    const cost = monthlyUsage[`${key}Cost`] || 0;
+                    if (count === 0) return null;
+                    return (
+                      <div key={key} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "13px", borderBottom: "1px solid #f3f4f6" }}>
+                        <span>{label} × {count}</span>
+                        <span style={{ fontWeight: "600", color: "#1a6985" }}>₹{cost}</span>
+                      </div>
+                    );
+                  })}
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 0 0", fontWeight: "700", fontSize: "16px" }}>
+                    <span>Estimated Bill</span>
+                    <span style={{ color: "#1a6985" }}>₹{monthlyUsage.totalCost || 0}</span>
+                  </div>
+                </>
+              ) : (
+                <p style={{ color: "#9ca3af", fontSize: "13px" }}>No usage this month yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <p style={{ textAlign: "center", color: "#9ca3af", fontSize: "12px", marginTop: "24px" }}>
+        🔒 Secure payments via Razorpay • All prices in INR • GST applicable
       </p>
     </div>
   );
