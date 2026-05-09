@@ -200,30 +200,30 @@ function CropRec() {
     });
   };
 
-  const TimelineCard = ({ t, showArchiveActions = false }) => {
-    const completed = t.tasks?.filter(tk => tk.completed).length || 0;
-    const totalTasks = t.tasks?.length || 0;
+  const TimelineCard = ({ tl, showArchiveActions = false }) => {
+    const completed = tl.tasks?.filter(tk => tk.completed).length || 0;
+    const totalTasks = tl.tasks?.length || 0;
     const progress = totalTasks > 0 ? Math.round((completed / totalTasks) * 100) : 0;
-    const daysLeft = Math.max(0, Math.ceil((new Date(t.harvestDate) - new Date()) / (1000 * 60 * 60 * 24)));
+    const daysLeft = Math.max(0, Math.ceil((new Date(tl.harvestDate) - new Date()) / (1000 * 60 * 60 * 24)));
 
     return (
       <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "14px", padding: "20px", boxShadow: "0 2px 10px rgba(0,0,0,0.04)", opacity: showArchiveActions ? 0.9 : 1 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-              <h3 style={{ margin: 0, color: DARK, fontSize: "18px", fontFamily: "Playfair Display, serif" }}>🌾 {t.crop}</h3>
+              <h3 style={{ margin: 0, color: DARK, fontSize: "18px", fontFamily: "Playfair Display, serif" }}>🌾 {tl.crop}</h3>
               {showArchiveActions && <span style={{ background: "#f3f4f6", color: "#6b7280", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", fontWeight: "600" }}>{t("crop_archived")}</span>}
             </div>
-            <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>🗺️ {t.landName} • 📅 {t.startDate} → {t.harvestDate}</p>
+            <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>🗺️ {tl.landName} • 📅 {tl.startDate} → {tl.harvestDate}</p>
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
             {showArchiveActions ? (
               <>
-                <button onClick={() => handleRestoreTimeline(t.id)} style={{ ...S.smallBtn, background: "#f0f7f4", color: GREEN, borderColor: "#b7e4c7" }}>↩️ {t("crop_restore")}</button>
-                <button onClick={() => handlePermanentDelete(t.id, t.crop)} style={{ ...S.smallBtn, background: "#fff5f5", color: "#dc2626", borderColor: "#fecaca" }}>🗑️ {t("common_delete")}</button>
+                <button onClick={() => handleRestoreTimeline(tl.id)} style={{ ...S.smallBtn, background: "#f0f7f4", color: GREEN, borderColor: "#b7e4c7" }}>↩️ {t("crop_restore")}</button>
+                <button onClick={() => handlePermanentDelete(tl.id, tl.crop)} style={{ ...S.smallBtn, background: "#fff5f5", color: "#dc2626", borderColor: "#fecaca" }}>🗑️ {t("common_delete")}</button>
               </>
             ) : (
-              <button onClick={() => handleDeleteTimeline(t.id, t.crop)} style={{ ...S.smallBtn, background: "#fff5f5", color: "#dc2626", borderColor: "#fecaca" }}>🗑️ {t("crop_remove")}</button>
+              <button onClick={() => handleDeleteTimeline(tl.id, tl.crop)} style={{ ...S.smallBtn, background: "#fff5f5", color: "#dc2626", borderColor: "#fecaca" }}>🗑️ {t("crop_remove")}</button>
             )}
           </div>
         </div>
@@ -238,23 +238,23 @@ function CropRec() {
                 <div style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${GREEN}, #52b788)`, height: "8px", borderRadius: "8px", transition: "width 1s" }} />
               </div>
             </div>
-            <p style={{ fontSize: "12px", color: "#6b7280", margin: "6px 0 0 0" }}>✅ {completed}/{t.tasks?.length || 0} {t("crop_tasks_completed")}</p>
+            <p style={{ fontSize: "12px", color: "#6b7280", margin: "6px 0 0 0" }}>✅ {completed}/{tl.tasks?.length || 0} {t("crop_tasks_completed")}</p>
           </>
         )}
 
         {showArchiveActions && (
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#6b7280", background: "#f9f9f9", borderRadius: "8px", padding: "10px 12px" }}>
-            <span>📋 {t.tasks?.length || 0} tasks</span>
-            <span>✅ {t.tasks?.filter(tk => tk.completed).length || 0} completed</span>
-            <span>📅 {t.totalDays} days</span>
+            <span>📋 {tl.tasks?.length || 0} tasks</span>
+            <span>✅ {tl.tasks?.filter(tk => tk.completed).length || 0} completed</span>
+            <span>📅 {tl.totalDays} days</span>
           </div>
         )}
 
-        {t.expectedYield && (
+        {tl.expectedYield && (
           <div style={{ background: "#fff8f0", border: "1px solid #fde8c8", borderRadius: "8px", padding: "10px 14px", marginTop: "10px" }}>
             <span style={{ fontWeight: "600", color: "#e67e22", fontSize: "13px" }}>🌾 Expected: </span>
-            <span style={{ color: GREEN, fontWeight: "700" }}>{t.expectedYield.min}–{t.expectedYield.max} {t.expectedYield.unit}</span>
-            <span style={{ color: "#9ca3af", fontSize: "12px" }}> • {t.expectedYield.notes}</span>
+            <span style={{ color: GREEN, fontWeight: "700" }}>{tl.expectedYield.min}–{tl.expectedYield.max} {tl.expectedYield.unit}</span>
+            <span style={{ color: "#9ca3af", fontSize: "12px" }}> • {tl.expectedYield.notes}</span>
           </div>
         )}
       </div>
@@ -309,7 +309,7 @@ function CropRec() {
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "16px" }}>
-              {activeTimelines.map(t => <TimelineCard key={t.id} t={t} />)}
+              {activeTimelines.map(t => <TimelineCard key={t.id} tl={t} />)}
             </div>
           )}
         </div>
@@ -328,7 +328,7 @@ function CropRec() {
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "16px" }}>
-              {archivedTimelines.map(t => <TimelineCard key={t.id} t={t} showArchiveActions />)}
+              {archivedTimelines.map(t => <TimelineCard key={t.id} tl={t} showArchiveActions />)}
             </div>
           )}
         </div>
