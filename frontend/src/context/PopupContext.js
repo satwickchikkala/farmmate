@@ -42,13 +42,13 @@ export const PopupProvider = ({ children }) => {
   };
 
   const handleConfirmAction = () => {
+    setConfirmData(prev => ({ ...prev, isOpen: false }));
     if (confirmData.onConfirm) confirmData.onConfirm();
-    setConfirmData({ ...confirmData, isOpen: false });
   };
 
   const handleCancelAction = () => {
+    setConfirmData(prev => ({ ...prev, isOpen: false }));
     if (confirmData.onCancel) confirmData.onCancel();
-    setConfirmData({ ...confirmData, isOpen: false });
   };
 
   return (
