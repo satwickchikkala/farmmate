@@ -160,7 +160,7 @@ function DiseaseDetect() {
               {lands.map(land => (
                 <option key={land.id} value={land.id}>
                   {land.landName} — {land.city}
-                  {land.isPayg ? " ⚡ (PAYG)" : " ✅ (Pro)"}
+                  {land.isPayg ? " ⚡ (PAYG)" : (land.landIndex === 1 ? " 🆓 (Free)" : " ✅ (Pro)")}
                 </option>
               ))}
             </select>

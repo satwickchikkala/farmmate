@@ -444,12 +444,17 @@ function MyLands({ user }) {
                     alt="land location"
                     style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "8px", marginBottom: "10px" }}
                   />
-                  {/* Status badge */}
+                  {/* Status & Plan badges */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                     <strong style={{ fontSize: "16px" }}>🏷️ {land.landName}</strong>
-                    <span style={{ background: statusColor(land.landStatus), color: "white", padding: "2px 10px", borderRadius: "20px", fontSize: "12px" }}>
-                      {land.landStatus}
-                    </span>
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                      <span style={{ background: land.isPayg ? "#f59e0b" : (land.landIndex === 1 ? "#10b981" : "#3b82f6"), color: "white", padding: "2px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "bold", textTransform: "uppercase" }}>
+                        {land.isPayg ? "PAYG" : (land.landIndex === 1 ? "Free" : "Pro")}
+                      </span>
+                      <span style={{ background: statusColor(land.landStatus), color: "white", padding: "2px 10px", borderRadius: "20px", fontSize: "12px" }}>
+                        {land.landStatus}
+                      </span>
+                    </div>
                   </div>
                   <p style={styles.cardText}>📍 {land.city}</p>
                   <p style={styles.cardText}>🪨 {land.soilType} | 📐 {land.landSize} {land.landUnit}</p>
