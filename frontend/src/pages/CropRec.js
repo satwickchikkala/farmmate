@@ -297,7 +297,7 @@ function CropRec() {
       `}</style>
 
       {/* Page header */}
-      <div style={{ padding: "32px 40px" }}>
+      <div style={{ padding: "32px var(--page-px)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
           <div>
             <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🌾 {t("crop_title")}</h2>

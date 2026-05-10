@@ -259,10 +259,9 @@ function App() {
             <Navbar user={user} />
             <div className="main-content-area" style={{ width: "100%", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 64px)", boxSizing: "border-box" }}>
               <style>{`
-                .main-content-area { padding: 0; width: 100%; }
-                @media (max-width: 900px) {
-                  .main-content-area { padding: 16px 12px !important; }
-                }
+                :root { --page-px: 40px; }
+                @media (max-width: 900px) { :root { --page-px: 16px; } }
+                .main-content-area { padding: 0; width: 100%; overflow-x: hidden; }
               `}</style>
               <Routes>
                 <Route path="/" element={<Navigate to="/home" />} />

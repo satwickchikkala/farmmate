@@ -78,39 +78,16 @@ function WeatherOverview() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
         .weather-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: start; }
-        .lands-scroll { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
+        .lands-scroll { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
         
         @media (max-width: 900px) {
           .weather-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
           .lands-scroll { display: flex !important; overflow-x: auto; padding-bottom: 10px; }
-          .lands-scroll > div { min-width: 160px; }
+          .lands-scroll > div { min-width: 130px; }
+          .forecast-desc { display: none; }
         }
       `}</style>
 
-      <div style={{ marginBottom: "24px" }}>
-        <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🌤 {t("weather_title")}</h2>
-        <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>{t("weather_subtitle")}</p>
-      </div>
-
-      {/* All lands quick cards */}
-      <div className="lands-scroll">
-        {allWeathers.map(land => (
-          <div key={land.id} onClick={() => handleSelectLand(land)}
-            style={{ padding: "16px", borderRadius: "12px", border: `2px solid ${selectedLand?.id === land.id ? GREEN : "#e5e7eb"}`, background: selectedLand?.id === land.id ? "#f0f7f4" : "white", cursor: "pointer", textAlign: "center", transition: "all 0.2s", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-            <strong style={{ fontSize: "13px", color: DARK }}>{land.landName}</strong>
-            <p style={{ margin: "2px 0 8px 0", fontSize: "11px", color: "#6b7280" }}>{land.city}</p>
-            {land.weather ? (
-              <>
-                <div style={{ fontSize: "32px", margin: "4px 0" }}>{weatherIcon(land.weather.description)}</div>
-                <div style={{ fontSize: "24px", fontWeight: "700", color: GREEN, fontFamily: "Playfair Display, serif" }}>{Math.round(land.weather.temperature)}°C</div>
-                <div style={{ fontSize: "11px", color: "#6b7280", margin: "2px 0" }}>{land.weather.description}</div>
-                <div style={{ fontSize: "11px", color: "#9ca3af" }}>💧 {land.weather.humidity}%</div>
-              </>
-            ) : <div style={{ color: "#d1d5db", fontSize: "12px", marginTop: "12px" }}>{t("weather_loading")}</div>}
-          </div>
-        ))}
-        {lands.length === 0 && (
-          <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "40px", background: "#f9fafb", borderRadius: "12px", color: "#9ca3af" }}>
             {t("weather_no_lands")}
           </div>
         )}

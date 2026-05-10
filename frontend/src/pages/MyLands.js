@@ -377,7 +377,7 @@ function MyLands({ user }) {
         }
       `}</style>
 
-      <div style={{ padding: "32px 40px" }}>
+      <div style={{ padding: "32px var(--page-px)" }}>
         <div className="lands-header">
           <h2 style={{ margin: 0 }}>🗺️ {t("lands_title")}</h2>
           <button onClick={() => { setShowAddForm(!showAddForm); resetForm(); }} style={styles.greenBtn}>

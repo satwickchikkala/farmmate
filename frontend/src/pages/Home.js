@@ -212,7 +212,7 @@ function Home({ user }) {
       `}</style>
 
       {/* Welcome Banner */}
-      <div className="welcome-banner" style={{ background: `linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%)`, borderRadius: "0", padding: "40px 60px", marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "24px", boxShadow: "0 12px 40px rgba(45,106,79,0.2)", width: "100%", boxSizing: "border-box" }}>
+      <div className="welcome-banner" style={{ background: `linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%)`, borderRadius: "0", padding: "40px var(--page-px)", marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "24px", boxShadow: "0 12px 40px rgba(45,106,79,0.2)", width: "100%", boxSizing: "border-box" }}>
         <div>
           <p style={{ color: "rgba(255,255,255,0.6)", margin: "0 0 4px 0", fontSize: "13px" }}>
             {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
@@ -236,7 +236,7 @@ function Home({ user }) {
         </div>
       </div>
 
-      <div style={{ padding: "0 40px 40px 40px" }}>
+      <div style={{ padding: "0 var(--page-px) 40px var(--page-px)" }}>
         {unpaidBill && !showBillPopup && (
           <div onClick={() => setShowBillPopup(true)} style={{ cursor: "pointer" }}>
             <BillBanner

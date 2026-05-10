@@ -186,7 +186,7 @@ function Subscription({ user }) {
         }
       `}</style>
 
-      <div style={{ padding: "32px 40px" }}>
+      <div style={{ padding: "32px var(--page-px)" }}>
         <div style={{ marginBottom: "32px" }}>
         <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "32px", color: DARK, margin: "0 0 8px 0" }}>
           Subscription Plans
