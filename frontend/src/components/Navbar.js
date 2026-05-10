@@ -227,7 +227,7 @@ function Navbar({ user }) {
       {/* Mobile Menu Overlay */}
       {showMobileMenu && (
         <div className="mobile-menu-overlay" style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.5)", zIndex: 2000, display: "flex", justifyContent: "flex-start" }} onClick={() => setShowMobileMenu(false)}>
-          <div style={{ width: "280px", height: "100%", background: "white", padding: "24px", boxShadow: "4px 0 20px rgba(0,0,0,0.2)", position: "relative" }} onClick={e => e.stopPropagation()}>
+          <div style={{ width: "280px", height: "100%", background: "white", padding: "24px", boxShadow: "4px 0 20px rgba(0,0,0,0.2)", position: "relative", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
             <button 
               onClick={() => setShowMobileMenu(false)}
               style={{ position: "absolute", top: "20px", right: "20px", background: "none", border: "none", fontSize: "24px", cursor: "pointer", color: "#6b7280" }}
