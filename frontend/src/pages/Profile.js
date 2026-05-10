@@ -1,8 +1,9 @@
 // src/pages/Profile.js
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import { collection, getDocs, query, where, doc, setDoc, getDoc } from "firebase/firestore";
-import { updateProfile, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { updateProfile, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, signOut } from "firebase/auth";
 import { getMonthlyUsage } from "../utils/trackUsage";
 import { getUserPlanInfo } from "../utils/updatePlan";
 import { useLanguage } from "../context/LanguageContext";
@@ -12,6 +13,7 @@ const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
 
 function Profile({ user }) {
+  const navigate = useNavigate();
   const { t, lang } = useLanguage();
   const [tab, setTab] = useState("info");
   const [displayName, setDisplayName] = useState(user?.displayName || "");
@@ -25,6 +27,17 @@ function Profile({ user }) {
   const [totalTasks, setTotalTasks] = useState(0);
   const [completedTasks, setCompletedTasks] = useState(0);
   const [usage, setUsage] = useState(null);
+  const fileRef = useRef();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState({ text: "", type: "" });
   const [currentPwd, setCurrentPwd] = useState("");
@@ -418,6 +431,11 @@ function Profile({ user }) {
               </div>
             </div>
           )}
+
+          {/* Sign Out Button for Mobile/All */}
+          <button onClick={handleLogout} style={{ width: "100%", marginTop: "32px", padding: "16px", background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "12px", cursor: "pointer", fontWeight: "600", fontSize: "15px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.2s" }} onMouseEnter={e => e.target.style.background = "#fecaca"} onMouseLeave={e => e.target.style.background = "#fee2e2"}>
+            🚪 {t("nav_signout")}
+          </button>
         </div>
       )}
     </div>
