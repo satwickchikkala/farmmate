@@ -210,11 +210,12 @@ function MyLands({ user }) {
 
     setLoading(true);
     try {
-      const uid = auth.currentUser.uid;
-      const userSnap = await getDoc(doc(db, "users", uid));
-      const userData = userSnap.exists() ? userSnap.data() : {};
-      const nextIndex = (userData.totalLandsCreated || 0) + 1;
-      const isPaygLand = nextIndex > 10;
+      // Count current active lands to decide if this one is PAYG
+      const q_count = query(collection(db, "lands"), where("userId", "==", uid));
+      const snap_count = await getDocs(q_count);
+      const activeCount = snap_count.size;
+      const isPaygLand = activeCount >= 10;
+      const nextIndex = activeCount + 1;
 
       await addDoc(collection(db, "lands"), {
         userId: uid,
