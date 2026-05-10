@@ -290,7 +290,7 @@ function Home({ user }) {
       ) : (
         <>
           {/* Crop summary cards */}
-          <div className="crop-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: "20px", marginBottom: "32px" }}>
+          <div className="crop-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(240px, 100%), 1fr))", gap: "16px", marginBottom: "32px" }}>
             {timelines.map(tl => {
               const completed = tl.tasks?.filter(t => t.completed).length || 0;
               const totalTasks = tl.tasks?.length || 0;
@@ -363,7 +363,7 @@ function Home({ user }) {
                     <span style={{ fontSize: "13px", color: "#9ca3af", fontWeight: "500" }}>{tasks.filter(t => t.completed).length}/{tasks.length} {t("common_save").toLowerCase().includes("save") ? "done" : ""}</span>
                   </div>
 
-                  <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(450px, 100%), 1fr))", gap: "16px" }}>
+                  <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(380px, 100%), 1fr))", gap: "16px" }}>
                     {tasks.map((task, i) => (
                       <div key={i} className="task-card" style={{
                         background: task.completed ? "#fafafa" : "white",

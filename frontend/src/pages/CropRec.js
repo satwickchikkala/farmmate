@@ -284,7 +284,7 @@ function CropRec() {
         
         @media (min-width: 901px) {
           .cr-new-container { grid-template-columns: 350px 1fr !important; gap: 40px !important; }
-          .cr-grid { grid-template-columns: repeat(auto-fill, minmax(min(480px, 100%), 1fr)) !important; gap: 24px !important; }
+          .cr-grid { grid-template-columns: repeat(auto-fill, minmax(min(400px, 100%), 1fr)) !important; gap: 24px !important; }
         }
         
         @media (max-width: 900px) {
