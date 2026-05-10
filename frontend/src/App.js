@@ -104,7 +104,9 @@ function App() {
           .auth-left-panel { display: none !important; }
           .auth-right-panel { padding: 20px !important; }
           .auth-form-card { padding: 32px 24px !important; border-radius: 16px !important; }
+          .mobile-branding { display: flex !important; }
         }
+        .mobile-branding { display: none; }
       `}</style>
       <div style={S.page}>
         {/* Left panel — visual */}
@@ -125,6 +127,12 @@ function App() {
         {/* Right panel — form */}
         <div className="auth-right-panel" style={S.rightPanel}>
           <div className="auth-form-card" style={S.formCard}>
+            {/* Mobile Branding */}
+            <div className="mobile-branding" style={{ alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "24px" }}>
+              <img src="/logo.png" alt="Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+              <span style={{ fontFamily: "Playfair Display, serif", fontSize: "24px", fontWeight: "700", color: "#1b4332", letterSpacing: "-0.5px" }}>FarmMate</span>
+            </div>
+
             <div style={S.formHeader}>
               <h2 style={S.formTitle}>
                 {mode === "login" ? "Welcome back" : mode === "register" ? "Create account" : "Reset password"}
