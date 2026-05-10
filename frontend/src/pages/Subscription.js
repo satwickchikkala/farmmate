@@ -251,18 +251,20 @@ function Subscription({ user }) {
 
       {/* FREE PLAN USER — show only Pro plan */}
       {userPlan === "free" && (
-        <div style={{ maxWidth: "400px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "24px", padding: "16px", background: "#f9fafb", borderRadius: "10px" }}>
-            <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div style={{ textAlign: "center", marginBottom: "32px", padding: "20px 32px", background: "#f9fafb", borderRadius: "12px", border: "1px solid #e5e7eb", width: "100%", maxWidth: "600px" }}>
+            <p style={{ color: "#6b7280", fontSize: "15px", margin: 0 }}>
               You are on the <strong>Free Plan</strong> — 1 land, basic features only.
             </p>
           </div>
 
           <div className="plan-card" style={{
             background: "#f0fdf4", border: `2px solid ${GREEN}`,
-            borderRadius: "16px", padding: "32px",
-            boxShadow: "0 8px 32px rgba(45,106,79,0.15)",
+            borderRadius: "24px", padding: "40px",
+            boxShadow: "0 12px 48px rgba(45,106,79,0.12)",
             position: "relative",
+            maxWidth: "500px",
+            width: "100%"
           }}>
             <div style={{ position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)", background: GREEN, color: "white", padding: "4px 20px", borderRadius: "20px", fontSize: "12px", fontWeight: "700" }}>
               ⭐ Recommended

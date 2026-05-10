@@ -159,6 +159,11 @@ function Profile({ user }) {
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
         
+        @media (min-width: 901px) {
+          .stats-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important; gap: 24px !important; }
+          .info-grid { grid-template-columns: 1fr 1fr 1fr !important; gap: 24px !important; }
+        }
+        
         @media (max-width: 900px) {
           .profile-header { padding: 20px !important; flex-direction: column !important; text-align: center !important; }
           .info-grid { grid-template-columns: 1fr !important; }

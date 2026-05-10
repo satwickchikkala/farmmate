@@ -365,11 +365,11 @@ function MyLands({ user }) {
   return (
     <div style={{ fontFamily: "sans-serif", width: "100%", boxSizing: "border-box" }}>
       <style>{`
-        .lands-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin-bottom: 30px; }
-        .lands-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        .lands-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        .lands-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
         
-        @media (max-width: 768px) {
-          .lands-grid { grid-template-columns: 1fr !important; }
+        @media (max-width: 900px) {
+          .lands-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
           .lands-header { flex-direction: column; align-items: stretch; }
           .form-section { padding: 16px !important; }
           .step-box { padding: 12px !important; }

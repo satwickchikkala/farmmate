@@ -282,6 +282,11 @@ function CropRec() {
         .land-card:hover { border-color: ${GREEN} !important; }
         .crop-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important; }
         
+        @media (min-width: 901px) {
+          .cr-new-container { grid-template-columns: 350px 1fr !important; gap: 40px !important; }
+          .cr-grid { grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)) !important; gap: 24px !important; }
+        }
+        
         @media (max-width: 900px) {
           .cr-new-container { grid-template-columns: 1fr !important; }
           .cr-sidebar { flex-direction: row !important; overflow-x: auto; padding-bottom: 10px; }

@@ -257,7 +257,7 @@ function App() {
         <PlanProvider user={user}>
           <BrowserRouter>
             <Navbar user={user} />
-            <div style={{ padding: "16px", maxWidth: "1200px", margin: "0 auto", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 64px)", boxSizing: "border-box" }}>
+            <div style={{ padding: "32px 60px", maxWidth: "1600px", margin: "0 auto", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 64px)", boxSizing: "border-box" }}>
               <Routes>
                 <Route path="/" element={<Navigate to="/home" />} />
                 <Route path="/home" element={<Home user={user} />} />
