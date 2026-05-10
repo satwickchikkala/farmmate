@@ -46,7 +46,6 @@ function Profile({ user }) {
   const [currentPlan, setCurrentPlan] = useState("free");
   const [planExpiry, setPlanExpiry] = useState(null);
   const [showPwds, setShowPwds] = useState({ current: false, new: false, confirm: false });
-  const fileRef = useRef();
 
   useEffect(() => { loadStats(); }, []);
 
