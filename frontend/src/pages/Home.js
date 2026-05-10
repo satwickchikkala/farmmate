@@ -198,6 +198,11 @@ function Home({ user }) {
         .complete-btn:hover { background: #1b4332 !important; }
         .undo-btn:hover { background: #f3f4f6 !important; }
         
+        @media (max-width: 900px) {
+          .welcome-banner { padding: 32px 24px !important; margin: 16px var(--page-px) 24px var(--page-px) !important; border-radius: 16px !important; }
+          .welcome-title { font-size: 24px !important; }
+        }
+        
         @media (max-width: 768px) {
           .welcome-banner { padding: 20px !important; flex-direction: column !important; align-items: flex-start !important; }
           .welcome-stats { width: 100% !important; justify-content: space-between !important; margin-top: 10px !important; }
@@ -212,12 +217,12 @@ function Home({ user }) {
       `}</style>
 
       {/* Welcome Banner */}
-      <div className="welcome-banner" style={{ background: `linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%)`, borderRadius: "0", padding: "40px var(--page-px)", marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "24px", boxShadow: "0 12px 40px rgba(45,106,79,0.2)", width: "100%", boxSizing: "border-box" }}>
+      <div className="welcome-banner" style={{ background: `linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%)`, borderRadius: "24px", padding: "40px 60px", margin: "24px var(--page-px) 32px var(--page-px)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "24px", boxShadow: "0 12px 40px rgba(45,106,79,0.2)", boxSizing: "border-box" }}>
         <div>
           <p style={{ color: "rgba(255,255,255,0.6)", margin: "0 0 4px 0", fontSize: "13px" }}>
             {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
-          <h2 className="welcome-title" style={{ fontFamily: "Playfair Display, serif", color: "white", margin: "0 0 6px 0", fontSize: "26px" }}>
+          <h2 className="welcome-title" style={{ fontFamily: "Playfair Display, serif", color: "white", margin: "0 0 6px 0", fontSize: "32px" }}>
             {greeting}, {user?.displayName?.split(" ")[0] || "Farmer"}! 🌱
           </h2>
           <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "14px" }}>
@@ -225,11 +230,11 @@ function Home({ user }) {
           </p>
         </div>
         <div className="welcome-stats" style={{ display: "flex", gap: "16px" }}>
-          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "16px 24px" }}>
+          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "16px", padding: "16px 24px", minWidth: "100px" }}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: pendingToday > 0 ? "#fbbf24" : "#6ee7b7", fontFamily: "Playfair Display, serif" }}>{pendingToday}</div>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>{t("home_tasks_today")}</div>
           </div>
-          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "16px 24px" }}>
+          <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "16px 24px", minWidth: "100px" }}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#6ee7b7", fontFamily: "Playfair Display, serif" }}>{timelines.length}</div>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>{t("home_active_crops")}</div>
           </div>
