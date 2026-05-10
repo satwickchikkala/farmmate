@@ -436,7 +436,13 @@ function Home({ user }) {
                         </div>
                       ))}
                     </div>
-                      </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
