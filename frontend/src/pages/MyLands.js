@@ -412,7 +412,7 @@ function MyLands({ user }) {
         )}
 
         <div className="lands-grid">
-          {lands.map((land) => (
+          {lands.map((land, index) => (
             <div key={land.id} style={styles.landCard}>
               {/* Edit Modal */}
               {editingLand?.id === land.id ? (
