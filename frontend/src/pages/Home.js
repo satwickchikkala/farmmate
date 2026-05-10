@@ -45,19 +45,17 @@ function Home({ user }) {
     const userData = userSnap.exists() ? userSnap.data() : null;
     setUserDoc(userData);
 
-    if (userData?.plan !== "payg") return;
-
-    // Check if it's the 1st of the month — generate bill
-    const today = new Date();
-    if (today.getDate() === 1) {
-      await generateMonthlyBill(uid);
-    }
-
-    // Check for unpaid bills
+    // 1. Always check for unpaid bills (even if user downgraded to Pro)
     const bill = await getUnpaidBill(uid);
     if (bill) {
       setUnpaidBill(bill);
-      setShowBillPopup(true); // Show popup every time app opens
+      setShowBillPopup(true);
+    }
+
+    // 2. On the 1st of the month, generate previous month's bill
+    const today = new Date();
+    if (today.getDate() === 1) {
+      await generateMonthlyBill(uid);
     }
   };
 

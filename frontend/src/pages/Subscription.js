@@ -8,6 +8,9 @@ import axios from "axios";
 import API_URL from "../config";
 import { PAYG_PRICES } from "../utils/paygPricing";
 import { usePopup } from "../context/PopupContext";
+import { getUnpaidBill, generateMonthlyBill } from "../utils/billManager";
+import BillBanner from "../components/BillBanner";
+import BillPopup from "../components/BillPopup";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -18,7 +21,8 @@ function Subscription({ user }) {
   const [userPlan, setUserPlan] = useState("free");
   const [landCount, setLandCount] = useState(0);
   const [monthlyUsage, setMonthlyUsage] = useState(null);
-  const [showLiveBilling, setShowLiveBilling] = useState(false);
+  const [unpaidBill, setUnpaidBill] = useState(null);
+  const [showBillPopup, setShowBillPopup] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,6 +40,10 @@ function Subscription({ user }) {
 
     const usage = await getMonthlyUsage(uid);
     setMonthlyUsage(usage);
+
+    const bill = await getUnpaidBill(uid);
+    setUnpaidBill(bill);
+
     setLoading(false);
   };
 
@@ -138,6 +146,26 @@ function Subscription({ user }) {
           </strong>
         </p>
       </div>
+
+      {unpaidBill && (
+        <div style={{ marginBottom: "24px" }}>
+          <BillBanner
+            bill={unpaidBill}
+            onViewBill={() => setShowBillPopup(true)}
+          />
+        </div>
+      )}
+
+      {showBillPopup && unpaidBill && (
+        <BillPopup
+          bill={unpaidBill}
+          onPaid={() => {
+            setUnpaidBill(null);
+            setShowBillPopup(false);
+            loadData();
+          }}
+        />
+      )}
 
       {/* FREE PLAN USER — show only Pro plan */}
       {userPlan === "free" && (

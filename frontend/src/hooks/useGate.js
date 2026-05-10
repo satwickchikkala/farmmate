@@ -58,6 +58,7 @@ export function useGate() {
   };
 
   return {
+    plan,
     isPro,
     checkGate,
     checkLandGate,

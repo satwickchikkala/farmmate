@@ -14,7 +14,7 @@ const DARK = "#1b4332";
 
 function DiseaseDetect() {
   const { t, lang } = useLanguage();
-  const { checkGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
+  const { plan, checkGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
@@ -62,7 +62,7 @@ function DiseaseDetect() {
       const res = await axios.post(`${API_URL}/detect-disease`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      await trackUsage(auth.currentUser.uid, "disease");
+      await trackUsage(auth.currentUser.uid, "disease", plan);
       setResult(res.data);
     } catch (err) {
       setError("Could not analyze image. Make sure the backend is running and the model files are present.");

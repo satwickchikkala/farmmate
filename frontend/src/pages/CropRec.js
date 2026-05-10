@@ -12,6 +12,7 @@ import UpgradePopup from "../components/UpgradePopup";
 import { trackUsage } from "../utils/trackUsage";
 import { useLanguage } from "../context/LanguageContext";
 import { usePopup } from "../context/PopupContext";
+import { useGate } from "../hooks/useGate";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -45,6 +46,7 @@ function CropRec() {
 
   const { t, lang } = useLanguage();
   const { showAlert, showConfirm } = usePopup();
+  const { plan, checkGate, showUpgrade, setShowUpgrade, blockedFeature } = useGate();
 
   const [tab, setTab] = useState("new");
   const [lands, setLands] = useState([]);
@@ -115,7 +117,7 @@ function CropRec() {
         ph: parseFloat(soilValues.ph), city: selectedLand.city,
         language: lang,
       });
-      await trackUsage(auth.currentUser.uid, "cropRec");
+      await trackUsage(auth.currentUser.uid, "cropRec", plan);
       setCrops(res.data.crops); setStep(2);
     } catch { setError("Could not get recommendations. Try again."); }
     setLoading(false);
@@ -135,7 +137,7 @@ function CropRec() {
         landSize: selectedLand.landSize, landUnit: selectedLand.landUnit,
         language: lang,
       });
-      await trackUsage(auth.currentUser.uid, "timeline");
+      await trackUsage(auth.currentUser.uid, "timeline", plan);
       setTimeline(res.data); setStep(3);
     } catch { setError("Could not generate timeline. Try again."); }
     setLoading(false);

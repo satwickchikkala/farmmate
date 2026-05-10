@@ -3,7 +3,9 @@ import { db } from "../firebase";
 import { doc, getDoc, setDoc, updateDoc, increment } from "firebase/firestore";
 import { PAYG_PRICES } from "./paygPricing";
 
-export const trackUsage = async (userId, feature) => {
+export const trackUsage = async (userId, feature, plan) => {
+  if (plan !== "payg") return;
+
   const month = new Date().toISOString().slice(0, 7);
   const docRef = doc(db, "usage", `${userId}_${month}`);
   const price = PAYG_PRICES[feature]?.price || 0;
