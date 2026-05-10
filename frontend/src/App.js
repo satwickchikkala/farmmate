@@ -264,7 +264,6 @@ function App() {
                   .main-content-area { padding: 16px 12px !important; }
                 }
               `}</style>
-              `}</style>
               <Routes>
                 <Route path="/" element={<Navigate to="/home" />} />
                 <Route path="/home" element={<Home user={user} />} />
