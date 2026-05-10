@@ -365,7 +365,7 @@ function MyLands({ user }) {
   return (
     <div style={{ fontFamily: "sans-serif", width: "100%", boxSizing: "border-box" }}>
       <style>{`
-        .lands-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        .lands-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 24px; margin-bottom: 40px; }
         .lands-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
         
         @media (max-width: 900px) {

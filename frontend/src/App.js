@@ -257,7 +257,13 @@ function App() {
         <PlanProvider user={user}>
           <BrowserRouter>
             <Navbar user={user} />
-            <div style={{ padding: "32px 60px", maxWidth: "1600px", margin: "0 auto", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 64px)", boxSizing: "border-box" }}>
+            <div className="main-content-area" style={{ maxWidth: "1600px", margin: "0 auto", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 64px)", boxSizing: "border-box" }}>
+              <style>{`
+                .main-content-area { padding: 32px 40px; }
+                @media (max-width: 900px) {
+                  .main-content-area { padding: 20px 16px !important; }
+                }
+              `}</style>
               <Routes>
                 <Route path="/" element={<Navigate to="/home" />} />
                 <Route path="/home" element={<Home user={user} />} />

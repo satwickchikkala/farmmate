@@ -121,7 +121,7 @@ function DiseaseDetect() {
     <div style={{ fontFamily: FONT, width: "100%" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
-        .dd-grid { display: grid; grid-template-columns: ${result ? "1.2fr 1fr" : "1fr 1fr"}; gap: 32px; align-items: start; }
+        .dd-grid { display: grid; grid-template-columns: ${result ? "1.2fr 1fr" : "1fr 1fr"}; gap: 24px; align-items: start; }
         
         @media (max-width: 900px) {
           .dd-grid { grid-template-columns: 1fr !important; gap: 16px !important; }

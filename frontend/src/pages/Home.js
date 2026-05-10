@@ -212,7 +212,7 @@ function Home({ user }) {
       `}</style>
 
       {/* Welcome Banner */}
-      <div className="welcome-banner" style={{ background: `linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%)`, borderRadius: "24px", padding: "40px 60px", marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "24px", boxShadow: "0 12px 40px rgba(45,106,79,0.2)" }}>
+      <div className="welcome-banner" style={{ background: `linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%)`, borderRadius: "24px", padding: "32px 40px", marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "24px", boxShadow: "0 12px 40px rgba(45,106,79,0.2)" }}>
         <div>
           <p style={{ color: "rgba(255,255,255,0.6)", margin: "0 0 4px 0", fontSize: "13px" }}>
             {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
@@ -290,7 +290,7 @@ function Home({ user }) {
       ) : (
         <>
           {/* Crop summary cards */}
-          <div className="crop-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px", marginBottom: "32px" }}>
+          <div className="crop-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: "20px", marginBottom: "32px" }}>
             {timelines.map(tl => {
               const completed = tl.tasks?.filter(t => t.completed).length || 0;
               const totalTasks = tl.tasks?.length || 0;
@@ -363,7 +363,7 @@ function Home({ user }) {
                     <span style={{ fontSize: "13px", color: "#9ca3af", fontWeight: "500" }}>{tasks.filter(t => t.completed).length}/{tasks.length} {t("common_save").toLowerCase().includes("save") ? "done" : ""}</span>
                   </div>
 
-                  <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))", gap: "16px" }}>
+                  <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(450px, 100%), 1fr))", gap: "16px" }}>
                     {tasks.map((task, i) => (
                       <div key={i} className="task-card" style={{
                         background: task.completed ? "#fafafa" : "white",
