@@ -155,7 +155,7 @@ function Profile({ user }) {
         .edit-input:focus { border-color: ${GREEN} !important; outline: none; box-shadow: 0 0 0 3px rgba(45,106,79,0.1); }
         .save-btn:hover { background: ${DARK} !important; transform: translateY(-1px); }
         .avatar-hover:hover .avatar-overlay { opacity: 1 !important; }
-        .profile-header { background: linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%); border-radius: 16px; padding: 32px 36px; marginBottom: 24px; display: flex; alignItems: center; gap: 24px; flex-wrap: wrap; }
+        .profile-header { background: linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%); border-radius: 24px; padding: 40px 60px; margin: 24px var(--page-px) 32px var(--page-px); display: flex; align-items: center; gap: 24px; flex-wrap: wrap; box-shadow: 0 12px 40px rgba(45,106,79,0.2); }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
         
@@ -165,7 +165,7 @@ function Profile({ user }) {
         }
         
         @media (max-width: 900px) {
-          .profile-header { padding: 20px !important; flex-direction: column !important; text-align: center !important; }
+          .profile-header { padding: 32px 24px !important; margin: 16px var(--page-px) 24px var(--page-px) !important; border-radius: 16px !important; flex-direction: column !important; text-align: center !important; }
           .info-grid { grid-template-columns: 1fr !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .profile-tab { font-size: 11px !important; padding: 8px 4px !important; }
@@ -221,7 +221,8 @@ function Profile({ user }) {
         </div>
       </div>
 
-      {/* Message */}
+      <div style={{ padding: "0 var(--page-px) 40px var(--page-px)" }}>
+        {/* Message */}
       {msg.text && (
         <div style={{ padding: "12px 16px", borderRadius: "10px", marginBottom: "16px", fontSize: "13px", fontWeight: "500", background: msg.type === "error" ? "#fff5f5" : "#f0fdf4", border: `1px solid ${msg.type === "error" ? "#fecaca" : "#bbf7d0"}`, color: msg.type === "error" ? "#dc2626" : "#15803d" }}>
           {msg.type === "error" ? "⚠️" : "✅"} {msg.text}
@@ -419,6 +420,7 @@ function Profile({ user }) {
           )}
         </div>
       )}
+    </div>
     </div>
   );
 }
