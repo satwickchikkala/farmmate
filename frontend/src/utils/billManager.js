@@ -24,14 +24,34 @@ export const generateMonthlyBill = async (userId) => {
     // Get usage for previous month
     const usageRef = doc(db, "usage", `${userId}_${monthKey}`);
     const usageSnap = await getDoc(usageRef);
+    const usage = usageSnap.exists() ? usageSnap.data() : {};
 
-    if (!usageSnap.exists() || usageSnap.data().totalCost === 0) return null;
-
-    const usage = usageSnap.data();
+    // Count PAYG lands (isPayg === true)
+    const landsQuery = query(
+        collection(db, "lands"),
+        where("userId", "==", userId),
+        where("isPayg", "==", true)
+    );
+    const landsSnap = await getDocs(landsQuery);
+    const paygLandCount = landsSnap.size;
 
     // Build bill items
     const items = [];
+
+    // 1. Base charge — ₹30 per PAYG land per month
+    if (paygLandCount > 0) {
+        items.push({
+            feature: "extraLand",
+            label: `Extra Lands (${paygLandCount} lands × ₹30/month)`,
+            quantity: paygLandCount,
+            unitPrice: 30,
+            total: paygLandCount * 30,
+        });
+    }
+
+    // 2. Feature usage charges for PAYG lands only (tracked in usage doc)
     Object.entries(PAYG_PRICES).forEach(([key, { label, price }]) => {
+        if (key === "extraLand") return; // Handled separately above
         const count = usage[`${key}Count`] || 0;
         if (count > 0) {
             items.push({
@@ -43,6 +63,9 @@ export const generateMonthlyBill = async (userId) => {
             });
         }
     });
+
+    // If no charges at all return null
+    if (items.length === 0) return null;
 
     const totalAmount = items.reduce((sum, i) => sum + i.total, 0);
 
@@ -60,6 +83,7 @@ export const generateMonthlyBill = async (userId) => {
         status: "unpaid",
         items,
         totalAmount,
+        paygLandCount,
         razorpayOrderId: null,
         razorpayPaymentId: null,
     };

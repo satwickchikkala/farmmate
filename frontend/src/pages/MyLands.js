@@ -210,8 +210,14 @@ function MyLands({ user }) {
 
     setLoading(true);
     try {
+      const uid = auth.currentUser.uid;
+      const userSnap = await getDoc(doc(db, "users", uid));
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      const nextIndex = (userData.totalLandsCreated || 0) + 1;
+      const isPaygLand = nextIndex > 10;
+
       await addDoc(collection(db, "lands"), {
-        userId: auth.currentUser.uid,
+        userId: uid,
         landName,
         city: weather.city,
         soilType,
@@ -225,11 +231,13 @@ function MyLands({ user }) {
         humidity: weather.humidity,
         description: weather.description,
         windSpeed: weather.wind_speed,
+        landIndex: nextIndex,
+        isPayg: isPaygLand,
         createdAt: new Date(),
       });
 
       // Increment lifetime counter AFTER successful save
-      await incrementLandCount(auth.currentUser.uid);
+      await incrementLandCount(uid);
 
       showAlert("Land saved successfully!");
       resetForm();

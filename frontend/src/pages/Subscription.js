@@ -23,6 +23,7 @@ function Subscription({ user }) {
   const [monthlyUsage, setMonthlyUsage] = useState(null);
   const [unpaidBill, setUnpaidBill] = useState(null);
   const [showBillPopup, setShowBillPopup] = useState(false);
+  const [paygLandCount, setPaygLandCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,6 +44,15 @@ function Subscription({ user }) {
 
     const bill = await getUnpaidBill(uid);
     setUnpaidBill(bill);
+
+    // Count PAYG lands
+    const landsQ = query(
+      collection(db, "lands"),
+      where("userId", "==", uid),
+      where("isPayg", "==", true)
+    );
+    const landsSnap = await getDocs(landsQ);
+    setPaygLandCount(landsSnap.size);
 
     setLoading(false);
   };
@@ -326,7 +336,7 @@ function Subscription({ user }) {
               {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
             </p>
 
-            {monthlyUsage && monthlyUsage.totalCost > 0 ? (
+            {(monthlyUsage?.totalCost || 0) + (paygLandCount * 30) > 0 ? (
               <>
                 {/* Grocery style bill */}
                 <div style={{ background: "#f9fafb", borderRadius: "10px", padding: "16px" }}>
@@ -338,6 +348,16 @@ function Subscription({ user }) {
                   </div>
 
                   <div style={{ height: "1px", background: "#e5e7eb", marginBottom: "10px" }} />
+
+                  {/* Extra land base charge */}
+                  {paygLandCount > 0 && (
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "7px 0", borderBottom: "1px solid #f3f4f6", fontSize: "13px" }}>
+                      <span style={{ color: "#374151" }}>Extra Lands (Base)</span>
+                      <span style={{ textAlign: "center", color: "#6b7280" }}>{paygLandCount}</span>
+                      <span style={{ textAlign: "right", color: "#6b7280" }}>₹30</span>
+                      <span style={{ textAlign: "right", fontWeight: "600", color: "#1a6985" }}>₹{paygLandCount * 30}</span>
+                    </div>
+                  )}
 
                   {Object.entries(PAYG_PRICES).map(([key, { label, price }]) => {
                     const count = monthlyUsage[`${key}Count`] || 0;
@@ -358,9 +378,16 @@ function Subscription({ user }) {
                   <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700", fontSize: "16px" }}>
                     <span style={{ color: DARK }}>Estimated Bill</span>
                     <span style={{ color: "#1a6985", fontSize: "20px", fontFamily: "Playfair Display, serif" }}>
-                      ₹{monthlyUsage.totalCost}
+                      ₹{monthlyUsage.totalCost + (paygLandCount * 30)}
                     </span>
                   </div>
+                </div>
+
+                <div style={{ marginTop: "20px", background: "#f0f8ff", borderRadius: "10px", padding: "14px", border: "1px solid #d1e9ff" }}>
+                  <p style={{ fontSize: "12px", color: "#1a6985", margin: 0, lineHeight: "1.5" }}>
+                    ⚡ <strong>Tiered Billing Policy:</strong> You are only charged for features used on lands <strong>beyond your first 10 lands</strong>. 
+                    Usage on your first 10 lands remains free under your Farmer Pro plan coverage. Base charge of ₹30/month applies per extra land.
+                  </p>
                 </div>
 
                 <p style={{ fontSize: "12px", color: "#9ca3af", margin: "12px 0 0 0", textAlign: "center" }}>

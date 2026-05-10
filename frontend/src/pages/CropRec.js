@@ -117,7 +117,12 @@ function CropRec() {
         ph: parseFloat(soilValues.ph), city: selectedLand.city,
         language: lang,
       });
-      await trackUsage(auth.currentUser.uid, "cropRec", plan);
+      await trackUsage(
+        auth.currentUser.uid,
+        "cropRec",
+        selectedLand.id,
+        selectedLand.isPayg === true
+      );
       setCrops(res.data.crops); setStep(2);
     } catch { setError("Could not get recommendations. Try again."); }
     setLoading(false);
@@ -137,7 +142,12 @@ function CropRec() {
         landSize: selectedLand.landSize, landUnit: selectedLand.landUnit,
         language: lang,
       });
-      await trackUsage(auth.currentUser.uid, "timeline", plan);
+      await trackUsage(
+        auth.currentUser.uid,
+        "timeline",
+        selectedLand.id,
+        selectedLand.isPayg === true
+      );
       setTimeline(res.data); setStep(3);
     } catch { setError("Could not generate timeline. Try again."); }
     setLoading(false);

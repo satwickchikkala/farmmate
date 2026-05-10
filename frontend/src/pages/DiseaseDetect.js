@@ -22,12 +22,21 @@ function DiseaseDetect() {
   const [error, setError] = useState("");
   const [activeCrops, setActiveCrops] = useState([]);
   const [dragOver, setDragOver] = useState(false);
+  const [lands, setLands] = useState([]);
+  const [selectedLandId, setSelectedLandId] = useState(null);
+  const [selectedLandIsPayg, setSelectedLandIsPayg] = useState(false);
 
   useEffect(() => {
     const load = async () => {
+      // Load active crops for hint
       const q = query(collection(db, "timelines"), where("userId", "==", auth.currentUser.uid), where("status", "==", "active"));
       const snap = await getDocs(q);
       setActiveCrops(snap.docs.map(d => d.data().crop));
+
+      // Load lands for selector
+      const landQ = query(collection(db, "lands"), where("userId", "==", auth.currentUser.uid));
+      const landSnap = await getDocs(landQ);
+      setLands(landSnap.docs.map(d => ({ id: d.id, ...d.data() })));
     };
     load();
   }, []);
@@ -62,7 +71,12 @@ function DiseaseDetect() {
       const res = await axios.post(`${API_URL}/detect-disease`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      await trackUsage(auth.currentUser.uid, "disease", plan);
+      await trackUsage(
+        auth.currentUser.uid,
+        "disease",
+        selectedLandId,
+        selectedLandIsPayg
+      );
       setResult(res.data);
     } catch (err) {
       setError("Could not analyze image. Make sure the backend is running and the model files are present.");
@@ -94,6 +108,28 @@ function DiseaseDetect() {
               🌾 {t("disease_active_crops")}: <strong>{activeCrops.join(", ")}</strong>
             </div>
           )}
+
+          {/* Land selector for billing */}
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: "#6b7280", marginBottom: "6px", textTransform: "uppercase" }}>Which land is this for?</label>
+            <select
+              value={selectedLandId || ""}
+              onChange={e => {
+                const land = lands.find(l => l.id === e.target.value);
+                setSelectedLandId(e.target.value);
+                setSelectedLandIsPayg(land?.isPayg === true);
+              }}
+              style={{ display: "block", width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "14px", fontFamily: FONT, background: "white" }}
+            >
+              <option value="">Select land...</option>
+              {lands.map(land => (
+                <option key={land.id} value={land.id}>
+                  {land.landName} — {land.city}
+                  {land.isPayg ? " ⚡ (PAYG)" : " ✅ (Pro)"}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Dropzone */}
           <div
