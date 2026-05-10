@@ -186,7 +186,8 @@ function Subscription({ user }) {
         }
       `}</style>
 
-      <div style={{ marginBottom: "32px" }}>
+      <div style={{ padding: "32px 40px" }}>
+        <div style={{ marginBottom: "32px" }}>
         <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "32px", color: DARK, margin: "0 0 8px 0" }}>
           Subscription Plans
         </h2>
@@ -251,8 +252,8 @@ function Subscription({ user }) {
 
       {/* FREE PLAN USER — show only Pro plan */}
       {userPlan === "free" && (
-        <div style={{ maxWidth: "1000px", margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <div style={{ textAlign: "center", marginBottom: "32px", padding: "20px 32px", background: "#f9fafb", borderRadius: "12px", border: "1px solid #e5e7eb", width: "100%", maxWidth: "600px" }}>
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div style={{ textAlign: "center", marginBottom: "32px", padding: "20px 32px", background: "#f9fafb", borderRadius: "12px", border: "1px solid #e5e7eb", width: "100%", maxWidth: "800px" }}>
             <p style={{ color: "#6b7280", fontSize: "15px", margin: 0 }}>
               You are on the <strong>Free Plan</strong> — 1 land, basic features only.
             </p>
@@ -488,6 +489,7 @@ function Subscription({ user }) {
       <p style={{ textAlign: "center", color: "#9ca3af", fontSize: "12px", marginTop: "24px" }}>
         🔒 Secure payments via Razorpay • All prices in INR • GST applicable
       </p>
+    </div>
     </div>
   );
 }

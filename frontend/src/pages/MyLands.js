@@ -365,7 +365,7 @@ function MyLands({ user }) {
   return (
     <div style={{ fontFamily: "sans-serif", width: "100%", boxSizing: "border-box" }}>
       <style>{`
-        .lands-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr)); gap: 24px; margin-bottom: 40px; }
+        .lands-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); gap: 32px; margin-bottom: 40px; }
         .lands-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
         
         @media (max-width: 900px) {
@@ -377,231 +377,233 @@ function MyLands({ user }) {
         }
       `}</style>
 
-      <div className="lands-header">
-        <h2 style={{ margin: 0 }}>🗺️ {t("lands_title")}</h2>
-        <button onClick={() => { setShowAddForm(!showAddForm); resetForm(); }} style={styles.greenBtn}>
-          {showAddForm ? `✖ ${t("lands_cancel")}` : `➕ ${t("lands_add_new")}`}
-        </button>
-      </div>
-
-      {/* ── SAVED LANDS ── */}
-      {lands.length === 0 && !showAddForm && (
-        <div style={styles.emptyState}>
-          <p>🌱 {t("lands_no_lands")}</p>
+      <div style={{ padding: "32px 40px" }}>
+        <div className="lands-header">
+          <h2 style={{ margin: 0 }}>🗺️ {t("lands_title")}</h2>
+          <button onClick={() => { setShowAddForm(!showAddForm); resetForm(); }} style={styles.greenBtn}>
+            {showAddForm ? `✖ ${t("lands_cancel")}` : `➕ ${t("lands_add_new")}`}
+          </button>
         </div>
-      )}
 
-      <div className="lands-grid">
-        {lands.map((land) => (
-          <div key={land.id} style={styles.landCard}>
-            {/* Edit Modal */}
-            {editingLand?.id === land.id ? (
-              <div>
-                <h4 style={{ marginTop: 0 }}>✏️ {t("common_edit")}</h4>
-                <input value={editingLand.landName} onChange={(e) => setEditingLand({ ...editingLand, landName: e.target.value })} placeholder={t("lands_land_name")} style={styles.input} />
-                <select value={editingLand.soilType} onChange={(e) => setEditingLand({ ...editingLand, soilType: e.target.value })} style={styles.input}>
-                  {SOIL_TYPES.map((s) => <option key={s}>{s}</option>)}
-                </select>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <input type="number" value={editingLand.landSize} onChange={(e) => setEditingLand({ ...editingLand, landSize: e.target.value })} placeholder={t("lands_land_size")} style={{ ...styles.input, flex: 1 }} />
-                  <select value={editingLand.landUnit} onChange={(e) => setEditingLand({ ...editingLand, landUnit: e.target.value })} style={{ ...styles.input, flex: 1 }}>
-                    <option value="cents">Cents</option>
-                    <option value="acres">Acres</option>
-                  </select>
-                </div>
-                <select value={editingLand.landStatus} onChange={(e) => setEditingLand({ ...editingLand, landStatus: e.target.value })} style={styles.input}>
-                  {LAND_STATUSES.map((s) => <option key={s}>{s}</option>)}
-                </select>
-                <textarea value={editingLand.notes} onChange={(e) => setEditingLand({ ...editingLand, notes: e.target.value })} placeholder={t("lands_notes")} style={{ ...styles.input, height: "60px", resize: "vertical" }} />
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={handleSaveEdit} style={styles.greenBtn}>💾 {t("common_save")}</button>
-                  <button onClick={() => setEditingLand(null)} style={styles.outlineBtn}>{t("common_cancel")}</button>
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* Mini map thumbnail */}
-                <img
-                  src={getMiniMapUrl(land.latitude, land.longitude)}
-                  alt="land location"
-                  style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "8px", marginBottom: "10px" }}
-                />
-                {/* Status badge */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                  <strong style={{ fontSize: "16px" }}>🏷️ {land.landName}</strong>
-                  <span style={{ background: statusColor(land.landStatus), color: "white", padding: "2px 10px", borderRadius: "20px", fontSize: "12px" }}>
-                    {land.landStatus}
-                  </span>
-                </div>
-                <p style={styles.cardText}>📍 {land.city}</p>
-                <p style={styles.cardText}>🪨 {land.soilType} | 📐 {land.landSize} {land.landUnit}</p>
-                <p style={styles.cardText}>🌡 {land.temperature}°C | 💧 {land.humidity}% | ☁ {land.description}</p>
-                {land.notes && <p style={{ ...styles.cardText, color: "#888", fontStyle: "italic" }}>📝 {land.notes}</p>}
-                <p style={{ fontSize: "11px", color: "#aaa" }}>Lat: {land.latitude?.toFixed(4)}, Lng: {land.longitude?.toFixed(4)}</p>
-
-                {/* Action buttons */}
-                <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
-                  <button onClick={() => refreshWeather(land)} style={styles.smallBtn}>🔄 {t("lands_refresh_weather")}</button>
-                  <button onClick={() => handleEdit(land)} style={styles.smallBtn}>✏️ {t("common_edit")}</button>
-                  <button onClick={() => handleDelete(land.id)} style={styles.dangerBtn}>🗑️ {t("common_delete")}</button>
-                </div>
-              </>
-            )}
+        {/* ── SAVED LANDS ── */}
+        {lands.length === 0 && !showAddForm && (
+          <div style={styles.emptyState}>
+            <p>🌱 {t("lands_no_lands")}</p>
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* ── ADD NEW LAND FORM ── */}
-      {showAddForm && (
-        <div className="form-section" style={styles.formSection}>
-          <h3 style={{ marginTop: 0 }}>➕ {t("lands_add_new")}</h3>
+        <div className="lands-grid">
+          {lands.map((land) => (
+            <div key={land.id} style={styles.landCard}>
+              {/* Edit Modal */}
+              {editingLand?.id === land.id ? (
+                <div>
+                  <h4 style={{ marginTop: 0 }}>✏️ {t("common_edit")}</h4>
+                  <input value={editingLand.landName} onChange={(e) => setEditingLand({ ...editingLand, landName: e.target.value })} placeholder={t("lands_land_name")} style={styles.input} />
+                  <select value={editingLand.soilType} onChange={(e) => setEditingLand({ ...editingLand, soilType: e.target.value })} style={styles.input}>
+                    {SOIL_TYPES.map((s) => <option key={s}>{s}</option>)}
+                  </select>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input type="number" value={editingLand.landSize} onChange={(e) => setEditingLand({ ...editingLand, landSize: e.target.value })} placeholder={t("lands_land_size")} style={{ ...styles.input, flex: 1 }} />
+                    <select value={editingLand.landUnit} onChange={(e) => setEditingLand({ ...editingLand, landUnit: e.target.value })} style={{ ...styles.input, flex: 1 }}>
+                      <option value="cents">Cents</option>
+                      <option value="acres">Acres</option>
+                    </select>
+                  </div>
+                  <select value={editingLand.landStatus} onChange={(e) => setEditingLand({ ...editingLand, landStatus: e.target.value })} style={styles.input}>
+                    {LAND_STATUSES.map((s) => <option key={s}>{s}</option>)}
+                  </select>
+                  <textarea value={editingLand.notes} onChange={(e) => setEditingLand({ ...editingLand, notes: e.target.value })} placeholder={t("lands_notes")} style={{ ...styles.input, height: "60px", resize: "vertical" }} />
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={handleSaveEdit} style={styles.greenBtn}>💾 {t("common_save")}</button>
+                    <button onClick={() => setEditingLand(null)} style={styles.outlineBtn}>{t("common_cancel")}</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Mini map thumbnail */}
+                  <img
+                    src={getMiniMapUrl(land.latitude, land.longitude)}
+                    alt="land location"
+                    style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "8px", marginBottom: "10px" }}
+                  />
+                  {/* Status badge */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                    <strong style={{ fontSize: "16px" }}>🏷️ {land.landName}</strong>
+                    <span style={{ background: statusColor(land.landStatus), color: "white", padding: "2px 10px", borderRadius: "20px", fontSize: "12px" }}>
+                      {land.landStatus}
+                    </span>
+                  </div>
+                  <p style={styles.cardText}>📍 {land.city}</p>
+                  <p style={styles.cardText}>🪨 {land.soilType} | 📐 {land.landSize} {land.landUnit}</p>
+                  <p style={styles.cardText}>🌡 {land.temperature}°C | 💧 {land.humidity}% | ☁ {land.description}</p>
+                  {land.notes && <p style={{ ...styles.cardText, color: "#888", fontStyle: "italic" }}>📝 {land.notes}</p>}
+                  <p style={{ fontSize: "11px", color: "#aaa" }}>Lat: {land.latitude?.toFixed(4)}, Lng: {land.longitude?.toFixed(4)}</p>
 
-          {/* Step 1 — Location */}
-          <div className="step-box" style={styles.stepBox}>
-            <h4 style={styles.stepTitle}>{t("lands_step1")}</h4>
+                  {/* Action buttons */}
+                  <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
+                    <button onClick={() => refreshWeather(land)} style={styles.smallBtn}>🔄 {t("lands_refresh_weather")}</button>
+                    <button onClick={() => handleEdit(land)} style={styles.smallBtn}>✏️ {t("common_edit")}</button>
+                    <button onClick={() => handleDelete(land.id)} style={styles.dangerBtn}>🗑️ {t("common_delete")}</button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
 
-            <div style={{ display: "flex", gap: "10px", marginBottom: "12px", flexWrap: "wrap" }}>
-              <button onClick={detectLocation} style={styles.greenBtn}>📍 {t("lands_detect")}</button>
+        {/* ── ADD NEW LAND FORM ── */}
+        {showAddForm && (
+          <div className="form-section" style={styles.formSection}>
+            <h3 style={{ marginTop: 0 }}>➕ {t("lands_add_new")}</h3>
+
+            {/* Step 1 — Location */}
+            <div className="step-box" style={styles.stepBox}>
+              <h4 style={styles.stepTitle}>{t("lands_step1")}</h4>
+
+              <div style={{ display: "flex", gap: "10px", marginBottom: "12px", flexWrap: "wrap" }}>
+                <button onClick={detectLocation} style={styles.greenBtn}>📍 {t("lands_detect")}</button>
+              </div>
+
+              {/* Search with autocomplete */}
+              <div style={{ position: "relative", marginBottom: "12px" }}>
+                <input
+                  type="text"
+                  placeholder={t("lands_search")}
+                  value={searchInput}
+                  onChange={(e) => handleSearchInput(e.target.value)}
+                  style={styles.input}
+                />
+                {suggestions.length > 0 && (
+                  <div style={styles.suggestionBox}>
+                    {suggestions.map((s) => (
+                      <div
+                        key={s.place_id}
+                        onClick={() => handleSuggestionClick(s.place_id, s.description)}
+                        style={styles.suggestionItem}
+                        onMouseEnter={(e) => e.target.style.background = "#f0f7f4"}
+                        onMouseLeave={(e) => e.target.style.background = "white"}
+                      >
+                        📍 {s.description}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Google Map */}
+              <div className="map-container" style={{ borderRadius: "10px", overflow: "hidden" }}>
+                <GoogleMap
+                  mapContainerStyle={{ width: "100%", height: "380px" }}
+                  center={mapCenter}
+                  zoom={12}
+                  onClick={handleMapClick}
+                >
+                  <Marker position={markerPos} />
+                </GoogleMap>
+              </div>
+
+              <p style={{ fontSize: "13px", color: "#666", marginTop: "6px" }}>
+                📌 {t("lands_pinned")}: {markerPos.lat.toFixed(5)}, {markerPos.lng.toFixed(5)}
+              </p>
             </div>
 
-            {/* Search with autocomplete */}
-            <div style={{ position: "relative", marginBottom: "12px" }}>
+            {/* Step 2 — Land Details */}
+            <div className="step-box" style={styles.stepBox}>
+              <h4 style={styles.stepTitle}>{t("lands_step2")}</h4>
+
+              <label style={styles.label}>{t("lands_land_name")} *</label>
               <input
                 type="text"
-                placeholder={t("lands_search")}
-                value={searchInput}
-                onChange={(e) => handleSearchInput(e.target.value)}
+                placeholder={t("lands_land_name_ph")}
+                value={landName}
+                onChange={(e) => setLandName(e.target.value)}
                 style={styles.input}
               />
-              {suggestions.length > 0 && (
-                <div style={styles.suggestionBox}>
-                  {suggestions.map((s) => (
-                    <div
-                      key={s.place_id}
-                      onClick={() => handleSuggestionClick(s.place_id, s.description)}
-                      style={styles.suggestionItem}
-                      onMouseEnter={(e) => e.target.style.background = "#f0f7f4"}
-                      onMouseLeave={(e) => e.target.style.background = "white"}
-                    >
-                      📍 {s.description}
-                    </div>
-                  ))}
+
+              <label style={styles.label}>{t("lands_soil_type")} *</label>
+              <select value={soilType} onChange={(e) => setSoilType(e.target.value)} style={styles.input}>
+                {SOIL_TYPES.map((s) => <option key={s}>{s}</option>)}
+              </select>
+
+              <label style={styles.label}>{t("lands_land_size")} *</label>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="number"
+                  placeholder="e.g. 30"
+                  value={landSize}
+                  onChange={(e) => setLandSize(e.target.value)}
+                  style={{ ...styles.input, flex: 2 }}
+                  min="0"
+                />
+                <select value={landUnit} onChange={(e) => setLandUnit(e.target.value)} style={{ ...styles.input, flex: 1 }}>
+                  <option value="cents">Cents</option>
+                  <option value="acres">Acres</option>
+                </select>
+              </div>
+
+              <label style={styles.label}>{t("lands_land_status")}</label>
+              <select value={landStatus} onChange={(e) => setLandStatus(e.target.value)} style={styles.input}>
+                {LAND_STATUSES.map((s) => <option key={s}>{s}</option>)}
+              </select>
+
+              <label style={styles.label}>{t("lands_notes")}</label>
+              <textarea
+                placeholder={t("lands_notes_ph")}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                style={{ ...styles.input, height: "70px", resize: "vertical" }}
+              />
+            </div>
+
+            {/* Step 3 — Fetch Weather */}
+            <div className="step-box" style={styles.stepBox}>
+              <h4 style={styles.stepTitle}>{t("lands_step3")}</h4>
+              {error && <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>}
+
+              <button onClick={fetchWeather} disabled={loading} style={styles.greenBtn}>
+                {loading ? t("lands_fetching") : `🌤 ${t("lands_fetch_weather")}`}
+              </button>
+
+              {weather && (
+                <div style={styles.weatherCard}>
+                  <p style={{ fontWeight: "bold", marginBottom: "8px" }}>✅ Weather fetched for {weather.city}</p>
+                  <p style={styles.cardText}>🌡 Temperature: {weather.temperature}°C</p>
+                  <p style={styles.cardText}>💧 Humidity: {weather.humidity}%</p>
+                  <p style={styles.cardText}>🌬 Wind Speed: {weather.wind_speed} m/s</p>
+                  <p style={styles.cardText}>☁ Condition: {weather.description}</p>
                 </div>
               )}
             </div>
 
-            {/* Google Map */}
-            <div className="map-container" style={{ borderRadius: "10px", overflow: "hidden" }}>
-              <GoogleMap
-                mapContainerStyle={{ width: "100%", height: "380px" }}
-                center={mapCenter}
-                zoom={12}
-                onClick={handleMapClick}
+            {/* Step 4 — Save */}
+            <div className="step-box" style={styles.stepBox}>
+              <h4 style={styles.stepTitle}>{t("lands_step4")}</h4>
+              <p style={{ fontSize: "13px", color: "#888", marginBottom: "10px" }}>
+                {t("lands_save_note")}
+              </p>
+              <button
+                onClick={handleSaveLand}
+                disabled={loading || !weatherFetched}
+                style={{
+                  ...styles.greenBtn,
+                  opacity: weatherFetched ? 1 : 0.5,
+                  cursor: weatherFetched ? "pointer" : "not-allowed",
+                }}
               >
-                <Marker position={markerPos} />
-              </GoogleMap>
+                💾 {t("lands_save")}
+              </button>
             </div>
-
-            <p style={{ fontSize: "13px", color: "#666", marginTop: "6px" }}>
-              📌 {t("lands_pinned")}: {markerPos.lat.toFixed(5)}, {markerPos.lng.toFixed(5)}
-            </p>
           </div>
+        )}
 
-          {/* Step 2 — Land Details */}
-          <div className="step-box" style={styles.stepBox}>
-            <h4 style={styles.stepTitle}>{t("lands_step2")}</h4>
-
-            <label style={styles.label}>{t("lands_land_name")} *</label>
-            <input
-              type="text"
-              placeholder={t("lands_land_name_ph")}
-              value={landName}
-              onChange={(e) => setLandName(e.target.value)}
-              style={styles.input}
-            />
-
-            <label style={styles.label}>{t("lands_soil_type")} *</label>
-            <select value={soilType} onChange={(e) => setSoilType(e.target.value)} style={styles.input}>
-              {SOIL_TYPES.map((s) => <option key={s}>{s}</option>)}
-            </select>
-
-            <label style={styles.label}>{t("lands_land_size")} *</label>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <input
-                type="number"
-                placeholder="e.g. 30"
-                value={landSize}
-                onChange={(e) => setLandSize(e.target.value)}
-                style={{ ...styles.input, flex: 2 }}
-                min="0"
-              />
-              <select value={landUnit} onChange={(e) => setLandUnit(e.target.value)} style={{ ...styles.input, flex: 1 }}>
-                <option value="cents">Cents</option>
-                <option value="acres">Acres</option>
-              </select>
-            </div>
-
-            <label style={styles.label}>{t("lands_land_status")}</label>
-            <select value={landStatus} onChange={(e) => setLandStatus(e.target.value)} style={styles.input}>
-              {LAND_STATUSES.map((s) => <option key={s}>{s}</option>)}
-            </select>
-
-            <label style={styles.label}>{t("lands_notes")}</label>
-            <textarea
-              placeholder={t("lands_notes_ph")}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              style={{ ...styles.input, height: "70px", resize: "vertical" }}
-            />
-          </div>
-
-          {/* Step 3 — Fetch Weather */}
-          <div className="step-box" style={styles.stepBox}>
-            <h4 style={styles.stepTitle}>{t("lands_step3")}</h4>
-            {error && <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>}
-
-            <button onClick={fetchWeather} disabled={loading} style={styles.greenBtn}>
-              {loading ? t("lands_fetching") : `🌤 ${t("lands_fetch_weather")}`}
-            </button>
-
-            {weather && (
-              <div style={styles.weatherCard}>
-                <p style={{ fontWeight: "bold", marginBottom: "8px" }}>✅ Weather fetched for {weather.city}</p>
-                <p style={styles.cardText}>🌡 Temperature: {weather.temperature}°C</p>
-                <p style={styles.cardText}>💧 Humidity: {weather.humidity}%</p>
-                <p style={styles.cardText}>🌬 Wind Speed: {weather.wind_speed} m/s</p>
-                <p style={styles.cardText}>☁ Condition: {weather.description}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Step 4 — Save */}
-          <div className="step-box" style={styles.stepBox}>
-            <h4 style={styles.stepTitle}>{t("lands_step4")}</h4>
-            <p style={{ fontSize: "13px", color: "#888", marginBottom: "10px" }}>
-              {t("lands_save_note")}
-            </p>
-            <button
-              onClick={handleSaveLand}
-              disabled={loading || !weatherFetched}
-              style={{
-                ...styles.greenBtn,
-                opacity: weatherFetched ? 1 : 0.5,
-                cursor: weatherFetched ? "pointer" : "not-allowed",
-              }}
-            >
-              💾 {t("lands_save")}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showUpgrade && (
-        <UpgradePopup
-          feature={blockedFeature}
-          onClose={() => setShowUpgrade(false)}
-        />
-      )}
+        {showUpgrade && (
+          <UpgradePopup
+            feature={blockedFeature}
+            onClose={() => setShowUpgrade(false)}
+          />
+        )}
+      </div>
     </div>
   );
 }

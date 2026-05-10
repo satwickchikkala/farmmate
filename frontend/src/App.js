@@ -257,15 +257,13 @@ function App() {
         <PlanProvider user={user}>
           <BrowserRouter>
             <Navbar user={user} />
-            <div className="main-content-area" style={{ maxWidth: "1600px", margin: "0 auto", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 64px)", boxSizing: "border-box" }}>
+            <div className="main-content-area" style={{ width: "100%", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 64px)", boxSizing: "border-box" }}>
               <style>{`
-                .main-content-area { padding: 24px 32px; }
-                @media (min-width: 1400px) {
-                  .main-content-area { padding: 32px 60px; max-width: 1600px !important; }
-                }
+                .main-content-area { padding: 0; width: 100%; }
                 @media (max-width: 900px) {
                   .main-content-area { padding: 16px 12px !important; }
                 }
+              `}</style>
               `}</style>
               <Routes>
                 <Route path="/" element={<Navigate to="/home" />} />

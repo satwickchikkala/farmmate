@@ -133,10 +133,11 @@ function DiseaseDetect() {
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       `}</style>
 
-      <div style={{ marginBottom: "24px" }}>
-        <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🔬 {t("disease_title")}</h2>
-        <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>{t("disease_subtitle")}</p>
-      </div>
+      <div style={{ padding: "32px 40px" }}>
+        <div style={{ marginBottom: "24px" }}>
+          <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🔬 {t("disease_title")}</h2>
+          <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>{t("disease_subtitle")}</p>
+        </div>
 
       <div className="dd-grid">
 
@@ -359,6 +360,7 @@ function DiseaseDetect() {
           onClose={() => setShowUpgrade(false)}
         />
       )}
+    </div>
     </div>
   );
 }

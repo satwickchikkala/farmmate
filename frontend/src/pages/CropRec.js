@@ -297,11 +297,12 @@ function CropRec() {
       `}</style>
 
       {/* Page header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🌾 {t("crop_title")}</h2>
-          <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>{t("crop_subtitle")}</p>
-        </div>
+      <div style={{ padding: "32px 40px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
+          <div>
+            <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🌾 {t("crop_title")}</h2>
+            <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>{t("crop_subtitle")}</p>
+          </div>
         {/* Tab pills */}
         <div style={{ display: "flex", gap: "6px", background: "white", padding: "6px", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
           {TABS.map(t_tab => (
@@ -559,6 +560,7 @@ function CropRec() {
       )}
 
 
+    </div>
     </div>
   );
 }
