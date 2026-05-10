@@ -14,18 +14,21 @@ export const updateUserPlan = async (userId, plan, paymentId) => {
   }, { merge: true });
 };
 
-export const getUserPlan = async (userId) => {
+export const getUserPlanInfo = async (userId) => {
   const docRef = doc(db, "users", userId);
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
     const data = docSnap.data();
-    if (data.planExpiry && new Date(data.planExpiry) < new Date()) {
-      return "free";
-    }
-    return data.plan || "free";
+    const expiry = data.planExpiry ? new Date(data.planExpiry) : null;
+    const isExpired = expiry && expiry < new Date();
+    
+    return {
+      plan: isExpired ? "free" : (data.plan || "free"),
+      planExpiry: data.planExpiry,
+    };
   }
-  return "free";
+  return { plan: "free", planExpiry: null };
 };
 
 // Call this when user CREATES a new land

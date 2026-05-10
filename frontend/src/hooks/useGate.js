@@ -7,7 +7,7 @@ import { isServiceStopped } from "../utils/billManager";
 import { doc, getDoc } from "firebase/firestore";
 
 export function useGate() {
-  const { plan } = usePlan();
+  const { plan, planExpiry, refreshPlan } = usePlan();
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [blockedFeature, setBlockedFeature] = useState("");
   const [serviceStopped, setServiceStopped] = useState(false);
@@ -59,6 +59,8 @@ export function useGate() {
 
   return {
     plan,
+    planExpiry,
+    refreshPlan,
     isPro,
     checkGate,
     checkLandGate,

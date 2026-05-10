@@ -1,6 +1,10 @@
 // src/pages/Home.js
 import { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
+import { getUserPlanInfo } from "../utils/updatePlan";
+import { useGate } from "../hooks/useGate";
+import axios from "axios";
+import API_URL from "../config";
 import { db, auth } from "../firebase";
 import { collection, getDocs, query, where, doc, updateDoc, getDoc } from "firebase/firestore";
 import { getUnpaidBill, generateMonthlyBill, isServiceStopped } from "../utils/billManager";
@@ -22,6 +26,8 @@ const TYPE_ICONS = {
 
 function Home({ user }) {
   const { t, lang } = useLanguage();
+  const { plan, planExpiry, refreshPlan } = useGate();
+  const [paying, setPaying] = useState(false);
   const [unpaidBill, setUnpaidBill] = useState(null);
   const [showBillPopup, setShowBillPopup] = useState(false);
   const [userDoc, setUserDoc] = useState(null);
@@ -64,6 +70,65 @@ function Home({ user }) {
     const snap = await getDocs(q);
     setTimelines(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     setLoading(false);
+  };
+
+  const handleRenewPro = async () => {
+    setPaying(true);
+    try {
+      const res = await axios.post(`${API_URL}/create-order`, { amount: 999, plan: "pro" });
+      const { orderId, keyId } = res.data;
+      const options = {
+        key: keyId, amount: 99900, currency: "INR", name: "FarmMate", description: "Pro Plan Renewal", order_id: orderId,
+        handler: async (response) => {
+          const { updateUserPlan } = await import("../utils/updatePlan");
+          await updateUserPlan(auth.currentUser.uid, "pro", response.razorpay_payment_id);
+          await refreshPlan();
+          alert("✅ Subscription renewed successfully! Your Pro plan is active for another year.");
+        },
+        prefill: { email: auth.currentUser.email, name: auth.currentUser.displayName || "" },
+        theme: { color: GREEN },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch { alert("Could not initiate payment. Try again."); }
+    setPaying(false);
+  };
+
+  const handlePayBill = async () => {
+    if (!unpaidBill) return;
+    setPaying(true);
+    try {
+      const orderRes = await axios.post(`${API_URL}/create-order`, {
+        amount: unpaidBill.totalAmount,
+        plan: "payg_bill",
+        billId: unpaidBill.id,
+      });
+
+      const { orderId, keyId } = orderRes.data;
+
+      const options = {
+        key: keyId,
+        amount: unpaidBill.totalAmount * 100,
+        currency: "INR",
+        name: "FarmMate",
+        description: `Bill for ${unpaidBill.month}`,
+        order_id: orderId,
+        handler: async (response) => {
+          const { markBillPaid } = await import("../utils/billManager");
+          await markBillPaid(auth.currentUser.uid, unpaidBill.id, response.razorpay_payment_id);
+          setUnpaidBill(null);
+          alert("✅ Payment successful! Services restored.");
+        },
+        prefill: { email: auth.currentUser.email, name: auth.currentUser.displayName || "" },
+        theme: { color: GREEN },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch {
+      alert("Could not initiate payment. Try again.");
+    }
+    setPaying(false);
   };
 
   const today = new Date().toISOString().split("T")[0];
@@ -159,13 +224,39 @@ function Home({ user }) {
         </div>
       </div>
 
-      {/* Bill Banner */}
       {unpaidBill && !showBillPopup && (
-        <BillBanner
-          bill={unpaidBill}
-          onViewBill={() => setShowBillPopup(true)}
-        />
+        <div onClick={() => setShowBillPopup(true)} style={{ cursor: "pointer" }}>
+          <BillBanner
+            bill={unpaidBill}
+            onPayNow={(e) => {
+              e.stopPropagation();
+              handlePayBill();
+            }}
+          />
+        </div>
       )}
+
+      {/* Pro Plan Renewal Reminder */}
+      {plan === "pro" && planExpiry && (() => {
+        const daysLeft = Math.ceil((new Date(planExpiry) - new Date()) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 15 && daysLeft > 0) {
+          return (
+            <div style={{ background: "#fffbeb", border: "1px solid #fef08a", borderRadius: "10px", padding: "12px 16px", marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <div style={{ fontSize: "13px", color: "#854d0e" }}>
+                ⭐ <strong>Farmer Pro</strong> expires in <strong>{daysLeft} days</strong>. Renew now to keep your benefits!
+              </div>
+              <button
+                onClick={handleRenewPro}
+                disabled={paying}
+                style={{ background: "#f59e0b", color: "white", border: "none", padding: "6px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: "600", fontFamily: FONT }}
+              >
+                {paying ? "..." : "💳 Renew Now ₹999"}
+              </button>
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       {/* Bill Popup */}
       {showBillPopup && unpaidBill && (

@@ -4,7 +4,7 @@ import { auth, db } from "../firebase";
 import { collection, getDocs, query, where, doc, setDoc, getDoc } from "firebase/firestore";
 import { updateProfile, updatePassword, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { getMonthlyUsage } from "../utils/trackUsage";
-import { getUserPlan } from "../utils/updatePlan";
+import { getUserPlanInfo } from "../utils/updatePlan";
 import { useLanguage } from "../context/LanguageContext";
 
 const FONT = "DM Sans, sans-serif";
@@ -31,6 +31,7 @@ function Profile({ user }) {
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
   const [currentPlan, setCurrentPlan] = useState("free");
+  const [planExpiry, setPlanExpiry] = useState(null);
   const [showPwds, setShowPwds] = useState({ current: false, new: false, confirm: false });
   const fileRef = useRef();
 
@@ -49,8 +50,9 @@ function Profile({ user }) {
       setDistrict(data.district || "");
       setDisplayName(data.displayName || user?.displayName || "");
     }
-    const plan = await getUserPlan(uid);
+    const { plan, planExpiry: expiry } = await getUserPlanInfo(uid);
     setCurrentPlan(plan);
+    setPlanExpiry(expiry);
     const lsnap = await getDocs(query(collection(db, "lands"), where("userId", "==", uid)));
     setLandsCount(lsnap.size);
     const tsnap = await getDocs(query(collection(db, "timelines"), where("userId", "==", uid), where("status", "==", "active")));
@@ -252,6 +254,12 @@ function Profile({ user }) {
               <label style={S.label}>{t("profile_member_since")}</label>
               <input value={memberSince} disabled style={{ ...S.input, background: "#f9f9f9", color: "#9ca3af", cursor: "not-allowed" }} />
             </div>
+            {currentPlan === "pro" && planExpiry && (
+              <div>
+                <label style={S.label}>Pro Plan Expires On</label>
+                <input value={new Date(planExpiry).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })} disabled style={{ ...S.input, background: "#fefce8", color: "#854d0e", border: "1px solid #fef08a", cursor: "not-allowed" }} />
+              </div>
+            )}
           </div>
 
           <div style={{ marginTop: "24px", display: "flex", gap: "12px" }}>

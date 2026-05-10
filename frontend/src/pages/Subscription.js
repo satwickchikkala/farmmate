@@ -1,6 +1,6 @@
 // src/pages/Subscription.js
 import { useState, useEffect } from "react";
-import { getUserPlan } from "../utils/updatePlan";
+import { getUserPlanInfo } from "../utils/updatePlan";
 import { getMonthlyUsage } from "../utils/trackUsage";
 import { auth, db } from "../firebase";
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
@@ -24,6 +24,7 @@ function Subscription({ user }) {
   const [unpaidBill, setUnpaidBill] = useState(null);
   const [showBillPopup, setShowBillPopup] = useState(false);
   const [paygLandCount, setPaygLandCount] = useState(0);
+  const [planExpiry, setPlanExpiry] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,8 +33,9 @@ function Subscription({ user }) {
 
   const loadData = async () => {
     const uid = auth.currentUser.uid;
-    const plan = await getUserPlan(uid);
+    const { plan, planExpiry: expiry } = await getUserPlanInfo(uid);
     setUserPlan(plan);
+    setPlanExpiry(expiry);
 
     const landsQuery = query(collection(db, "lands"), where("userId", "==", uid));
     const landsSnap = await getDocs(landsQuery);
@@ -106,6 +108,42 @@ function Subscription({ user }) {
     }
   };
 
+  const handlePayBill = async () => {
+    if (!unpaidBill) return;
+    try {
+      const orderRes = await axios.post(`${API_URL}/create-order`, {
+        amount: unpaidBill.totalAmount,
+        plan: "payg_bill",
+        billId: unpaidBill.id,
+      });
+
+      const { orderId, keyId } = orderRes.data;
+
+      const options = {
+        key: keyId,
+        amount: unpaidBill.totalAmount * 100,
+        currency: "INR",
+        name: "FarmMate",
+        description: `Bill for ${unpaidBill.month}`,
+        order_id: orderId,
+        handler: async (response) => {
+          const { markBillPaid } = await import("../utils/billManager");
+          await markBillPaid(auth.currentUser.uid, unpaidBill.id, response.razorpay_payment_id);
+          setUnpaidBill(null);
+          alert("✅ Payment successful! Services restored.");
+          loadData();
+        },
+        prefill: { email: auth.currentUser.email, name: auth.currentUser.displayName || "" },
+        theme: { color: GREEN },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch {
+      alert("Could not initiate payment. Try again.");
+    }
+  };
+
 
 
   const confirmUpgradePayg = () => {
@@ -148,14 +186,46 @@ function Subscription({ user }) {
           Current plan: <strong style={{ color: userPlan === "payg" ? "#1a6985" : userPlan === "pro" ? GREEN : "#6b7280" }}>
             {userPlan === "payg" ? "⚡ Pay As You Go" : userPlan === "pro" ? "⭐ Farmer Pro" : "🌿 Free"}
           </strong>
+          {userPlan === "pro" && planExpiry && (
+            <span style={{ fontSize: "13px", marginLeft: "12px", color: "#6b7280" }}>
+              (Expires {new Date(planExpiry).toLocaleDateString("en-IN")})
+            </span>
+          )}
         </p>
       </div>
 
+      {userPlan === "pro" && planExpiry && (() => {
+        const daysLeft = Math.ceil((new Date(planExpiry) - new Date()) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 15 && daysLeft > 0) {
+          return (
+            <div style={{ background: "#fffbeb", border: "1px solid #fef08a", borderRadius: "12px", padding: "16px 20px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                <span style={{ fontSize: "24px" }}>⏰</span>
+                <div>
+                  <p style={{ margin: 0, fontWeight: "700", color: "#854d0e" }}>Pro Plan expires in {daysLeft} days</p>
+                  <p style={{ margin: 0, fontSize: "13px", color: "#a16207" }}>Renew now to keep your unlimited land access and premium features.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handlePay(999, "pro")}
+                style={{ background: "#f59e0b", color: "white", border: "none", padding: "8px 20px", borderRadius: "8px", fontWeight: "600", cursor: "pointer", fontFamily: FONT }}
+              >
+                Renew Now ₹999
+              </button>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
       {unpaidBill && (
-        <div style={{ marginBottom: "24px" }}>
+        <div onClick={() => setShowBillPopup(true)} style={{ marginBottom: "24px", cursor: "pointer" }}>
           <BillBanner
             bill={unpaidBill}
-            onViewBill={() => setShowBillPopup(true)}
+            onPayNow={(e) => {
+              e.stopPropagation();
+              handlePayBill();
+            }}
           />
         </div>
       )}

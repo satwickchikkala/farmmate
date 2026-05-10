@@ -1,7 +1,7 @@
 // src/components/BillBanner.js
 const GREEN = "#2d6a4f";
 
-function BillBanner({ bill, onViewBill }) {
+function BillBanner({ bill, onPayNow }) {
     const isOverdue = new Date() > new Date(bill.dueDate);
     const isStopDate = new Date() > new Date(bill.stopDate);
 
@@ -28,7 +28,7 @@ function BillBanner({ bill, onViewBill }) {
                 </span>
             </div>
             <button
-                onClick={onViewBill}
+                onClick={onPayNow}
                 style={{
                     background: isStopDate ? "#dc2626" : "#e09f3e",
                     color: "white", border: "none",
