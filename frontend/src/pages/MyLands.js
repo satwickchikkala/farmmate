@@ -210,6 +210,7 @@ function MyLands({ user }) {
 
     setLoading(true);
     try {
+      const uid = auth.currentUser.uid;
       // Count current active lands to decide if this one is PAYG
       const q_count = query(collection(db, "lands"), where("userId", "==", uid));
       const snap_count = await getDocs(q_count);
