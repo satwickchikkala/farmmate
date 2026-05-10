@@ -53,8 +53,8 @@ function Subscription({ user }) {
       where("userId", "==", uid),
       where("isPayg", "==", true)
     );
-    const landsSnap = await getDocs(landsQ);
-    setPaygLandCount(landsSnap.size);
+    const paygLandsSnap = await getDocs(landsQ);
+    setPaygLandCount(paygLandsSnap.size);
 
     setLoading(false);
   };
