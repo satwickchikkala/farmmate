@@ -157,10 +157,12 @@ function DiseaseDetect() {
               style={{ display: "block", width: "100%", padding: "12px", borderRadius: "8px", border: `1.5px solid ${selectedLandId ? "#e5e7eb" : GREEN}`, fontSize: "14px", fontFamily: FONT, background: "white", color: DARK, fontWeight: "500" }}
             >
               <option value="">Choose a land...</option>
-              {lands.map(land => (
+              {lands
+                .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0))
+                .map((land, index) => (
                 <option key={land.id} value={land.id}>
                   {land.landName} — {land.city}
-                  {land.isPayg ? " ⚡ (PAYG)" : (land.landIndex === 1 ? " 🆓 (Free)" : " ✅ (Pro)")}
+                  {land.isPayg ? " ⚡ (PAYG)" : (index === 0 ? " 🆓 (Free)" : " ✅ (Pro)")}
                 </option>
               ))}
             </select>

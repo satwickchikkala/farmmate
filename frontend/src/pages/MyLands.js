@@ -328,7 +328,9 @@ function MyLands({ user }) {
       where("userId", "==", auth.currentUser.uid)
     );
     const snapshot = await getDocs(q);
-    const results = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const results = snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
 
     // AUTO-FIX: If total lands <= 10, they should all be Pro.
     // This fixes any "ghost" PAYG status from previous tests.
@@ -448,8 +450,8 @@ function MyLands({ user }) {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                     <strong style={{ fontSize: "16px" }}>🏷️ {land.landName}</strong>
                     <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                      <span style={{ background: land.isPayg ? "#f59e0b" : (land.landIndex === 1 ? "#10b981" : "#3b82f6"), color: "white", padding: "2px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "bold", textTransform: "uppercase" }}>
-                        {land.isPayg ? "PAYG" : (land.landIndex === 1 ? "Free" : "Pro")}
+                      <span style={{ background: land.isPayg ? "#f59e0b" : (index === 0 ? "#10b981" : "#3b82f6"), color: "white", padding: "2px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "bold", textTransform: "uppercase" }}>
+                        {land.isPayg ? "PAYG" : (index === 0 ? "Free" : "Pro")}
                       </span>
                       <span style={{ background: statusColor(land.landStatus), color: "white", padding: "2px 10px", borderRadius: "20px", fontSize: "12px" }}>
                         {land.landStatus}
