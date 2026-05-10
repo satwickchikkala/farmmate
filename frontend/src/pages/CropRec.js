@@ -62,6 +62,9 @@ function CropRec() {
   const [timeline, setTimeline] = useState(null);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("");
+  const [recLocked, setRecLocked] = useState(false);
+  const [timelineLocked, setTimelineLocked] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => { loadData(); }, []);
@@ -103,11 +106,14 @@ function CropRec() {
   const getActiveTimeline = (landId) => activeTimelines.find(t => t.landId === landId);
 
   const handleGetRecommendations = async () => {
-
-
+    if (recLocked) return;
     setError("");
     if (!rainfall) { setError("Please enter estimated rainfall."); return; }
     setLoading(true);
+    setLoadingText("Analysing the data...");
+    await new Promise(r => setTimeout(r, 2000));
+    setLoadingText("Getting the predictions...");
+    await new Promise(r => setTimeout(r, 2000));
     try {
       const res = await axios.post(`${API_URL}/recommend-crops`, {
         landName: selectedLand.landName, soilType: selectedLand.soilType,
@@ -124,16 +130,23 @@ function CropRec() {
         selectedLand.isPayg === true
       );
       setCrops(res.data.crops); setStep(2);
+      setRecLocked(true);
+      setTimeout(() => setRecLocked(false), 5 * 60 * 1000);
     } catch { setError("Could not get recommendations. Try again."); }
     setLoading(false);
   };
 
   const handleGenerateTimeline = async () => {
-
-
+    if (timelineLocked) return;
     setError("");
     if (!startDate) { setError("Please select a start date."); return; }
+    
     setLoading(true);
+    setLoadingText("Analysing the data...");
+    await new Promise(r => setTimeout(r, 2000));
+    setLoadingText("Getting the predictions...");
+    await new Promise(r => setTimeout(r, 2000));
+
     try {
       const res = await axios.post(`${API_URL}/generate-timeline`, {
         crop: selectedCrop.name, startDate, soilType: selectedLand.soilType,
@@ -149,6 +162,8 @@ function CropRec() {
         selectedLand.isPayg === true
       );
       setTimeline(res.data); setStep(3);
+      setTimelineLocked(true);
+      setTimeout(() => setTimelineLocked(false), 2 * 60 * 1000);
     } catch { setError("Could not generate timeline. Try again."); }
     setLoading(false);
   };
@@ -454,8 +469,8 @@ function CropRec() {
 
                 <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
                   <button onClick={() => setStep(1)} style={S.outlineBtn}>← {t("crop_back")}</button>
-                  <button onClick={handleGetRecommendations} disabled={loading} style={{ ...S.greenBtn, flex: 1 }}>
-                    {loading ? `🤖 ${t("crop_asking")}` : `🌱 ${t("crop_get_rec")}`}
+                  <button onClick={handleGetRecommendations} disabled={loading || recLocked} style={{ ...S.greenBtn, flex: 1 }}>
+                    {loading ? loadingText : recLocked ? "Select recommendations from below" : `🌱 ${t("crop_get_rec")}`}
                   </button>
                 </div>
               </div>
@@ -490,8 +505,8 @@ function CropRec() {
                   <div style={{ background: "#f9f9f9", borderRadius: "10px", padding: "16px" }}>
                     <label style={S.label}>{t("crop_sowing_date")}</label>
                     <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} min={new Date().toISOString().split("T")[0]} style={{ ...S.input, marginBottom: "12px" }} />
-                    <button onClick={handleGenerateTimeline} disabled={loading} style={S.greenBtn}>
-                      {loading ? `🤖 ${t("crop_generating")}` : `📅 ${t("crop_generate")}`}
+                    <button onClick={handleGenerateTimeline} disabled={loading || timelineLocked} style={S.greenBtn}>
+                      {loading ? loadingText : timelineLocked ? "Timeline generated successfully!" : `📅 ${t("crop_generate")}`}
                     </button>
                   </div>
                 )}
