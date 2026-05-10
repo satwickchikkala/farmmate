@@ -207,7 +207,7 @@ function Subscription({ user }) {
                 </div>
               </div>
               <button
-                onClick={() => handlePay(999, "pro")}
+                onClick={() => handleUpgradePro()}
                 style={{ background: "#f59e0b", color: "white", border: "none", padding: "8px 20px", borderRadius: "8px", fontWeight: "600", cursor: "pointer", fontFamily: FONT }}
               >
                 Renew Now ₹999
