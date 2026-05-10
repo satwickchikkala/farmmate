@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { getUserPlan } from "../utils/updatePlan";
 import { getMonthlyUsage } from "../utils/trackUsage";
 import { auth, db } from "../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import axios from "axios";
 import API_URL from "../config";
 import { PAYG_PRICES } from "../utils/paygPricing";
@@ -30,10 +30,9 @@ function Subscription({ user }) {
     const plan = await getUserPlan(uid);
     setUserPlan(plan);
 
-    const userSnap = await getDoc(doc(db, "users", uid));
-    if (userSnap.exists()) {
-      setLandCount(userSnap.data().totalLandsCreated || 0);
-    }
+    const landsQuery = query(collection(db, "lands"), where("userId", "==", uid));
+    const landsSnap = await getDocs(landsQuery);
+    setLandCount(landsSnap.size);
 
     const usage = await getMonthlyUsage(uid);
     setMonthlyUsage(usage);
