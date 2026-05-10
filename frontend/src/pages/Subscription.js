@@ -96,13 +96,7 @@ function Subscription({ user }) {
     }
   };
 
-  const handleUpgradePayg = () => {
-    if (landCount < 10) {
-      showAlert("⚠️ Pay As You Go plan is only available when you have reached 10 lands. You currently have " + landCount + " land(s). Add more lands to unlock this plan.");
-      return;
-    }
-    setShowLiveBilling(true);
-  };
+
 
   const confirmUpgradePayg = () => {
     showConfirm(
