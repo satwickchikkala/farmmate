@@ -242,8 +242,6 @@ function Subscription({ user }) {
                 "Monthly bill on 1st of each month",
                 "3-day grace period for payment",
                 "Multiple farm managers",
-                "API access",
-                "Dedicated account manager",
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: "8px", padding: "5px 0", fontSize: "13px", color: "#374151", borderBottom: "1px solid #f3f4f6" }}>
                   <span style={{ color: "#1a6985", fontWeight: "700" }}>✓</span> {f}
