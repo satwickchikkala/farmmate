@@ -5,6 +5,8 @@ import { auth, db } from "../firebase";
 import { signOut } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useLanguage, LANGUAGES } from "../context/LanguageContext";
+import { useGate } from "../hooks/useGate";
+import { getUnpaidBill } from "../utils/billManager";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
 
@@ -22,10 +24,16 @@ function Navbar({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang, changeLang, t } = useLanguage();
+  const { plan, planExpiry } = useGate();
   const [todayTasks, setTodayTasks] = useState(0);
+  const [unpaidBill, setUnpaidBill] = useState(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
 
-  useEffect(() => { loadTodayTasks(); }, []);
+  useEffect(() => { 
+    loadTodayTasks();
+    loadUnpaidBill();
+  }, []);
 
 
   const loadTodayTasks = async () => {
@@ -39,6 +47,13 @@ function Navbar({ user }) {
         count += tasks.filter(t => t.date === today && !t.completed).length;
       });
       setTodayTasks(count);
+    } catch {}
+  };
+
+  const loadUnpaidBill = async () => {
+    try {
+      const bill = await getUnpaidBill(auth.currentUser.uid);
+      setUnpaidBill(bill);
     } catch {}
   };
 
@@ -98,6 +113,86 @@ function Navbar({ user }) {
           <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "13px", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {user?.displayName || user?.email?.split("@")[0]}
           </span>
+          
+          {/* Notification Center */}
+          <div style={{ position: "relative" }}>
+            <button 
+              onClick={() => setShowNotifMenu(!showNotifMenu)}
+              style={{ background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.2)", padding: "6px 10px", borderRadius: "8px", cursor: "pointer", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              🔔
+              {(todayTasks > 0 || unpaidBill || (plan === "pro" && planExpiry && Math.ceil((new Date(planExpiry) - new Date()) / (1000 * 60 * 60 * 24)) <= 15)) && (
+                <span style={{ position: "absolute", top: "-5px", right: "-5px", background: "#ef4444", border: "2px solid #2d6a4f", width: "10px", height: "10px", borderRadius: "50%" }} />
+              )}
+            </button>
+
+            {showNotifMenu && (
+              <div style={{ position: "absolute", top: "110%", right: 0, background: "white", borderRadius: "12px", boxShadow: "0 10px 30px rgba(0,0,0,0.2)", zIndex: 200, minWidth: "280px", overflow: "hidden", border: "1px solid #e5e7eb" }}>
+                <div style={{ padding: "12px 16px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontWeight: "700", color: DARK, fontSize: "14px" }}>Notifications</span>
+                  <span style={{ fontSize: "11px", color: "#6b7280" }}>{todayTasks > 0 ? "Pending Tasks" : "All Clear"}</span>
+                </div>
+                
+                <div style={{ maxHeight: "350px", overflowY: "auto" }}>
+                  {/* Bill Notification */}
+                  {unpaidBill && (
+                    <div onClick={() => { navigate("/subscription"); setShowNotifMenu(false); }} style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", cursor: "pointer", background: "#fff5f5" }}>
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <span style={{ fontSize: "18px" }}>🧾</span>
+                        <div>
+                          <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#dc2626" }}>Unpaid Bill: ₹{unpaidBill.totalAmount}</p>
+                          <p style={{ margin: "2px 0 0 0", fontSize: "11px", color: "#991b1b" }}>Due by {new Date(unpaidBill.dueDate).toLocaleDateString("en-IN")}. Pay now to avoid service stop.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pro Renewal Notification */}
+                  {plan === "pro" && planExpiry && (() => {
+                    const daysLeft = Math.ceil((new Date(planExpiry) - new Date()) / (1000 * 60 * 60 * 24));
+                    if (daysLeft <= 15 && daysLeft > 0) {
+                      return (
+                        <div onClick={() => { navigate("/subscription"); setShowNotifMenu(false); }} style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", cursor: "pointer", background: "#fffbeb" }}>
+                          <div style={{ display: "flex", gap: "10px" }}>
+                            <span style={{ fontSize: "18px" }}>⭐</span>
+                            <div>
+                              <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: "#854d0e" }}>Pro Plan Expires in {daysLeft}d</p>
+                              <p style={{ margin: "2px 0 0 0", fontSize: "11px", color: "#a16207" }}>Renew your subscription to keep premium benefits.</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Today's Tasks Notification */}
+                  {todayTasks > 0 ? (
+                    <div onClick={() => { navigate("/home"); setShowNotifMenu(false); }} style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}>
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <span style={{ fontSize: "18px" }}>📋</span>
+                        <div>
+                          <p style={{ margin: 0, fontSize: "13px", fontWeight: "600", color: DARK }}>{todayTasks} Pending Tasks Today</p>
+                          <p style={{ margin: "2px 0 0 0", fontSize: "11px", color: "#6b7280" }}>Don't forget to complete your farm activities today!</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    (!unpaidBill && !(plan === "pro" && planExpiry && Math.ceil((new Date(planExpiry) - new Date()) / (1000 * 60 * 60 * 24)) <= 15)) && (
+                      <div style={{ padding: "30px 20px", textAlign: "center", color: "#9ca3af" }}>
+                        <div style={{ fontSize: "24px", marginBottom: "8px" }}>🍃</div>
+                        <p style={{ margin: 0, fontSize: "13px" }}>All caught up! No new notifications.</p>
+                      </div>
+                    )
+                  )}
+                </div>
+                
+                <div style={{ padding: "8px", background: "#f9fafb", textAlign: "center" }}>
+                  <button onClick={() => { navigate("/subscription"); setShowNotifMenu(false); }} style={{ background: "transparent", border: "none", color: GREEN, fontSize: "12px", fontWeight: "600", cursor: "pointer" }}>Manage Plans & Billing</button>
+                </div>
+              </div>
+            )}
+          </div>
           
 
           
