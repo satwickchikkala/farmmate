@@ -197,22 +197,34 @@ function Home({ user }) {
         .task-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important; }
         .complete-btn:hover { background: #1b4332 !important; }
         .undo-btn:hover { background: #f3f4f6 !important; }
+        
+        @media (max-width: 768px) {
+          .welcome-banner { padding: 20px !important; flex-direction: column !important; align-items: flex-start !important; }
+          .welcome-stats { width: 100% !important; justify-content: space-between !important; margin-top: 10px !important; }
+          .welcome-stats > div { flex: 1 !important; padding: 12px !important; }
+          .cal-controls { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+          .cal-controls > div { width: 100% !important; overflow-x: auto !important; padding-bottom: 5px !important; }
+          .cal-controls select { width: 100% !important; }
+          .task-grid { grid-template-columns: 1fr !important; }
+          .crop-summary-grid { grid-template-columns: 1fr !important; }
+          .welcome-title { fontSize: 22px !important; }
+        }
       `}</style>
 
       {/* Welcome Banner */}
-      <div style={{ background: `linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%)`, borderRadius: "16px", padding: "28px 36px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+      <div className="welcome-banner" style={{ background: `linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%)`, borderRadius: "16px", padding: "28px 36px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
         <div>
           <p style={{ color: "rgba(255,255,255,0.6)", margin: "0 0 4px 0", fontSize: "13px" }}>
             {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
-          <h2 style={{ fontFamily: "Playfair Display, serif", color: "white", margin: "0 0 6px 0", fontSize: "26px" }}>
+          <h2 className="welcome-title" style={{ fontFamily: "Playfair Display, serif", color: "white", margin: "0 0 6px 0", fontSize: "26px" }}>
             {greeting}, {user?.displayName?.split(" ")[0] || "Farmer"}! 🌱
           </h2>
           <p style={{ color: "rgba(255,255,255,0.75)", margin: 0, fontSize: "14px" }}>
             {timelines.length > 0 ? `${timelines.length} ${t("home_active_crops")}` : t("home_no_crops")}
           </p>
         </div>
-        <div style={{ display: "flex", gap: "20px" }}>
+        <div className="welcome-stats" style={{ display: "flex", gap: "16px" }}>
           <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "16px 24px" }}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: pendingToday > 0 ? "#fbbf24" : "#6ee7b7", fontFamily: "Playfair Display, serif" }}>{pendingToday}</div>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>{t("home_tasks_today")}</div>
@@ -278,7 +290,7 @@ function Home({ user }) {
       ) : (
         <>
           {/* Crop summary cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "14px", marginBottom: "24px" }}>
+          <div className="crop-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "14px", marginBottom: "24px" }}>
             {timelines.map(tl => {
               const completed = tl.tasks?.filter(t => t.completed).length || 0;
               const totalTasks = tl.tasks?.length || 0;
@@ -314,12 +326,12 @@ function Home({ user }) {
           </div>
 
           {/* Calendar controls */}
-          <div style={{ display: "flex", gap: "12px", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", background: "white", padding: "14px 16px", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
+          <div className="cal-controls" style={{ display: "flex", gap: "12px", marginBottom: "20px", alignItems: "center", flexWrap: "wrap", background: "white", padding: "14px 16px", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
             <div style={{ display: "flex", gap: "6px" }}>
               {[["today", t("home_today")], ["weekly", t("home_7days")], ["monthly", t("home_30days")], ["full", t("home_full")]].map(([v, l]) => (
                 <button key={v} className={`view-btn${calView === v ? " active" : ""}`}
                   onClick={() => setCalView(v)}
-                  style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #e5e7eb", background: "white", color: "#6b7280", cursor: "pointer", fontFamily: FONT, fontSize: "13px", fontWeight: "500", transition: "all 0.2s" }}>
+                  style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #e5e7eb", background: "white", color: "#6b7280", cursor: "pointer", fontFamily: FONT, fontSize: "13px", fontWeight: "500", transition: "all 0.2s", whiteSpace: "nowrap" }}>
                   {l}
                 </button>
               ))}
@@ -351,7 +363,7 @@ function Home({ user }) {
                     <span style={{ fontSize: "12px", color: "#9ca3af" }}>{tasks.filter(t => t.completed).length}/{tasks.length} done</span>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "10px" }}>
+                  <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "12px" }}>
                     {tasks.map((task, i) => (
                       <div key={i} className="task-card" style={{
                         background: task.completed ? "#fafafa" : "white",

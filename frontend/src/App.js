@@ -99,148 +99,154 @@ function App() {
 
   if (!user) return (
     <LanguageProvider>
+      <style>{`
+        @media (max-width: 768px) {
+          .auth-left-panel { display: none !important; }
+          .auth-right-panel { padding: 20px !important; }
+          .auth-form-card { padding: 32px 24px !important; border-radius: 16px !important; }
+        }
+      `}</style>
       <div style={S.page}>
         {/* Left panel — visual */}
-        <div style={S.leftPanel}>
-
-        <div style={S.leftContent}>
-<img src="/logo.png" alt="FarmMate Logo" style={{ width: "64px", height: "64px", objectFit: "contain" }} />
-          <h1 style={S.brand}>FarmMate</h1>
-          <p style={S.tagline}>AI-Powered Smart Farming Assistant</p>
-          <div style={S.features}>
-            {["🗺️ Manage all your lands", "🌤️ Real-time weather insights", "🤖 AI crop recommendations", "🔬 Disease detection", "📅 Smart farming calendar"].map((f, i) => (
-              <div key={i} style={{ ...S.featureItem, animationDelay: `${i * 0.1}s` }}>{f}</div>
-            ))}
-          </div>
-        </div>
-        <div style={S.leafDeco}>🌿</div>
-      </div>
-
-      {/* Right panel — form */}
-      <div style={S.rightPanel}>
-        <div style={S.formCard}>
-          <div style={S.formHeader}>
-            <h2 style={S.formTitle}>
-              {mode === "login" ? "Welcome back" : mode === "register" ? "Create account" : "Reset password"}
-            </h2>
-            <p style={S.formSub}>
-              {mode === "login" ? "Sign in to your farm dashboard"
-                : mode === "register" ? "Start your smart farming journey"
-                : "We'll send you a reset link"}
-            </p>
-          </div>
-
-          {error && <div style={S.errorBox}>⚠️ {error}</div>}
-          {success && <div style={S.successBox}>✅ {success}</div>}
-
-          {/* Email */}
-          <div style={S.fieldGroup}>
-            <label style={S.label}>Email address</label>
-            <input
-              type="email"
-              placeholder="farmer@example.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={S.input}
-              onKeyDown={e => e.key === "Enter" && handleSubmit()}
-            />
-          </div>
-
-          {/* Password */}
-          {mode !== "forgot" && (
-            <div style={S.fieldGroup}>
-              <label style={S.label}>Password</label>
-              <div style={{ position: "relative" }}>
-                <input
-                  type={showPass ? "text" : "password"}
-                  placeholder={mode === "register" ? "Min 8 chars, A-Z, 0-9, @#$..." : "Your password"}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  style={{ ...S.input, paddingRight: "44px" }}
-                  onKeyDown={e => e.key === "Enter" && handleSubmit()}
-                />
-                <span onClick={() => setShowPass(!showPass)} style={S.eyeBtn}>{showPass ? "🙈" : "👁️"}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Confirm password */}
-          {mode === "register" && (
-            <div style={S.fieldGroup}>
-              <label style={S.label}>Confirm password</label>
-              <div style={{ position: "relative" }}>
-                <input
-                  type={showConfirm ? "text" : "password"}
-                  placeholder="Re-enter your password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  style={{
-                    ...S.input, paddingRight: "44px",
-                    borderColor: confirmPassword && confirmPassword !== password ? "#e74c3c" : confirmPassword && confirmPassword === password ? "#52b788" : "#d0d0d0"
-                  }}
-                />
-                <span onClick={() => setShowConfirm(!showConfirm)} style={S.eyeBtn}>{showConfirm ? "🙈" : "👁️"}</span>
-              </div>
-              {confirmPassword && password !== confirmPassword && (
-                <p style={{ color: "#e74c3c", fontSize: "11px", marginTop: "4px" }}>Passwords don't match</p>
-              )}
-            </div>
-          )}
-
-          {/* Forgot password link */}
-          {mode === "login" && (
-            <div style={{ textAlign: "right", marginBottom: "16px" }}>
-              <span onClick={() => switchMode("forgot")} style={S.link}>Forgot password?</span>
-            </div>
-          )}
-
-          {/* Password strength hint */}
-          {mode === "register" && password && (
-            <div style={{ marginBottom: "12px" }}>
-              {[
-                { label: "8+ characters", ok: password.length >= 8 },
-                { label: "Uppercase letter", ok: /[A-Z]/.test(password) },
-                { label: "Lowercase letter", ok: /[a-z]/.test(password) },
-                { label: "Number", ok: /\d/.test(password) },
-                { label: "Special char (@#$...)", ok: /[@#$%^&*!]/.test(password) },
-              ].map((r, i) => (
-                <div key={i} style={{ fontSize: "11px", color: r.ok ? "#52b788" : "#aaa", display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
-                  <span>{r.ok ? "✓" : "○"}</span> {r.label}
-                </div>
+        <div className="auth-left-panel" style={S.leftPanel}>
+          <div style={S.leftContent}>
+            <img src="/logo.png" alt="FarmMate Logo" style={{ width: "64px", height: "64px", objectFit: "contain" }} />
+            <h1 style={S.brand}>FarmMate</h1>
+            <p style={S.tagline}>AI-Powered Smart Farming Assistant</p>
+            <div style={S.features}>
+              {["🗺️ Manage all your lands", "🌤️ Real-time weather insights", "🤖 AI crop recommendations", "🔬 Disease detection", "📅 Smart farming calendar"].map((f, i) => (
+                <div key={i} style={{ ...S.featureItem, animationDelay: `${i * 0.1}s` }}>{f}</div>
               ))}
             </div>
-          )}
+          </div>
+          <div style={S.leafDeco}>🌿</div>
+        </div>
 
-          {/* Submit */}
-          <button onClick={handleSubmit} disabled={submitting} style={S.primaryBtn}>
-            {submitting ? "Please wait..." : mode === "login" ? "Sign In" : mode === "register" ? "Create Account" : "Send Reset Email"}
-          </button>
+        {/* Right panel — form */}
+        <div className="auth-right-panel" style={S.rightPanel}>
+          <div className="auth-form-card" style={S.formCard}>
+            <div style={S.formHeader}>
+              <h2 style={S.formTitle}>
+                {mode === "login" ? "Welcome back" : mode === "register" ? "Create account" : "Reset password"}
+              </h2>
+              <p style={S.formSub}>
+                {mode === "login" ? "Sign in to your farm dashboard"
+                  : mode === "register" ? "Start your smart farming journey"
+                  : "We'll send you a reset link"}
+              </p>
+            </div>
 
-          {/* Google login */}
-          {mode !== "forgot" && (
-            <>
-              <div style={S.divider}><span style={S.dividerText}>or continue with</span></div>
-              <button onClick={handleGoogle} style={S.googleBtn}>
-                <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: "8px" }}>
-                  <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
-                  <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/>
-                  <path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18z"/>
-                  <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/>
-                </svg>
-                Continue with Google
-              </button>
-            </>
-          )}
+            {error && <div style={S.errorBox}>⚠️ {error}</div>}
+            {success && <div style={S.successBox}>✅ {success}</div>}
 
-          {/* Mode switch */}
-          <p style={S.switchText}>
-            {mode === "login" ? <>New to FarmMate? <span onClick={() => switchMode("register")} style={S.link}>Create an account</span></>
-              : mode === "register" ? <>Already have an account? <span onClick={() => switchMode("login")} style={S.link}>Sign in</span></>
-              : <>Remember your password? <span onClick={() => switchMode("login")} style={S.link}>Back to sign in</span></>}
-          </p>
+            {/* Email */}
+            <div style={S.fieldGroup}>
+              <label style={S.label}>Email address</label>
+              <input
+                type="email"
+                placeholder="farmer@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                style={S.input}
+                onKeyDown={e => e.key === "Enter" && handleSubmit()}
+              />
+            </div>
+
+            {/* Password */}
+            {mode !== "forgot" && (
+              <div style={S.fieldGroup}>
+                <label style={S.label}>Password</label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showPass ? "text" : "password"}
+                    placeholder={mode === "register" ? "Min 8 chars, A-Z, 0-9, @#$..." : "Your password"}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    style={{ ...S.input, paddingRight: "44px" }}
+                    onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                  />
+                  <span onClick={() => setShowPass(!showPass)} style={S.eyeBtn}>{showPass ? "🙈" : "👁️"}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Confirm password */}
+            {mode === "register" && (
+              <div style={S.fieldGroup}>
+                <label style={S.label}>Confirm password</label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    placeholder="Re-enter your password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    style={{
+                      ...S.input, paddingRight: "44px",
+                      borderColor: confirmPassword && confirmPassword !== password ? "#e74c3c" : confirmPassword && confirmPassword === password ? "#52b788" : "#d0d0d0"
+                    }}
+                  />
+                  <span onClick={() => setShowConfirm(!showConfirm)} style={S.eyeBtn}>{showConfirm ? "🙈" : "👁️"}</span>
+                </div>
+                {confirmPassword && password !== confirmPassword && (
+                  <p style={{ color: "#e74c3c", fontSize: "11px", marginTop: "4px" }}>Passwords don't match</p>
+                )}
+              </div>
+            )}
+
+            {/* Forgot password link */}
+            {mode === "login" && (
+              <div style={{ textAlign: "right", marginBottom: "16px" }}>
+                <span onClick={() => switchMode("forgot")} style={S.link}>Forgot password?</span>
+              </div>
+            )}
+
+            {/* Password strength hint */}
+            {mode === "register" && password && (
+              <div style={{ marginBottom: "12px" }}>
+                {[
+                  { label: "8+ characters", ok: password.length >= 8 },
+                  { label: "Uppercase letter", ok: /[A-Z]/.test(password) },
+                  { label: "Lowercase letter", ok: /[a-z]/.test(password) },
+                  { label: "Number", ok: /\d/.test(password) },
+                  { label: "Special char (@#$...)", ok: /[@#$%^&*!]/.test(password) },
+                ].map((r, i) => (
+                  <div key={i} style={{ fontSize: "11px", color: r.ok ? "#52b788" : "#aaa", display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+                    <span>{r.ok ? "✓" : "○"}</span> {r.label}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Submit */}
+            <button onClick={handleSubmit} disabled={submitting} style={S.primaryBtn}>
+              {submitting ? "Please wait..." : mode === "login" ? "Sign In" : mode === "register" ? "Create Account" : "Send Reset Email"}
+            </button>
+
+            {/* Google login */}
+            {mode !== "forgot" && (
+              <>
+                <div style={S.divider}><span style={S.dividerText}>or continue with</span></div>
+                <button onClick={handleGoogle} style={S.googleBtn}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: "8px" }}>
+                    <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
+                    <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/>
+                    <path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18z"/>
+                    <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/>
+                  </svg>
+                  Continue with Google
+                </button>
+              </>
+            )}
+
+            {/* Mode switch */}
+            <p style={S.switchText}>
+              {mode === "login" ? <>New to FarmMate? <span onClick={() => switchMode("register")} style={S.link}>Create an account</span></>
+                : mode === "register" ? <>Already have an account? <span onClick={() => switchMode("login")} style={S.link}>Sign in</span></>
+                : <>Remember your password? <span onClick={() => switchMode("login")} style={S.link}>Back to sign in</span></>}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
     </LanguageProvider>
   );
 
@@ -251,7 +257,7 @@ function App() {
         <PlanProvider user={user}>
           <BrowserRouter>
             <Navbar user={user} />
-            <div style={{ padding: "24px 40px", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 60px)" }}>
+            <div style={{ padding: "16px", maxWidth: "1200px", margin: "0 auto", fontFamily: "DM Sans, sans-serif", background: "#f7faf8", minHeight: "calc(100vh - 64px)", boxSizing: "border-box" }}>
               <Routes>
                 <Route path="/" element={<Navigate to="/home" />} />
                 <Route path="/home" element={<Home user={user} />} />
@@ -276,7 +282,6 @@ const S = {
     flex: 1, background: "linear-gradient(135deg, #0d1f17 0%, #1b4332 50%, #2d6a4f 100%)",
     display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
     padding: "60px 40px", position: "relative", overflow: "hidden",
-    "@media (max-width: 768px)": { display: "none" }
   },
   leftContent: { zIndex: 2, textAlign: "center", maxWidth: "400px" },
 logo: { width: "64px", height: "64px", marginBottom: "16px", objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(82,183,136,0.4))" },

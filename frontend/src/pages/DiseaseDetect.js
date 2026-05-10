@@ -88,17 +88,25 @@ function DiseaseDetect() {
 
   return (
     <div style={{ fontFamily: FONT, width: "100%" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
+        .dd-grid { display: grid; grid-template-columns: ${result ? "1fr 1fr" : "600px 1fr"}; gap: 24px; align-items: start; }
+        
+        @media (max-width: 900px) {
+          .dd-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .dd-card { padding: 20px !important; }
+        }
+      `}</style>
 
       <div style={{ marginBottom: "24px" }}>
         <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🔬 {t("disease_title")}</h2>
         <p style={{ color: "#6b7280", fontSize: "14px", margin: 0 }}>{t("disease_subtitle")}</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: result ? "1fr 1fr" : "600px 1fr", gap: "24px", alignItems: "start" }}>
+      <div className="dd-grid">
 
         {/* Upload section */}
-        <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "28px", boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}>
+        <div className="dd-card" style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "28px", boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}>
           <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, margin: "0 0 6px 0", fontSize: "20px" }}>{t("disease_upload_title")}</h3>
           <p style={{ color: "#9ca3af", fontSize: "13px", margin: "0 0 20px 0" }}>{t("disease_upload_sub")}</p>
 
@@ -187,9 +195,9 @@ function DiseaseDetect() {
 
         {/* Results section */}
         {result ? (
-          <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "28px", boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}>
+          <div className="dd-card" style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "28px", boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}>
             {/* Disease header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
               <div>
                 <h3 style={{ fontFamily: "Playfair Display, serif", color: "#dc2626", fontSize: "22px", margin: "0 0 4px 0" }}>
                   🦠 {result.disease}
@@ -237,7 +245,7 @@ function DiseaseDetect() {
             </button>
           </div>
         ) : (
-          <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "28px", textAlign: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}>
+          <div className="dd-card" style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", padding: "28px", textAlign: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.04)" }}>
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>🔬</div>
             <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, fontSize: "20px", margin: "0 0 8px 0" }}>{t("disease_how")}</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left" }}>

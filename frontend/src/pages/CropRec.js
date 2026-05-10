@@ -281,6 +281,14 @@ function CropRec() {
         .cr-tab:hover { background: #f0f7f4 !important; }
         .land-card:hover { border-color: ${GREEN} !important; }
         .crop-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important; }
+        
+        @media (max-width: 900px) {
+          .cr-new-container { grid-template-columns: 1fr !important; }
+          .cr-sidebar { flex-direction: row !important; overflow-x: auto; padding-bottom: 10px; }
+          .cr-sidebar > div { min-width: 160px; padding: 10px !important; }
+          .cr-sidebar > div > div > div { font-size: 11px !important; }
+          .cr-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       {/* Page header */}
@@ -320,7 +328,7 @@ function CropRec() {
               <h3 style={{ color: GREEN, margin: "0 0 8px 0", fontFamily: "Playfair Display, serif" }}>{t("crop_no_active")}</h3>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "16px" }}>
+            <div className="cr-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "16px" }}>
               {activeTimelines.map(t => <TimelineCard key={t.id} tl={t} />)}
             </div>
           )}
@@ -339,7 +347,7 @@ function CropRec() {
               <h3 style={{ color: "#6b7280", margin: "0 0 8px 0", fontFamily: "Playfair Display, serif" }}>{t("crop_no_archived")}</h3>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "16px" }}>
+            <div className="cr-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "16px" }}>
               {archivedTimelines.map(t => <TimelineCard key={t.id} tl={t} showArchiveActions />)}
             </div>
           )}
@@ -348,10 +356,10 @@ function CropRec() {
 
       {/* NEW CROP TAB */}
       {tab === "new" && (
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: "24px", alignItems: "start" }}>
+        <div className="cr-new-container" style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: "24px", alignItems: "start" }}>
 
           {/* Left sidebar — steps */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div className="cr-sidebar" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {[
               { n: 1, label: "Select Land", icon: "🗺️" },
               { n: 2, label: "Soil Details", icon: "🧪" },

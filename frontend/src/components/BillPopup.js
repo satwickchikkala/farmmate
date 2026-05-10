@@ -59,90 +59,96 @@ function BillPopup({ bill, onPaid }) {
         setPaying(false);
     };
 
-    return (
-        <div style={S.overlay}>
-            <div style={S.popup}>
-                {/* Header */}
-                <div style={S.header}>
-                    <div>
-                        <h2 style={S.title}>🧾 FarmMate Bill</h2>
-                        <p style={S.sub}>Usage for {bill.month}</p>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                        {isStopDate ? (
-                            <span style={S.stopBadge}>🚫 Services Stopped</span>
-                        ) : isOverdue ? (
-                            <span style={S.overdueBadge}>⚠️ Overdue</span>
-                        ) : (
-                            <span style={S.dueBadge}>
-                                Due: {new Date(bill.dueDate).toLocaleDateString("en-IN")}
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                {/* Bill items — grocery style */}
-                <div style={S.billTable}>
-                    <div style={S.tableHeader}>
-                        <span>Service</span>
-                        <span>Qty</span>
-                        <span>Rate</span>
-                        <span>Amount</span>
-                    </div>
-                    <div style={S.divider} />
-
-                    {bill.items.map((item, i) => (
-                        <div key={i} style={S.tableRow}>
-                            <span style={{ color: "#374151" }}>{item.label}</span>
-                            <span style={{ color: "#6b7280", textAlign: "center" }}>{item.quantity}</span>
-                            <span style={{ color: "#6b7280", textAlign: "right" }}>₹{item.unitPrice}</span>
-                            <span style={{ fontWeight: "600", textAlign: "right" }}>₹{item.total}</span>
-                        </div>
-                    ))}
-
-                    <div style={S.divider} />
-
-                    {/* Total */}
-                    <div style={{ ...S.tableRow, fontWeight: "700", fontSize: "16px" }}>
-                        <span style={{ color: DARK }}>Total Amount</span>
-                        <span />
-                        <span />
-                        <span style={{ color: GREEN, fontSize: "20px" }}>₹{bill.totalAmount}</span>
-                    </div>
-                </div>
-
-                {/* Warning if overdue */}
-                {isStopDate && (
-                    <div style={S.stopWarning}>
-                        🚫 Your services have been stopped due to non-payment.
-                        Pay now to restore all features immediately.
-                    </div>
-                )}
-                {isOverdue && !isStopDate && (
-                    <div style={S.overdueWarning}>
-                        ⚠️ Payment is overdue. Services will stop on{" "}
-                        {new Date(bill.stopDate).toLocaleDateString("en-IN")}.
-                        Pay now to avoid interruption.
-                    </div>
-                )}
-
-                {/* Pay Now button */}
-                <button
-                    onClick={handlePayNow}
-                    disabled={paying}
-                    style={S.payBtn}
-                >
-                    {paying ? "Opening payment..." : `💳 Pay Now ₹${bill.totalAmount}`}
-                </button>
-
-                <p style={{ textAlign: "center", fontSize: "11px", color: "#9ca3af", margin: "8px 0 0 0" }}>
-                    Generated: {new Date(bill.generatedDate).toLocaleDateString("en-IN")} •
-                    Due: {new Date(bill.dueDate).toLocaleDateString("en-IN")} •
-                    Grace till: {new Date(bill.stopDate).toLocaleDateString("en-IN")}
-                </p>
-            </div>
+  return (
+    <div style={S.overlay}>
+      <style>{`
+        .bill-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+        @media (max-width: 400px) {
+          .bill-row { font-size: 11px !important; }
+        }
+      `}</style>
+      <div style={S.popup}>
+        {/* Header */}
+        <div style={S.header}>
+          <div>
+            <h2 style={S.title}>🧾 FarmMate Bill</h2>
+            <p style={S.sub}>Usage for {bill.month}</p>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            {isStopDate ? (
+              <span style={S.stopBadge}>🚫 Services Stopped</span>
+            ) : isOverdue ? (
+              <span style={S.overdueBadge}>⚠️ Overdue</span>
+            ) : (
+              <span style={S.dueBadge}>
+                Due: {new Date(bill.dueDate).toLocaleDateString("en-IN")}
+              </span>
+            )}
+          </div>
         </div>
-    );
+
+        {/* Bill items — grocery style */}
+        <div style={S.billTable}>
+          <div className="bill-row" style={{ fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px", borderBottom: "none" }}>
+            <span>Service</span>
+            <span style={{ textAlign: "center" }}>Qty</span>
+            <span style={{ textAlign: "right" }}>Rate</span>
+            <span style={{ textAlign: "right" }}>Amount</span>
+          </div>
+          <div style={S.divider} />
+
+          {bill.items.map((item, i) => (
+            <div key={i} className="bill-row">
+              <span style={{ color: "#374151" }}>{item.label}</span>
+              <span style={{ color: "#6b7280", textAlign: "center" }}>{item.quantity}</span>
+              <span style={{ color: "#6b7280", textAlign: "right" }}>₹{item.unitPrice}</span>
+              <span style={{ fontWeight: "600", textAlign: "right" }}>₹{item.total}</span>
+            </div>
+          ))}
+
+          <div style={S.divider} />
+
+          {/* Total */}
+          <div className="bill-row" style={{ fontWeight: "700", fontSize: "16px", borderBottom: "none" }}>
+            <span style={{ color: DARK }}>Total Amount</span>
+            <span />
+            <span />
+            <span style={{ color: GREEN, fontSize: "20px", textAlign: "right" }}>₹{bill.totalAmount}</span>
+          </div>
+        </div>
+
+        {/* Warning if overdue */}
+        {isStopDate && (
+          <div style={S.stopWarning}>
+            🚫 Your services have been stopped due to non-payment.
+            Pay now to restore all features immediately.
+          </div>
+        )}
+        {isOverdue && !isStopDate && (
+          <div style={S.overdueWarning}>
+            ⚠️ Payment is overdue. Services will stop on{" "}
+            {new Date(bill.stopDate).toLocaleDateString("en-IN")}.
+            Pay now to avoid interruption.
+          </div>
+        )}
+
+        {/* Pay Now button */}
+        <button
+          onClick={handlePayNow}
+          disabled={paying}
+          style={S.payBtn}
+        >
+          {paying ? "Opening payment..." : `💳 Pay Now ₹${bill.totalAmount}`}
+        </button>
+
+        <p style={{ textAlign: "center", fontSize: "11px", color: "#9ca3af", margin: "8px 0 0 0" }}>
+          Generated: {new Date(bill.generatedDate).toLocaleDateString("en-IN")} •
+          Due: {new Date(bill.dueDate).toLocaleDateString("en-IN")} •
+          Grace till: {new Date(bill.stopDate).toLocaleDateString("en-IN")}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 const S = {

@@ -147,7 +147,7 @@ function Profile({ user }) {
   ];
 
   return (
-    <div style={{ fontFamily: FONT, maxWidth: "900px", width: "100%" }}>
+    <div style={{ fontFamily: FONT, width: "100%", boxSizing: "border-box" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
         .profile-tab:hover { background: #f0f7f4 !important; }
@@ -155,10 +155,21 @@ function Profile({ user }) {
         .edit-input:focus { border-color: ${GREEN} !important; outline: none; box-shadow: 0 0 0 3px rgba(45,106,79,0.1); }
         .save-btn:hover { background: ${DARK} !important; transform: translateY(-1px); }
         .avatar-hover:hover .avatar-overlay { opacity: 1 !important; }
+        .profile-header { background: linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%); border-radius: 16px; padding: 32px 36px; marginBottom: 24px; display: flex; alignItems: center; gap: 24px; flex-wrap: wrap; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        
+        @media (max-width: 900px) {
+          .profile-header { padding: 20px !important; flex-direction: column !important; text-align: center !important; }
+          .info-grid { grid-template-columns: 1fr !important; }
+          .stats-grid { grid-template-columns: 1fr 1fr !important; }
+          .profile-tab { font-size: 11px !important; padding: 8px 4px !important; }
+          .header-stats { width: 100% !important; justify-content: center !important; margin-top: 10px !important; }
+        }
       `}</style>
 
       {/* Header banner */}
-      <div style={{ background: `linear-gradient(135deg, ${DARK} 0%, ${GREEN} 100%)`, borderRadius: "16px", padding: "32px 36px", marginBottom: "24px", display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
+      <div className="profile-header">
         {/* Avatar */}
         <div className="avatar-hover" style={{ position: "relative", cursor: "pointer" }} onClick={() => fileRef.current.click()}>
           {photoPreview
@@ -174,7 +185,7 @@ function Profile({ user }) {
             {user?.displayName || user?.email?.split("@")[0] || "Farmer"}
           </h2>
           <p style={{ color: "rgba(255,255,255,0.7)", margin: "0 0 8px 0", fontSize: "14px" }}>{user?.email}</p>
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "inherit" }}>
             <span style={{ background: "rgba(255,255,255,0.15)", color: "white", padding: "4px 12px", borderRadius: "20px", fontSize: "12px" }}>
               🗓️ {t("profile_member_since")} {memberSince}
             </span>
@@ -195,7 +206,7 @@ function Profile({ user }) {
         </div>
 
         {/* Quick stats in header */}
-        <div style={{ display: "flex", gap: "20px" }}>
+        <div className="header-stats" style={{ display: "flex", gap: "20px" }}>
           {[{ v: landsCount, l: t("profile_total_lands") }, { v: activeCrops, l: t("profile_active_crops") }, { v: pastCrops, l: t("profile_past_crops") }].map((s, i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontSize: "26px", fontWeight: "700", color: "white", fontFamily: "Playfair Display, serif" }}>{s.v}</div>
@@ -213,7 +224,7 @@ function Profile({ user }) {
       )}
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "20px", background: "white", padding: "6px", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
+      <div style={{ display: "flex", gap: "4px", marginBottom: "20px", background: "white", padding: "6px", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
         {TABS.map(t => (
           <button key={t.id} className={`profile-tab${tab === t.id ? " active" : ""}`}
             onClick={() => setTab(t.id)}
@@ -229,7 +240,7 @@ function Profile({ user }) {
           <h3 style={S.cardTitle}>{t("profile_personal")}</h3>
           <p style={S.cardSub}>Update your name and contact details. Click the avatar above to change your photo.</p>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          <div className="info-grid">
             <div>
               <label style={S.label}>{t("profile_name")}</label>
               <input className="edit-input" value={displayName} onChange={e => setDisplayName(e.target.value)} style={S.input} placeholder="Your full name" />
@@ -351,7 +362,7 @@ function Profile({ user }) {
           <h3 style={S.cardTitle}>{t("profile_journey")}</h3>
           <p style={S.cardSub}>{t("profile_journey_sub")}</p>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+          <div className="stats-grid">
             {[
               { icon: "🗺️", label: t("profile_total_lands"), value: landsCount, color: "#2d6a4f" },
               { icon: "🌾", label: t("profile_active_crops"), value: activeCrops, color: "#1a6985" },
@@ -386,7 +397,7 @@ function Profile({ user }) {
               <h4 style={{ margin: "0 0 12px 0", color: DARK, fontSize: "15px" }}>
                 📊 {t("profile_this_month")}
               </h4>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "8px" }}>
                 {[
                   { label: "Crop Recommendations", value: usage.cropRecCount || 0 },
                   { label: "Timelines Generated", value: usage.timelineCount || 0 },

@@ -172,10 +172,18 @@ function Subscription({ user }) {
   );
 
   return (
-    <div style={{ fontFamily: FONT, maxWidth: "900px", width: "100%" }}>
+    <div style={{ fontFamily: FONT, width: "100%", boxSizing: "border-box" }}>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
         .plan-card { transition: transform 0.2s, box-shadow 0.2s; }
         .plan-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1) !important; }
+        .usage-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; font-size: 13px; padding: 7px 0; border-bottom: 1px solid #f3f4f6; }
+        
+        @media (max-width: 600px) {
+          .usage-row { font-size: 11px !important; }
+          .usage-header { font-size: 9px !important; }
+          .plan-card { padding: 20px !important; }
+        }
       `}</style>
 
       <div style={{ marginBottom: "32px" }}>
@@ -407,10 +415,10 @@ function Subscription({ user }) {
             </p>
 
             {(monthlyUsage?.totalCost || 0) + (paygLandCount * 30) > 0 ? (
-              <>
+              <div style={{ overflowX: "auto" }}>
                 {/* Grocery style bill */}
-                <div style={{ background: "#f9fafb", borderRadius: "10px", padding: "16px" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", fontSize: "11px", fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>
+                <div style={{ background: "#f9fafb", borderRadius: "10px", padding: "16px", minWidth: "300px" }}>
+                  <div className="usage-row usage-header" style={{ fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px", borderBottom: "none" }}>
                     <span>Service</span>
                     <span style={{ textAlign: "center" }}>Qty</span>
                     <span style={{ textAlign: "right" }}>Rate</span>
@@ -421,7 +429,7 @@ function Subscription({ user }) {
 
                   {/* Extra land base charge */}
                   {paygLandCount > 0 && (
-                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "7px 0", borderBottom: "1px solid #f3f4f6", fontSize: "13px" }}>
+                    <div className="usage-row">
                       <span style={{ color: "#374151" }}>Extra Lands (Base)</span>
                       <span style={{ textAlign: "center", color: "#6b7280" }}>{paygLandCount}</span>
                       <span style={{ textAlign: "right", color: "#6b7280" }}>₹30</span>
@@ -434,7 +442,7 @@ function Subscription({ user }) {
                     const cost = monthlyUsage[`${key}Cost`] || 0;
                     if (count === 0) return null;
                     return (
-                      <div key={key} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "7px 0", borderBottom: "1px solid #f3f4f6", fontSize: "13px" }}>
+                      <div key={key} className="usage-row">
                         <span style={{ color: "#374151" }}>{label}</span>
                         <span style={{ textAlign: "center", color: "#6b7280" }}>{count}</span>
                         <span style={{ textAlign: "right", color: "#6b7280" }}>₹{price}</span>
@@ -463,7 +471,7 @@ function Subscription({ user }) {
                 <p style={{ fontSize: "12px", color: "#9ca3af", margin: "12px 0 0 0", textAlign: "center" }}>
                   ⚠️ Bill is generated on the 1st of next month. Due by 5th, grace period till 8th.
                 </p>
-              </>
+              </div>
             ) : (
               <div style={{ textAlign: "center", padding: "30px", background: "#f9fafb", borderRadius: "10px" }}>
                 <div style={{ fontSize: "32px", marginBottom: "8px" }}>✅</div>

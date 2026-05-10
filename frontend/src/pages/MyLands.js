@@ -363,8 +363,21 @@ function MyLands({ user }) {
   if (!isLoaded) return <p>Loading map...</p>;
 
   return (
-    <div style={{ fontFamily: "sans-serif", maxWidth: "800px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+    <div style={{ fontFamily: "sans-serif", width: "100%", boxSizing: "border-box" }}>
+      <style>{`
+        .lands-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin-bottom: 30px; }
+        .lands-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        
+        @media (max-width: 768px) {
+          .lands-grid { grid-template-columns: 1fr !important; }
+          .lands-header { flex-direction: column; align-items: stretch; }
+          .form-section { padding: 16px !important; }
+          .step-box { padding: 12px !important; }
+          .map-container { height: 300px !important; }
+        }
+      `}</style>
+
+      <div className="lands-header">
         <h2 style={{ margin: 0 }}>🗺️ {t("lands_title")}</h2>
         <button onClick={() => { setShowAddForm(!showAddForm); resetForm(); }} style={styles.greenBtn}>
           {showAddForm ? `✖ ${t("lands_cancel")}` : `➕ ${t("lands_add_new")}`}
@@ -378,7 +391,7 @@ function MyLands({ user }) {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "16px", marginBottom: "30px" }}>
+      <div className="lands-grid">
         {lands.map((land) => (
           <div key={land.id} style={styles.landCard}>
             {/* Edit Modal */}
@@ -440,11 +453,11 @@ function MyLands({ user }) {
 
       {/* ── ADD NEW LAND FORM ── */}
       {showAddForm && (
-        <div style={styles.formSection}>
+        <div className="form-section" style={styles.formSection}>
           <h3 style={{ marginTop: 0 }}>➕ {t("lands_add_new")}</h3>
 
           {/* Step 1 — Location */}
-          <div style={styles.stepBox}>
+          <div className="step-box" style={styles.stepBox}>
             <h4 style={styles.stepTitle}>{t("lands_step1")}</h4>
 
             <div style={{ display: "flex", gap: "10px", marginBottom: "12px", flexWrap: "wrap" }}>
@@ -478,14 +491,16 @@ function MyLands({ user }) {
             </div>
 
             {/* Google Map */}
-            <GoogleMap
-              mapContainerStyle={mapContainerStyle}
-              center={mapCenter}
-              zoom={12}
-              onClick={handleMapClick}
-            >
-              <Marker position={markerPos} />
-            </GoogleMap>
+            <div className="map-container" style={{ borderRadius: "10px", overflow: "hidden" }}>
+              <GoogleMap
+                mapContainerStyle={{ width: "100%", height: "380px" }}
+                center={mapCenter}
+                zoom={12}
+                onClick={handleMapClick}
+              >
+                <Marker position={markerPos} />
+              </GoogleMap>
+            </div>
 
             <p style={{ fontSize: "13px", color: "#666", marginTop: "6px" }}>
               📌 {t("lands_pinned")}: {markerPos.lat.toFixed(5)}, {markerPos.lng.toFixed(5)}
@@ -493,7 +508,7 @@ function MyLands({ user }) {
           </div>
 
           {/* Step 2 — Land Details */}
-          <div style={styles.stepBox}>
+          <div className="step-box" style={styles.stepBox}>
             <h4 style={styles.stepTitle}>{t("lands_step2")}</h4>
 
             <label style={styles.label}>{t("lands_land_name")} *</label>
@@ -541,7 +556,7 @@ function MyLands({ user }) {
           </div>
 
           {/* Step 3 — Fetch Weather */}
-          <div style={styles.stepBox}>
+          <div className="step-box" style={styles.stepBox}>
             <h4 style={styles.stepTitle}>{t("lands_step3")}</h4>
             {error && <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>}
 
@@ -561,7 +576,7 @@ function MyLands({ user }) {
           </div>
 
           {/* Step 4 — Save */}
-          <div style={styles.stepBox}>
+          <div className="step-box" style={styles.stepBox}>
             <h4 style={styles.stepTitle}>{t("lands_step4")}</h4>
             <p style={{ fontSize: "13px", color: "#888", marginBottom: "10px" }}>
               {t("lands_save_note")}

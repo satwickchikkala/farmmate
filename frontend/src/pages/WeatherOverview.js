@@ -75,7 +75,17 @@ function WeatherOverview() {
 
   return (
     <div style={{ fontFamily: FONT, width: "100%" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');
+        .weather-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: start; }
+        .lands-scroll { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
+        
+        @media (max-width: 900px) {
+          .weather-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .lands-scroll { display: flex !important; overflow-x: auto; padding-bottom: 10px; }
+          .lands-scroll > div { min-width: 160px; }
+        }
+      `}</style>
 
       <div style={{ marginBottom: "24px" }}>
         <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", color: DARK, margin: "0 0 4px 0" }}>🌤 {t("weather_title")}</h2>
@@ -83,7 +93,7 @@ function WeatherOverview() {
       </div>
 
       {/* All lands quick cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px", marginBottom: "28px" }}>
+      <div className="lands-scroll">
         {allWeathers.map(land => (
           <div key={land.id} onClick={() => handleSelectLand(land)}
             style={{ padding: "16px", borderRadius: "12px", border: `2px solid ${selectedLand?.id === land.id ? GREEN : "#e5e7eb"}`, background: selectedLand?.id === land.id ? "#f0f7f4" : "white", cursor: "pointer", textAlign: "center", transition: "all 0.2s", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
@@ -119,7 +129,7 @@ function WeatherOverview() {
           {error && <p style={{ color: "#dc2626" }}>⚠️ {error}</p>}
 
           {currentWeather && !loading && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "20px", alignItems: "start" }}>
+            <div className="weather-grid">
               {/* Current weather big card */}
               <div style={{ background: `linear-gradient(135deg, ${DARK}, ${GREEN})`, borderRadius: "16px", padding: "28px", color: "white", textAlign: "center" }}>
                 <p style={{ margin: "0 0 4px 0", fontSize: "13px", opacity: 0.7 }}>📍 {selectedLand.landName}</p>
@@ -148,13 +158,13 @@ function WeatherOverview() {
                           {i === 0 ? t("weather_today") : new Date(day.date + 'T00:00:00').toLocaleDateString("en-IN", { weekday: "short", day: "numeric" })}
                         </div>
                         <div style={{ fontSize: "24px" }}>{weatherIcon(day.day_condition)}</div>
-                        <div style={{ flex: 1, fontSize: "13px", color: "#6b7280", textTransform: "capitalize" }}>{day.day_condition}</div>
+                        <div style={{ flex: 1, fontSize: "13px", color: "#6b7280", textTransform: "capitalize", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{day.day_condition}</div>
                         {day.precipitation_chance > 30 && (
-                          <div style={{ fontSize: "12px", color: "#1a6985", background: "#f0f8ff", padding: "3px 8px", borderRadius: "8px" }}>🌧 {day.precipitation_chance}%</div>
+                          <div style={{ fontSize: "10px", color: "#1a6985", background: "#f0f8ff", padding: "2px 6px", borderRadius: "6px" }}>🌧 {day.precipitation_chance}%</div>
                         )}
-                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                          <span style={{ fontSize: "14px", fontWeight: "700", color: "#dc2626" }}>{Math.round(day.max_temp)}°</span>
-                          <span style={{ fontSize: "14px", color: "#93c5fd" }}>{Math.round(day.min_temp)}°</span>
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                          <span style={{ fontSize: "13px", fontWeight: "700", color: "#dc2626" }}>{Math.round(day.max_temp)}°</span>
+                          <span style={{ fontSize: "13px", color: "#93c5fd" }}>{Math.round(day.min_temp)}°</span>
                         </div>
                       </div>
                     ))}
