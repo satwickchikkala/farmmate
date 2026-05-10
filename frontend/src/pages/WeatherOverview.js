@@ -190,7 +190,7 @@ function WeatherOverview() {
                       {i === 0 ? t("weather_today") : new Date(f.date + 'T00:00:00').toLocaleDateString(lang === "en" ? "en-IN" : "hi-IN", { weekday: "short", day: "numeric" })}
                     </div>
                     <div style={{ fontSize: "28px" }}>{weatherIcon(f.day_condition || f.description)}</div>
-                    <div style={{ width: "80px", textAlign: "right", fontWeight: "700", color: GREEN }}>{Math.round(f.temperature)}°C</div>
+                    <div style={{ width: "80px", textAlign: "right", fontWeight: "700", color: GREEN }}>{Math.round(f.max_temp)}°C</div>
                     <div style={{ width: "130px", fontSize: "13px", color: "#6b7280", textAlign: "right", textTransform: "capitalize" }} className="forecast-desc-text">
                       {f.day_condition || f.description}
                     </div>
