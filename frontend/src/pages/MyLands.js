@@ -329,6 +329,21 @@ function MyLands({ user }) {
     );
     const snapshot = await getDocs(q);
     const results = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // AUTO-FIX: If total lands <= 10, they should all be Pro.
+    // This fixes any "ghost" PAYG status from previous tests.
+    if (results.length <= 10) {
+      const mislabeled = results.filter(l => l.isPayg);
+      if (mislabeled.length > 0) {
+        await Promise.all(mislabeled.map(l => 
+          updateDoc(doc(db, "lands", l.id), { isPayg: false })
+        ));
+        // Refresh list after fixing
+        loadLands();
+        return;
+      }
+    }
+
     setLands(results);
   };
 
