@@ -1,6 +1,7 @@
 // src/pages/Home.js
 import { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { getUserPlanInfo } from "../utils/updatePlan";
 import { useGate } from "../hooks/useGate";
 import axios from "axios";
@@ -182,11 +183,7 @@ function Home({ user }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t("home_good_morning") : hour < 17 ? t("home_good_afternoon") : t("home_good_evening");
 
-  if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "300px", fontFamily: FONT }}>
-      <div style={{ color: GREEN, fontSize: "16px" }}>🌱 {t("common_loading")}</div>
-    </div>
-  );
+  if (loading) return <LoadingSpinner message={t("common_loading")} />;
 
   return (
     <div style={{ fontFamily: FONT, width: "100%" }}>

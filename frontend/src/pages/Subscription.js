@@ -1,5 +1,6 @@
 // src/pages/Subscription.js
 import { useState, useEffect } from "react";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { getUserPlanInfo } from "../utils/updatePlan";
 import { getMonthlyUsage } from "../utils/trackUsage";
 import { auth, db } from "../firebase";
@@ -165,11 +166,7 @@ function Subscription({ user }) {
     );
   };
 
-  if (loading) return (
-    <div style={{ padding: "40px", fontFamily: FONT, color: "#6b7280" }}>
-      Loading...
-    </div>
-  );
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div style={{ fontFamily: FONT, width: "100%", boxSizing: "border-box" }}>

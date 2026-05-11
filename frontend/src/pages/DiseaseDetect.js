@@ -1,5 +1,6 @@
 // src/pages/DiseaseDetect.js
 import React, { useState, useEffect } from 'react';
+import LoadingSpinner from "../components/LoadingSpinner";
 import { db, auth } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import axios from 'axios';
@@ -225,11 +226,7 @@ function DiseaseDetect() {
             {loading ? `🤖 ${t("disease_analyzing")}` : `🔍 ${t("disease_detect")}`}
           </button>
 
-          {loading && (
-            <div style={{ marginTop: "16px", padding: "12px", background: "#f0f7f4", borderRadius: "8px", fontSize: "13px", color: GREEN, textAlign: "center" }}>
-              Running ResNet50 model → Asking AI for cure details...
-            </div>
-          )}
+          {loading && <LoadingSpinner fullPage={false} message="Running ResNet50 model → Asking AI for cure details..." />}
         </div>
 
         {/* Results section */}

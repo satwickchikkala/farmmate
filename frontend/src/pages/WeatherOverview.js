@@ -1,5 +1,6 @@
 // src/pages/WeatherOverview.js
 import { useState, useEffect } from "react";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { db, auth } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import axios from "axios";
@@ -135,7 +136,7 @@ function WeatherOverview() {
           </div>
         )}
 
-        {loading && !currentWeather && <div style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>⌛ {t("lands_fetching")}...</div>}
+        {loading && !currentWeather && <LoadingSpinner fullPage={false} message={t("lands_fetching")} />}
         {error && <div style={{ padding: "20px", background: "#fee2e2", color: "#dc2626", borderRadius: "12px", marginBottom: "20px" }}>⚠️ {error}</div>}
 
         {!loading && selectedLand && currentWeather && (

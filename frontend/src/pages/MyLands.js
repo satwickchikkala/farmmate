@@ -1,5 +1,6 @@
 // src/pages/MyLands.js
 import { useState, useCallback, useEffect, useRef } from "react";
+import LoadingSpinner from "../components/LoadingSpinner";
 import {
   GoogleMap,
   useJsApiLoader,
@@ -379,7 +380,7 @@ function MyLands({ user }) {
     return "#888";
   };
 
-  if (!isLoaded) return <p>Loading map...</p>;
+  if (!isLoaded) return <LoadingSpinner message="Loading map..." />;
 
   return (
     <div style={{ fontFamily: "sans-serif", width: "100%", boxSizing: "border-box" }}>
