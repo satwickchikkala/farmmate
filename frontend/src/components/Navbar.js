@@ -204,6 +204,48 @@ function Navbar({ user }) {
             )}
           </div>
 
+          {/* Language Selector Desktop */}
+          <div style={{ position: "relative" }} className="user-name-desktop">
+            <button 
+              onClick={() => setShowLangMenu(!showLangMenu)}
+              style={{ background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.2)", padding: "8px 12px", borderRadius: "10px", cursor: "pointer", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", transition: "all 0.2s" }}
+            >
+              {LANGUAGES.find(l => l.code === lang)?.flag || "🌐"}
+              <span style={{ fontSize: "12px", fontWeight: "600" }}>{lang.toUpperCase()}</span>
+            </button>
+
+            {showLangMenu && (
+              <div style={{ position: "absolute", top: "120%", right: 0, background: "white", borderRadius: "14px", boxShadow: "0 12px 40px rgba(0,0,0,0.25)", zIndex: 1001, minWidth: "150px", overflow: "hidden", border: "1px solid #e5e7eb", padding: "8px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {LANGUAGES.map(language => (
+                    <button
+                      key={language.code}
+                      onClick={() => { changeLang(language.code); setShowLangMenu(false); }}
+                      style={{ 
+                        padding: "10px 14px", 
+                        borderRadius: "8px", 
+                        border: "none",
+                        background: lang === language.code ? "#f0f7f4" : "transparent",
+                        color: lang === language.code ? "#2d6a4f" : "#4b5563",
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      <span style={{ fontSize: "16px" }}>{language.flag}</span>
+                      {language.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             {user?.photoURL ? (
               <img src={user.photoURL} alt="" style={{ width: "34px", height: "34px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)" }} />
