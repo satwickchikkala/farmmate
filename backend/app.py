@@ -228,7 +228,7 @@ A farmer has the following land and conditions:
 - Potassium (K): {K}
 - Soil pH: {ph}
 
-Suggest the TOP 5 most suitable crops to grow right now.
+Suggest the TOP 5 most suitable crops to grow right now based on the locations past 3 to 4 months and next predicted 3-4 months weather data.
 For each crop provide:
 1. Crop name
 2. Match percentage (how suitable it is, 0-100)
