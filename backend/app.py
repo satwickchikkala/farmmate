@@ -8,6 +8,7 @@ import numpy as np
 import os
 import tempfile
 import threading
+from datetime import datetime, timedelta
 
 # Keep native thread pools tiny on low-memory instances.
 os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -382,6 +383,48 @@ def get_forecast():
             days[date]["min_temp"] = min(days[date]["min_temp"], item["main"]["temp_min"])
 
     return jsonify(list(days.values())[:7])
+
+@app.route('/weather-historical', methods=['GET'])
+def get_weather_historical():
+    lat = request.args.get('lat')
+    lng = request.args.get('lng')
+
+    if not lat or not lng:
+        return jsonify({"error": "Coordinates required"}), 400
+
+    try:
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=180) # Past 6 months
+
+        url = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lng}&start_date={start_date.strftime('%Y-%m-%d')}&end_date={end_date.strftime('%Y-%m-%d')}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto"
+        response = requests.get(url, timeout=10)
+        data = response.json()
+
+        if response.status_code != 200:
+            return jsonify({"error": "Could not fetch historical data"}), 404
+
+        daily = data.get('daily', {})
+        temp_max = daily.get('temperature_2m_max', [])
+        temp_min = daily.get('temperature_2m_min', [])
+        precip = daily.get('precipitation_sum', [])
+
+        valid_max = [t for t in temp_max if t is not None]
+        valid_min = [t for t in temp_min if t is not None]
+        valid_precip = [p for p in precip if p is not None]
+
+        avg_max = sum(valid_max) / len(valid_max) if valid_max else 0
+        avg_min = sum(valid_min) / len(valid_min) if valid_min else 0
+        total_precip = sum(valid_precip) if valid_precip else 0
+
+        return jsonify({
+            "avg_max_temp": round(avg_max, 1),
+            "avg_min_temp": round(avg_min, 1),
+            "total_precipitation": round(total_precip, 1),
+            "period": "Past 6 Months"
+        })
+    except Exception as e:
+        print(f"Error fetching historical weather: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 # Load the model and class labels - route
 @app.route('/detect-disease', methods=['POST'])

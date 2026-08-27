@@ -38,6 +38,7 @@ function WeatherOverview() {
   const [selectedLand, setSelectedLand] = useState(null);
   const [currentWeather, setCurrentWeather] = useState(null);
   const [forecast, setForecast] = useState([]);
+  const [historicalWeather, setHistoricalWeather] = useState(null);
   const [allWeathers, setAllWeathers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -63,12 +64,14 @@ function WeatherOverview() {
   const fetchWeather = async (land) => {
     setLoading(true); setError("");
     try {
-      const [wres, fres] = await Promise.all([
+      const [wres, fres, hres] = await Promise.all([
         axios.get(`${API_URL}/weather-coords?lat=${land.latitude}&lng=${land.longitude}`),
-        axios.get(`${API_URL}/weather-forecast?lat=${land.latitude}&lng=${land.longitude}`)
+        axios.get(`${API_URL}/weather-forecast?lat=${land.latitude}&lng=${land.longitude}`),
+        axios.get(`${API_URL}/weather-historical?lat=${land.latitude}&lng=${land.longitude}`).catch(() => ({ data: null }))
       ]);
       setCurrentWeather(wres.data);
       setForecast(fres.data);
+      setHistoricalWeather(hres.data);
     } catch (err) {
       console.error("Error fetching weather:", err);
       setError("Could not fetch weather data.");
@@ -181,23 +184,46 @@ function WeatherOverview() {
               )}
             </div>
 
-            {/* Right: Forecast */}
-            <div style={{ background: "white", borderRadius: "20px", padding: "32px", border: "1px solid #e5e7eb", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
-              <h3 style={{ margin: "0 0 24px 0", fontSize: "20px", color: DARK, fontFamily: "Playfair Display, serif" }}>📅 {t("weather_forecast")}</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {forecast.slice(0, 7).map((f, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderRadius: "14px", background: i === 0 ? "#f0f7f4" : "transparent", border: i === 0 ? `1px solid ${GREEN}` : "1px solid #f3f4f6" }}>
-                    <div style={{ width: "110px", fontSize: "14px", fontWeight: "600", color: DARK }}>
-                      {i === 0 ? t("weather_today") : new Date(f.date + 'T00:00:00').toLocaleDateString(lang === "en" ? "en-IN" : "hi-IN", { weekday: "short", day: "numeric" })}
+            {/* Right: Forecast & Historical */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              <div style={{ background: "white", borderRadius: "20px", padding: "32px", border: "1px solid #e5e7eb", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+                <h3 style={{ margin: "0 0 24px 0", fontSize: "20px", color: DARK, fontFamily: "Playfair Display, serif" }}>📅 {t("weather_forecast")}</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {forecast.slice(0, 7).map((f, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderRadius: "14px", background: i === 0 ? "#f0f7f4" : "transparent", border: i === 0 ? `1px solid ${GREEN}` : "1px solid #f3f4f6" }}>
+                      <div style={{ width: "110px", fontSize: "14px", fontWeight: "600", color: DARK }}>
+                        {i === 0 ? t("weather_today") : new Date(f.date + 'T00:00:00').toLocaleDateString(lang === "en" ? "en-IN" : "hi-IN", { weekday: "short", day: "numeric" })}
+                      </div>
+                      <div style={{ fontSize: "28px" }}>{weatherIcon(f.day_condition || f.description)}</div>
+                      <div style={{ width: "80px", textAlign: "right", fontWeight: "700", color: GREEN }}>{Math.round(f.max_temp)}°C</div>
+                      <div style={{ width: "130px", fontSize: "13px", color: "#6b7280", textAlign: "right", textTransform: "capitalize" }} className="forecast-desc-text">
+                        {f.day_condition || f.description}
+                      </div>
                     </div>
-                    <div style={{ fontSize: "28px" }}>{weatherIcon(f.day_condition || f.description)}</div>
-                    <div style={{ width: "80px", textAlign: "right", fontWeight: "700", color: GREEN }}>{Math.round(f.max_temp)}°C</div>
-                    <div style={{ width: "130px", fontSize: "13px", color: "#6b7280", textAlign: "right", textTransform: "capitalize" }} className="forecast-desc-text">
-                      {f.day_condition || f.description}
+                  ))}
+                </div>
+              </div>
+
+              {/* Historical Weather */}
+              {historicalWeather && !historicalWeather.error && (
+                <div style={{ background: "white", borderRadius: "20px", padding: "32px", border: "1px solid #e5e7eb", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
+                  <h3 style={{ margin: "0 0 24px 0", fontSize: "20px", color: DARK, fontFamily: "Playfair Display, serif" }}>📊 {t("weather_historical_title")}</h3>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <div style={{ background: "#f9fafb", padding: "16px", borderRadius: "12px", textAlign: "center" }}>
+                      <div style={{ color: "#9ca3af", fontSize: "12px", marginBottom: "4px" }}>🌡️ {t("weather_avg_max_temp")}</div>
+                      <div style={{ fontWeight: "700", color: "#ef4444", fontSize: "20px" }}>{historicalWeather.avg_max_temp}°C</div>
+                    </div>
+                    <div style={{ background: "#f9fafb", padding: "16px", borderRadius: "12px", textAlign: "center" }}>
+                      <div style={{ color: "#9ca3af", fontSize: "12px", marginBottom: "4px" }}>❄️ {t("weather_avg_min_temp")}</div>
+                      <div style={{ fontWeight: "700", color: "#3b82f6", fontSize: "20px" }}>{historicalWeather.avg_min_temp}°C</div>
+                    </div>
+                    <div style={{ background: "#f9fafb", padding: "16px", borderRadius: "12px", textAlign: "center", gridColumn: "span 2" }}>
+                      <div style={{ color: "#9ca3af", fontSize: "12px", marginBottom: "4px" }}>🌧️ {t("weather_total_rainfall")}</div>
+                      <div style={{ fontWeight: "700", color: "#0ea5e9", fontSize: "24px" }}>{historicalWeather.total_precipitation} mm</div>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
