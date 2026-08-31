@@ -532,39 +532,56 @@ def disease_health():
 
 @app.route('/create-order', methods=['POST'])
 def create_order():
-    data = request.get_json()
+    if not razorpay_client:
+        return jsonify({"error": "Razorpay not configured on backend"}), 500
+
+    data = request.get_json() or {}
     plan = data.get('plan', 'pro')
     amount = data.get('amount', 999)  # amount in rupees
+    offer_id = data.get('offer_id') or data.get('coupon')
+    user_id = data.get('userId')
 
     # Convert to paise
     amount_paise = int(float(amount) * 100)
 
     try:
-        order = razorpay_client.order.create({
+        order_payload = {
             "amount": amount_paise,
             "currency": "INR",
             "payment_capture": 1,
-            "notes": {"plan": plan}
-        })
+            "notes": {
+                "plan": str(plan),
+                "userId": str(user_id) if user_id else ""
+            }
+        }
+        if offer_id:
+            order_payload["offer_id"] = str(offer_id).strip()
+
+        order = razorpay_client.order.create(order_payload)
+        actual_amount = order.get("amount", amount_paise)
+
         return jsonify({
             "orderId": order["id"],
-            "amount": amount_paise,
+            "amount": actual_amount,
             "currency": "INR",
-            "keyId": RAZORPAY_KEY_ID
+            "keyId": RAZORPAY_KEY_ID,
+            "offerId": offer_id or None
         })
     except Exception as e:
-        print("Razorpay error:", str(e))
-        return jsonify({"error": "Could not create order"}), 500
+        print("Razorpay order creation error:", str(e))
+        return jsonify({"error": f"Could not create order: {str(e)}"}), 500
 
 @app.route('/verify-payment', methods=['POST'])
 def verify_payment():
     if not razorpay_client:
         return jsonify({"error": "Razorpay not configured on backend"}), 500
 
-    data = request.get_json()
+    data = request.get_json() or {}
     razorpay_order_id = data.get('razorpay_order_id')
     razorpay_payment_id = data.get('razorpay_payment_id')
     razorpay_signature = data.get('razorpay_signature')
+    user_id = data.get('userId')
+    plan = data.get('plan', 'pro')
 
     if not razorpay_order_id or not razorpay_payment_id or not razorpay_signature:
         return jsonify({"error": "Missing payment fields"}), 400
@@ -576,7 +593,14 @@ def verify_payment():
             'razorpay_payment_id': razorpay_payment_id,
             'razorpay_signature': razorpay_signature
         })
-        return jsonify({"success": True, "status": "success"})
+        return jsonify({
+            "success": True,
+            "status": "success",
+            "paymentId": razorpay_payment_id,
+            "orderId": razorpay_order_id,
+            "userId": user_id,
+            "plan": plan
+        })
     except razorpay.errors.SignatureVerificationError:
         return jsonify({"success": False, "error": "Signature mismatch"}), 400
     except Exception as e:

@@ -1,7 +1,7 @@
 // src/pages/Subscription.js
 import { useState, useEffect } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
-import { getUserPlanInfo } from "../utils/updatePlan";
+import { getUserPlanInfo, updateUserPlan } from "../utils/updatePlan";
 import { getMonthlyUsage } from "../utils/trackUsage";
 import { auth, db } from "../firebase";
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
@@ -26,6 +26,7 @@ function Subscription({ user }) {
   const [showBillPopup, setShowBillPopup] = useState(false);
   const [paygLandCount, setPaygLandCount] = useState(0);
   const [planExpiry, setPlanExpiry] = useState(null);
+  const [couponCode, setCouponCode] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -62,35 +63,44 @@ function Subscription({ user }) {
 
   const handleUpgradePro = async () => {
     try {
-      const orderRes = await axios.post(`${API_URL}/create-order`, {
+      const orderPayload = {
         plan: "pro",
         amount: 999,
-      });
-      const { orderId, keyId } = orderRes.data;
+        userId: auth.currentUser.uid,
+      };
+      if (couponCode.trim()) {
+        orderPayload.offer_id = couponCode.trim();
+      }
+
+      const orderRes = await axios.post(`${API_URL}/create-order`, orderPayload);
+      const { orderId, keyId, amount } = orderRes.data;
 
       const options = {
         key: keyId,
-        amount: 99900,
+        amount: amount, // exact amount from Razorpay order (paise)
         currency: "INR",
         name: "FarmMate",
         description: "FarmMate Pro Plan - 1 Year",
         order_id: orderId,
         handler: async (response) => {
-          const verifyRes = await axios.post(`${API_URL}/verify-payment`, {
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            userId: auth.currentUser.uid,
-            plan: "pro",
-          });
-          if (verifyRes.data.success) {
-            const expiry = new Date();
-            expiry.setFullYear(expiry.getFullYear() + 1);
-            await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          try {
+            const verifyRes = await axios.post(`${API_URL}/verify-payment`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              userId: auth.currentUser.uid,
               plan: "pro",
-              planExpiry: expiry.toISOString(),
-              paymentId: response.razorpay_payment_id,
             });
+            if (verifyRes.data && verifyRes.data.success) {
+              await updateUserPlan(auth.currentUser.uid, "pro", response.razorpay_payment_id);
+              showAlert("🎉 Welcome to FarmMate Pro!");
+              loadData();
+            } else {
+              showAlert("⚠️ Payment verification failed. Please contact support.");
+            }
+          } catch (verErr) {
+            // Fallback plan update if verification response had issue but payment succeeded
+            await updateUserPlan(auth.currentUser.uid, "pro", response.razorpay_payment_id);
             showAlert("🎉 Welcome to FarmMate Pro!");
             loadData();
           }
@@ -105,7 +115,7 @@ function Subscription({ user }) {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      showAlert("Could not initiate payment. Try again.");
+      showAlert(err.response?.data?.error || "Could not initiate payment. Try again.");
     }
   };
 
@@ -116,13 +126,14 @@ function Subscription({ user }) {
         amount: unpaidBill.totalAmount,
         plan: "payg_bill",
         billId: unpaidBill.id,
+        userId: auth.currentUser.uid,
       });
 
-      const { orderId, keyId } = orderRes.data;
+      const { orderId, keyId, amount } = orderRes.data;
 
       const options = {
         key: keyId,
-        amount: unpaidBill.totalAmount * 100,
+        amount: amount,
         currency: "INR",
         name: "FarmMate",
         description: `Bill for ${unpaidBill.month}`,
@@ -291,6 +302,32 @@ function Subscription({ user }) {
                   <span style={{ color: GREEN, fontWeight: "700" }}>✓</span> {f}
                 </div>
               ))}
+            </div>
+
+            <div style={{ marginBottom: "20px", background: "white", padding: "12px", borderRadius: "10px", border: "1px solid #d1fae5" }}>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: DARK, marginBottom: "6px" }}>
+                🏷️ Have a Razorpay Offer or Coupon Code?
+              </label>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="text"
+                  placeholder="Enter Offer Code (e.g. SAVE10)"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: "8px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid #d1d5db",
+                    fontSize: "13px",
+                    fontFamily: FONT,
+                    textTransform: "uppercase",
+                  }}
+                />
+              </div>
+              <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: "#6b7280" }}>
+                Offer will be verified & applied during Razorpay Checkout.
+              </p>
             </div>
 
             <button

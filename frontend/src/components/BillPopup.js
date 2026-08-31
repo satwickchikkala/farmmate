@@ -24,13 +24,14 @@ function BillPopup({ bill, onPaid }) {
                 amount: bill.totalAmount,
                 plan: "payg_bill",
                 billId: bill.id,
+                userId: auth.currentUser.uid,
             });
 
-            const { orderId, keyId } = orderRes.data;
+            const { orderId, keyId, amount } = orderRes.data;
 
             const options = {
                 key: keyId,
-                amount: bill.totalAmount * 100,
+                amount: amount,
                 currency: "INR",
                 name: "FarmMate",
                 description: `Bill for ${bill.month}`,

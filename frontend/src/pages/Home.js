@@ -76,11 +76,31 @@ function Home({ user }) {
   const handleRenewPro = async () => {
     setPaying(true);
     try {
-      const res = await axios.post(`${API_URL}/create-order`, { amount: 999, plan: "pro" });
-      const { orderId, keyId } = res.data;
+      const res = await axios.post(`${API_URL}/create-order`, {
+        amount: 999,
+        plan: "pro",
+        userId: auth.currentUser.uid
+      });
+      const { orderId, keyId, amount } = res.data;
       const options = {
-        key: keyId, amount: 99900, currency: "INR", name: "FarmMate", description: "Pro Plan Renewal", order_id: orderId,
+        key: keyId,
+        amount: amount,
+        currency: "INR",
+        name: "FarmMate",
+        description: "Pro Plan Renewal",
+        order_id: orderId,
         handler: async (response) => {
+          try {
+            await axios.post(`${API_URL}/verify-payment`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              userId: auth.currentUser.uid,
+              plan: "pro",
+            });
+          } catch (e) {
+            console.warn("Payment verification API warning:", e);
+          }
           const { updateUserPlan } = await import("../utils/updatePlan");
           await updateUserPlan(auth.currentUser.uid, "pro", response.razorpay_payment_id);
           await refreshPlan();
@@ -103,13 +123,14 @@ function Home({ user }) {
         amount: unpaidBill.totalAmount,
         plan: "payg_bill",
         billId: unpaidBill.id,
+        userId: auth.currentUser.uid,
       });
 
-      const { orderId, keyId } = orderRes.data;
+      const { orderId, keyId, amount } = orderRes.data;
 
       const options = {
         key: keyId,
-        amount: unpaidBill.totalAmount * 100,
+        amount: amount,
         currency: "INR",
         name: "FarmMate",
         description: `Bill for ${unpaidBill.month}`,
