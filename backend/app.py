@@ -556,6 +556,19 @@ def create_order():
         }
         if offer_id:
             order_payload["offer_id"] = str(offer_id).strip()
+        else:
+            # Try to auto-attach enabled offers from Razorpay account
+            try:
+                offers_res = razorpay_client.get('/offers', {})
+                if isinstance(offers_res, dict) and "items" in offers_res:
+                    active_offer_ids = [
+                        o["id"] for o in offers_res["items"]
+                        if o.get("status") == "enabled" or o.get("active") is True
+                    ]
+                    if active_offer_ids:
+                        order_payload["offers"] = active_offer_ids
+            except Exception as off_err:
+                print("Notice: Could not auto-fetch Razorpay offers:", str(off_err))
 
         order = razorpay_client.order.create(order_payload)
         actual_amount = order.get("amount", amount_paise)
