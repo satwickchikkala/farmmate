@@ -210,14 +210,15 @@ function Profile({ user }) {
               {isGoogle ? `🔵 ${t("profile_google_account")}` : `📧 ${t("profile_email_account")}`}
             </span>
             <span style={{
-              background: currentPlan === "pro" ? "rgba(255,215,0,0.2)" : "rgba(255,255,255,0.15)",
+              background: currentPlan === "pro" ? "rgba(255,215,0,0.2)" : currentPlan === "payg" ? "rgba(56, 189, 248, 0.25)" : "rgba(255,255,255,0.15)",
               color: "white",
               padding: "4px 12px",
               borderRadius: "20px",
               fontSize: "12px",
-              border: currentPlan === "pro" ? "1px solid gold" : "none"
+              fontWeight: currentPlan === "payg" || currentPlan === "pro" ? "600" : "normal",
+              border: currentPlan === "pro" ? "1px solid gold" : currentPlan === "payg" ? "1px solid #38bdf8" : "none"
             }}>
-              {currentPlan === "pro" ? `⭐ ${t("profile_pro_plan")}` : `🌿 ${t("profile_free_plan")}`}
+              {currentPlan === "pro" ? `⭐ ${t("profile_pro_plan")}` : currentPlan === "payg" ? "👑 PAYG" : `🌿 ${t("profile_free_plan")}`}
             </span>
           </div>
         </div>

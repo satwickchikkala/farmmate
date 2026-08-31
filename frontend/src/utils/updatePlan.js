@@ -20,12 +20,20 @@ export const getUserPlanInfo = async (userId) => {
 
   if (docSnap.exists()) {
     const data = docSnap.data();
-    const expiry = data.planExpiry ? new Date(data.planExpiry) : null;
-    const isExpired = expiry && expiry < new Date();
-    
+    const plan = data.plan || "free";
+
+    if (plan === "pro") {
+      const expiry = data.planExpiry ? new Date(data.planExpiry) : null;
+      const isExpired = expiry && expiry < new Date();
+      return {
+        plan: isExpired ? "free" : "pro",
+        planExpiry: data.planExpiry || null,
+      };
+    }
+
     return {
-      plan: isExpired ? "free" : (data.plan || "free"),
-      planExpiry: data.planExpiry,
+      plan: plan,
+      planExpiry: data.planExpiry || null,
     };
   }
   return { plan: "free", planExpiry: null };
