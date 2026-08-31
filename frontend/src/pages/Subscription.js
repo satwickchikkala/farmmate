@@ -26,7 +26,6 @@ function Subscription({ user }) {
   const [showBillPopup, setShowBillPopup] = useState(false);
   const [paygLandCount, setPaygLandCount] = useState(0);
   const [planExpiry, setPlanExpiry] = useState(null);
-  const [couponCode, setCouponCode] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -68,9 +67,6 @@ function Subscription({ user }) {
         amount: 999,
         userId: auth.currentUser.uid,
       };
-      if (couponCode.trim()) {
-        orderPayload.offer_id = couponCode.trim();
-      }
 
       const orderRes = await axios.post(`${API_URL}/create-order`, orderPayload);
       const { orderId, keyId, amount } = orderRes.data;
@@ -302,32 +298,6 @@ function Subscription({ user }) {
                   <span style={{ color: GREEN, fontWeight: "700" }}>✓</span> {f}
                 </div>
               ))}
-            </div>
-
-            <div style={{ marginBottom: "20px", background: "white", padding: "12px", borderRadius: "10px", border: "1px solid #d1fae5" }}>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: "600", color: DARK, marginBottom: "6px" }}>
-                🏷️ Have a Razorpay Offer or Coupon Code?
-              </label>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <input
-                  type="text"
-                  placeholder="Enter Offer Code (e.g. SAVE10)"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid #d1d5db",
-                    fontSize: "13px",
-                    fontFamily: FONT,
-                    textTransform: "uppercase",
-                  }}
-                />
-              </div>
-              <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: "#6b7280" }}>
-                Offer will be verified & applied during Razorpay Checkout.
-              </p>
             </div>
 
             <button
