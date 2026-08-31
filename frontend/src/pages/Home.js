@@ -163,9 +163,9 @@ function Home({ user }) {
   const getFilteredTasks = () => {
     const allTasks = getAllTasks();
     const now = new Date();
-    if (calView === "today") return allTasks.filter(t => t.date === today);
-    if (calView === "weekly") { const e = new Date(now); e.setDate(now.getDate() + 7); return allTasks.filter(t => { const d = new Date(t.date); return d >= now && d <= e; }); }
-    if (calView === "monthly") { const e = new Date(now); e.setDate(now.getDate() + 30); return allTasks.filter(t => { const d = new Date(t.date); return d >= now && d <= e; }); }
+    if (calView === "today") return allTasks.filter(t => t.date === today || (t.date < today && !t.completed));
+    if (calView === "weekly") { const e = new Date(now); e.setDate(now.getDate() + 7); return allTasks.filter(t => { const d = new Date(t.date); return (d >= now && d <= e) || (t.date < today && !t.completed); }); }
+    if (calView === "monthly") { const e = new Date(now); e.setDate(now.getDate() + 30); return allTasks.filter(t => { const d = new Date(t.date); return (d >= now && d <= e) || (t.date < today && !t.completed); }); }
     return allTasks;
   };
 
@@ -191,8 +191,11 @@ function Home({ user }) {
     loadTimelines();
   };
 
-  const todayTasks = getAllTasks().filter(t => t.date === today);
+  const allTasksList = getAllTasks();
+  const overdueTasks = allTasksList.filter(t => t.date < today && !t.completed);
+  const todayTasks = allTasksList.filter(t => t.date === today);
   const pendingToday = todayTasks.filter(t => !t.completed).length;
+  const pendingTotal = pendingToday + overdueTasks.length;
   const filteredTasks = getFilteredTasks();
 
   const groupByDate = (tasks) => {
@@ -249,8 +252,10 @@ function Home({ user }) {
         </div>
         <div className="welcome-stats" style={{ display: "flex", gap: "16px" }}>
           <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "16px", padding: "16px 24px", minWidth: "100px" }}>
-            <div style={{ fontSize: "32px", fontWeight: "700", color: pendingToday > 0 ? "#fbbf24" : "#6ee7b7", fontFamily: "Playfair Display, serif" }}>{pendingToday}</div>
-            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>{t("home_tasks_today")}</div>
+            <div style={{ fontSize: "32px", fontWeight: "700", color: pendingTotal > 0 ? (overdueTasks.length > 0 ? "#f87171" : "#fbbf24") : "#6ee7b7", fontFamily: "Playfair Display, serif" }}>{pendingTotal}</div>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
+              {overdueTasks.length > 0 ? `${pendingTotal} Pending (${overdueTasks.length} Overdue)` : t("home_tasks_today")}
+            </div>
           </div>
           <div style={{ textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "16px 24px", minWidth: "100px" }}>
             <div style={{ fontSize: "32px", fontWeight: "700", color: "#6ee7b7", fontFamily: "Playfair Display, serif" }}>{timelines.length}</div>
@@ -380,19 +385,29 @@ function Home({ user }) {
                   <div key={date}>
                     {/* Date header */}
                     <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
-                      <div style={{ background: date === today ? GREEN : "#f3f4f6", color: date === today ? "white" : "#6b7280", borderRadius: "10px", padding: "8px 20px", fontSize: "14px", fontWeight: "600", boxShadow: date === today ? "0 4px 12px rgba(45,106,79,0.2)" : "none" }}>
-                        {date === today ? `📅 ${t("home_today")}` : new Date(date + 'T00:00:00').toLocaleDateString(lang === "en" ? "en-IN" : lang === "hi" ? "hi-IN" : lang === "te" ? "te-IN" : "ta-IN", { weekday: "short", day: "numeric", month: "short" })}
+                      <div style={{
+                        background: date < today ? "#fff1f2" : date === today ? GREEN : "#f3f4f6",
+                        color: date < today ? "#9f1239" : date === today ? "white" : "#6b7280",
+                        border: date < today ? "1px solid #fecdd3" : "none",
+                        borderRadius: "10px", padding: "8px 20px", fontSize: "14px", fontWeight: "600",
+                        boxShadow: date === today ? "0 4px 12px rgba(45,106,79,0.2)" : "none"
+                      }}>
+                        {date < today
+                          ? `⚠️ Overdue (${new Date(date + 'T00:00:00').toLocaleDateString(lang === "en" ? "en-IN" : lang === "hi" ? "hi-IN" : lang === "te" ? "te-IN" : "ta-IN", { weekday: "short", day: "numeric", month: "short" })})`
+                          : date === today
+                          ? `📅 ${t("home_today")}`
+                          : new Date(date + 'T00:00:00').toLocaleDateString(lang === "en" ? "en-IN" : lang === "hi" ? "hi-IN" : lang === "te" ? "te-IN" : "ta-IN", { weekday: "short", day: "numeric", month: "short" })}
                       </div>
                       <div style={{ flex: 1, height: "1.5px", background: "#e5e7eb" }} />
-                      <span style={{ fontSize: "13px", color: "#9ca3af", fontWeight: "500" }}>{tasks.filter(t => t.completed).length}/{tasks.length} {t("common_save").toLowerCase().includes("save") ? "done" : ""}</span>
+                      <span style={{ fontSize: "13px", color: date < today ? "#be123c" : "#9ca3af", fontWeight: "600" }}>{tasks.filter(t => t.completed).length}/{tasks.length} {t("common_save").toLowerCase().includes("save") ? "done" : ""}</span>
                     </div>
 
                     <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "16px" }}>
                       {tasks.map((task, i) => (
                         <div key={i} className="task-card" style={{
-                          background: task.completed ? "#fafafa" : "white",
-                          border: "1px solid #e5e7eb",
-                          borderLeft: `4px solid ${task.completed ? "#d1d5db" : (TYPE_COLORS[task.type] || "#888")}`,
+                          background: task.completed ? "#fafafa" : (task.date < today ? "#fffef6" : "white"),
+                          border: task.date < today && !task.completed ? "1.5px solid #fca5a5" : "1px solid #e5e7eb",
+                          borderLeft: `4px solid ${task.completed ? "#d1d5db" : (task.date < today ? "#ef4444" : (TYPE_COLORS[task.type] || "#888"))}`,
                           borderRadius: "10px", padding: "14px 16px",
                           opacity: task.completed ? 0.75 : 1,
                           transition: "all 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
@@ -407,6 +422,7 @@ function Home({ user }) {
                                 <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "8px", background: (TYPE_COLORS[task.type] || "#888") + "22", color: TYPE_COLORS[task.type] || "#888", fontWeight: "600" }}>
                                   {task.type}
                                 </span>
+                                {task.date < today && !task.completed && <span style={{ fontSize: "10px", color: "#dc2626", background: "#fee2e2", padding: "2px 8px", borderRadius: "8px", fontWeight: "700" }}>⚠️ Overdue (Pending)</span>}
                                 {task.priority === "high" && !task.completed && <span style={{ fontSize: "10px", color: "#dc2626", fontWeight: "600" }}>⚠️ {t("home_high_priority")}</span>}
                                 {task.weatherSensitive && !task.completed && <span style={{ fontSize: "10px", color: "#1a6985" }}>🌧 {t("home_weather_sensitive")}</span>}
                               </div>

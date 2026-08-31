@@ -26,6 +26,7 @@ function Navbar({ user }) {
   const { lang, changeLang, t } = useLanguage();
   const { plan, planExpiry } = useGate();
   const [todayTasks, setTodayTasks] = useState(0);
+  const [overdueTasksCount, setOverdueTasksCount] = useState(0);
   const [unpaidBill, setUnpaidBill] = useState(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
@@ -48,12 +49,19 @@ function Navbar({ user }) {
       const today = new Date().toISOString().split("T")[0];
       const q = query(collection(db, "timelines"), where("userId", "==", auth.currentUser.uid), where("status", "==", "active"));
       const snap = await getDocs(q);
-      let count = 0;
+      let pending = 0;
+      let overdue = 0;
       snap.docs.forEach(d => {
         const tasks = d.data().tasks || [];
-        count += tasks.filter(t => t.date === today && !t.completed).length;
+        tasks.forEach(t => {
+          if (!t.completed && t.date <= today) {
+            pending++;
+            if (t.date < today) overdue++;
+          }
+        });
       });
-      setTodayTasks(count);
+      setTodayTasks(pending);
+      setOverdueTasksCount(overdue);
     } catch {}
   };
 
@@ -182,12 +190,16 @@ function Navbar({ user }) {
                   })()}
 
                   {todayTasks > 0 ? (
-                    <div onClick={() => navigate("/home")} style={{ padding: "14px 18px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}>
+                    <div onClick={() => navigate("/home")} style={{ padding: "14px 18px", borderBottom: "1px solid #f3f4f6", cursor: "pointer", background: overdueTasksCount > 0 ? "#fffcf5" : "white" }}>
                       <div style={{ display: "flex", gap: "12px" }}>
-                        <span style={{ fontSize: "20px" }}>📋</span>
+                        <span style={{ fontSize: "20px" }}>{overdueTasksCount > 0 ? "⚠️" : "📋"}</span>
                         <div>
-                          <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: DARK }}>{todayTasks} Pending Tasks Today</p>
-                          <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#6b7280" }}>Don't forget to complete your farm activities today!</p>
+                          <p style={{ margin: 0, fontSize: "14px", fontWeight: "600", color: overdueTasksCount > 0 ? "#b45309" : DARK }}>
+                            {todayTasks} Pending Task{todayTasks > 1 ? "s" : ""} {overdueTasksCount > 0 ? `(${overdueTasksCount} Overdue)` : ""}
+                          </p>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: overdueTasksCount > 0 ? "#92400e" : "#6b7280" }}>
+                            {overdueTasksCount > 0 ? "You have uncompleted tasks from past days requiring action!" : "Don't forget to complete your farm activities today!"}
+                          </p>
                         </div>
                       </div>
                     </div>
