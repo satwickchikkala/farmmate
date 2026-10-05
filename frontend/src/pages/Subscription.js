@@ -4,12 +4,12 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { getUserPlanInfo, updateUserPlan } from "../utils/updatePlan";
 import { getMonthlyUsage } from "../utils/trackUsage";
 import { auth, db } from "../firebase";
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import axios from "axios";
 import API_URL from "../config";
 import { PAYG_PRICES } from "../utils/paygPricing";
 import { usePopup } from "../context/PopupContext";
-import { getUnpaidBill, generateMonthlyBill } from "../utils/billManager";
+import { getUnpaidBill } from "../utils/billManager";
 import BillBanner from "../components/BillBanner";
 import BillPopup from "../components/BillPopup";
 
@@ -61,6 +61,10 @@ function Subscription({ user }) {
   };
 
   const handleUpgradePro = async () => {
+    if (typeof window.Razorpay !== "function") {
+      showAlert("⚠️ Payment gateway is initializing or blocked. Please refresh the page.");
+      return;
+    }
     try {
       const orderPayload = {
         plan: "pro",
@@ -117,6 +121,10 @@ function Subscription({ user }) {
 
   const handlePayBill = async () => {
     if (!unpaidBill) return;
+    if (typeof window.Razorpay !== "function") {
+      showAlert("⚠️ Payment gateway is initializing or blocked. Please refresh the page.");
+      return;
+    }
     try {
       const orderRes = await axios.post(`${API_URL}/create-order`, {
         amount: unpaidBill.totalAmount,
@@ -138,7 +146,7 @@ function Subscription({ user }) {
           const { markBillPaid } = await import("../utils/billManager");
           await markBillPaid(auth.currentUser.uid, unpaidBill.id, response.razorpay_payment_id);
           setUnpaidBill(null);
-          alert("✅ Payment successful! Services restored.");
+          showAlert("✅ Payment successful! Services restored.");
           loadData();
         },
         prefill: { email: auth.currentUser.email, name: auth.currentUser.displayName || "" },
@@ -148,7 +156,7 @@ function Subscription({ user }) {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch {
-      alert("Could not initiate payment. Try again.");
+      showAlert("Could not initiate payment. Try again.");
     }
   };
 
@@ -445,8 +453,8 @@ function Subscription({ user }) {
                   )}
 
                   {Object.entries(PAYG_PRICES).map(([key, { label, price }]) => {
-                    const count = monthlyUsage[`${key}Count`] || 0;
-                    const cost = monthlyUsage[`${key}Cost`] || 0;
+                    const count = monthlyUsage ? (monthlyUsage[`${key}Count`] || 0) : 0;
+                    const cost = monthlyUsage ? (monthlyUsage[`${key}Cost`] || 0) : 0;
                     if (count === 0) return null;
                     return (
                       <div key={key} className="usage-row">
@@ -463,7 +471,7 @@ function Subscription({ user }) {
                   <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700", fontSize: "16px" }}>
                     <span style={{ color: DARK }}>Estimated Bill</span>
                     <span style={{ color: "#1a6985", fontSize: "20px", fontFamily: "Playfair Display, serif" }}>
-                      ₹{monthlyUsage.totalCost + (paygLandCount * 30)}
+                      ₹{(monthlyUsage?.totalCost || 0) + (paygLandCount * 30)}
                     </span>
                   </div>
                 </div>

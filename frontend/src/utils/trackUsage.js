@@ -3,11 +3,17 @@ import { db } from "../firebase";
 import { doc, getDoc, setDoc, updateDoc, increment } from "firebase/firestore";
 import { PAYG_PRICES } from "./paygPricing";
 
+export const getYearMonth = (d = new Date()) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+};
+
 export const trackUsage = async (userId, feature, landId = null, isPaygLand = false) => {
   // Only charge if this is a PAYG land (11th land onwards)
   if (!isPaygLand) return;
 
-  const month = new Date().toISOString().slice(0, 7);
+  const month = getYearMonth();
   const docRef = doc(db, "usage", `${userId}_${month}`);
   const price = PAYG_PRICES[feature]?.price || 0;
 
@@ -44,16 +50,16 @@ export const trackUsage = async (userId, feature, landId = null, isPaygLand = fa
 };
 
 export const getMonthlyUsage = async (userId) => {
-  const month = new Date().toISOString().slice(0, 7);
+  const month = getYearMonth();
   const docRef = doc(db, "usage", `${userId}_${month}`);
   const snap = await getDoc(docRef);
   return snap.exists() ? snap.data() : null;
 };
 
 export const getPreviousMonthUsage = async (userId) => {
-  const d = new Date();
-  d.setMonth(d.getMonth() - 1);
-  const month = d.toISOString().slice(0, 7);
+  const now = new Date();
+  const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const month = getYearMonth(prevMonthDate);
   const docRef = doc(db, "usage", `${userId}_${month}`);
   const snap = await getDoc(docRef);
   return snap.exists() ? snap.data() : null;

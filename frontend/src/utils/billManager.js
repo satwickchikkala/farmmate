@@ -5,12 +5,13 @@ import {
     collection, addDoc, query, where, getDocs
 } from "firebase/firestore";
 import { PAYG_PRICES } from "./paygPricing";
+import { getYearMonth } from "./trackUsage";
 
 // Generate bill for previous month
 export const generateMonthlyBill = async (userId) => {
     const now = new Date();
     const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const monthKey = prevMonth.toISOString().slice(0, 7);
+    const monthKey = getYearMonth(prevMonth);
 
     // Check if bill already generated for this month
     const billQuery = query(
@@ -103,6 +104,13 @@ export const generateMonthlyBill = async (userId) => {
 
 // Get unpaid bill for user
 export const getUnpaidBill = async (userId) => {
+    // Generate previous month's bill if not already generated
+    try {
+        await generateMonthlyBill(userId);
+    } catch (err) {
+        console.error("Error generating bill:", err);
+    }
+
     const q = query(
         collection(db, "bills"),
         where("userId", "==", userId),

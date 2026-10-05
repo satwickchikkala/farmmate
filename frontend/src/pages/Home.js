@@ -8,7 +8,7 @@ import axios from "axios";
 import API_URL from "../config";
 import { db, auth } from "../firebase";
 import { collection, getDocs, query, where, doc, updateDoc, getDoc } from "firebase/firestore";
-import { getUnpaidBill, generateMonthlyBill, isServiceStopped } from "../utils/billManager";
+import { getUnpaidBill } from "../utils/billManager";
 import BillPopup from "../components/BillPopup";
 import BillBanner from "../components/BillBanner";
 const FONT = "DM Sans, sans-serif";
@@ -52,17 +52,11 @@ function Home({ user }) {
     const userData = userSnap.exists() ? userSnap.data() : null;
     setUserDoc(userData);
 
-    // 1. Always check for unpaid bills (even if user downgraded to Pro)
+    // Always check for unpaid bills (which automatically generates previous month's bill if needed)
     const bill = await getUnpaidBill(uid);
     if (bill) {
       setUnpaidBill(bill);
       setShowBillPopup(true);
-    }
-
-    // 2. On the 1st of the month, generate previous month's bill
-    const today = new Date();
-    if (today.getDate() === 1) {
-      await generateMonthlyBill(uid);
     }
   };
 
