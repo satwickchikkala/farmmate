@@ -142,3 +142,14 @@ export const markBillPaid = async (userId, billId, paymentId) => {
         currentBillId: null,
     });
 };
+
+// Get all billing history statements for a user
+export const getAllBills = async (userId) => {
+    const q = query(
+        collection(db, "bills"),
+        where("userId", "==", userId)
+    );
+    const snap = await getDocs(q);
+    const bills = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return bills.sort((a, b) => b.month.localeCompare(a.month));
+};

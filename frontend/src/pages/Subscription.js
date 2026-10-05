@@ -9,7 +9,7 @@ import axios from "axios";
 import API_URL from "../config";
 import { PAYG_PRICES } from "../utils/paygPricing";
 import { usePopup } from "../context/PopupContext";
-import { getUnpaidBill } from "../utils/billManager";
+import { getUnpaidBill, getAllBills } from "../utils/billManager";
 import BillBanner from "../components/BillBanner";
 import BillPopup from "../components/BillPopup";
 
@@ -23,7 +23,9 @@ function Subscription({ user }) {
   const [landCount, setLandCount] = useState(0);
   const [monthlyUsage, setMonthlyUsage] = useState(null);
   const [unpaidBill, setUnpaidBill] = useState(null);
+  const [allBills, setAllBills] = useState([]);
   const [showBillPopup, setShowBillPopup] = useState(false);
+  const [selectedBillModal, setSelectedBillModal] = useState(null);
   const [paygLandCount, setPaygLandCount] = useState(0);
   const [planExpiry, setPlanExpiry] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,6 +49,9 @@ function Subscription({ user }) {
 
     const bill = await getUnpaidBill(uid);
     setUnpaidBill(bill);
+
+    const history = await getAllBills(uid);
+    setAllBills(history);
 
     // Count PAYG lands
     const landsQ = query(
@@ -496,6 +501,97 @@ function Subscription({ user }) {
             )}
           </div>
         </div>
+      )}
+
+      {/* BILLING HISTORY / STATEMENTS SECTION (Visible if PAYG plan or user has past bills) */}
+      {(userPlan === "payg" || (allBills && allBills.length > 0)) && (
+        <div style={{ marginTop: "32px", background: "white", border: "1px solid #e5e7eb", borderRadius: "16px", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+            <div>
+              <h3 style={{ fontFamily: "Playfair Display, serif", color: DARK, margin: "0 0 4px 0", fontSize: "20px" }}>
+                📜 Monthly Statements & Payment History
+              </h3>
+              <p style={{ color: "#6b7280", fontSize: "13px", margin: 0 }}>
+                View and track your monthly billing statements and payment history
+              </p>
+            </div>
+            <span style={{ fontSize: "12px", background: "#f3f4f6", color: "#4b5563", padding: "4px 10px", borderRadius: "12px", fontWeight: "600" }}>
+              {allBills.length} Statement{allBills.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
+          {allBills.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {allBills.map((b) => {
+                const billDateObj = new Date(`${b.month}-01`);
+                const formattedMonth = billDateObj.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+                const isPaid = b.status === "paid";
+                const isOverdue = !isPaid && new Date() > new Date(b.dueDate);
+
+                return (
+                  <div key={b.id} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "16px", borderRadius: "12px", background: "#f9fafb", border: "1px solid #f3f4f6",
+                    flexWrap: "wrap", gap: "12px"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                      <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: isPaid ? "#f0fdf4" : isOverdue ? "#fff5f5" : "#fff8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>
+                        {isPaid ? "✅" : isOverdue ? "🚫" : "🧾"}
+                      </div>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontWeight: "700", color: DARK, fontSize: "15px" }}>{formattedMonth}</span>
+                          <span style={{
+                            fontSize: "11px", fontWeight: "700", padding: "2px 8px", borderRadius: "6px",
+                            background: isPaid ? "#dcfce7" : isOverdue ? "#fee2e2" : "#fef3c7",
+                            color: isPaid ? "#15803d" : isOverdue ? "#991b1b" : "#92400e"
+                          }}>
+                            {isPaid ? "PAID" : isOverdue ? "OVERDUE" : "PENDING"}
+                          </span>
+                        </div>
+                        <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#6b7280" }}>
+                          {isPaid ? (
+                            `Paid on ${new Date(b.paidAt || b.generatedDate).toLocaleDateString("en-IN")} • Ref: ${b.razorpayPaymentId || "N/A"}`
+                          ) : (
+                            `Due: ${new Date(b.dueDate).toLocaleDateString("en-IN")}`
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                      <span style={{ fontSize: "18px", fontWeight: "700", color: isPaid ? GREEN : DARK, fontFamily: "Playfair Display, serif" }}>
+                        ₹{b.totalAmount}
+                      </span>
+                      <button
+                        onClick={() => setSelectedBillModal(b)}
+                        style={{ background: "#e0f2fe", color: "#0369a1", border: "none", padding: "8px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: FONT }}
+                      >
+                        📄 View Statement
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "28px", background: "#f9fafb", borderRadius: "10px" }}>
+              <p style={{ color: "#6b7280", margin: 0, fontSize: "14px" }}>No previous monthly statements found.</p>
+              <p style={{ color: "#9ca3af", fontSize: "12px", margin: "4px 0 0 0" }}>Statements will appear here after monthly bills are generated on the 1st of each month.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {selectedBillModal && (
+        <BillPopup
+          bill={selectedBillModal}
+          onClose={() => setSelectedBillModal(null)}
+          onPaid={() => {
+            setSelectedBillModal(null);
+            loadData();
+          }}
+        />
       )}
 
       <p style={{ textAlign: "center", color: "#9ca3af", fontSize: "12px", marginTop: "24px" }}>

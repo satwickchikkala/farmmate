@@ -10,12 +10,13 @@ const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
 
-function BillPopup({ bill, onPaid }) {
+function BillPopup({ bill, onPaid, onClose }) {
     const [paying, setPaying] = useState(false);
     const { showAlert } = usePopup();
 
-    const isOverdue = new Date() > new Date(bill.dueDate);
-    const isStopDate = new Date() > new Date(bill.stopDate);
+    const isPaid = bill.status === "paid";
+    const isOverdue = !isPaid && new Date() > new Date(bill.dueDate);
+    const isStopDate = !isPaid && new Date() > new Date(bill.stopDate);
 
     const handlePayNow = async () => {
         setPaying(true);
@@ -43,7 +44,7 @@ function BillPopup({ bill, onPaid }) {
                         response.razorpay_payment_id
                     );
                     showAlert("✅ Payment successful! Services restored.");
-                    onPaid();
+                    if (onPaid) onPaid();
                 },
                 prefill: {
                     email: auth.currentUser.email,
@@ -61,22 +62,24 @@ function BillPopup({ bill, onPaid }) {
     };
 
   return (
-    <div style={S.overlay}>
+    <div style={S.overlay} onClick={() => onClose && onClose()}>
       <style>{`
         .bill-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
         @media (max-width: 400px) {
           .bill-row { font-size: 11px !important; }
         }
       `}</style>
-      <div style={S.popup}>
+      <div style={S.popup} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div style={S.header}>
           <div>
-            <h2 style={S.title}>🧾 FarmMate Bill</h2>
-            <p style={S.sub}>Usage for {bill.month}</p>
+            <h2 style={S.title}>🧾 FarmMate Statement</h2>
+            <p style={S.sub}>Bill for {bill.month}</p>
           </div>
-          <div style={{ textAlign: "right" }}>
-            {isStopDate ? (
+          <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: "10px" }}>
+            {isPaid ? (
+              <span style={S.paidBadge}>✅ Paid</span>
+            ) : isStopDate ? (
               <span style={S.stopBadge}>🚫 Services Stopped</span>
             ) : isOverdue ? (
               <span style={S.overdueBadge}>⚠️ Overdue</span>
@@ -84,6 +87,14 @@ function BillPopup({ bill, onPaid }) {
               <span style={S.dueBadge}>
                 Due: {new Date(bill.dueDate).toLocaleDateString("en-IN")}
               </span>
+            )}
+            {onClose && (
+              <button
+                onClick={onClose}
+                style={{ background: "#f3f4f6", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", fontWeight: "700", color: "#6b7280" }}
+              >
+                ✕
+              </button>
             )}
           </div>
         </div>
@@ -98,7 +109,7 @@ function BillPopup({ bill, onPaid }) {
           </div>
           <div style={S.divider} />
 
-          {bill.items.map((item, i) => (
+          {bill.items?.map((item, i) => (
             <div key={i} className="bill-row">
               <span style={{ color: "#374151" }}>{item.label}</span>
               <span style={{ color: "#6b7280", textAlign: "center" }}>{item.quantity}</span>
@@ -119,13 +130,13 @@ function BillPopup({ bill, onPaid }) {
         </div>
 
         {/* Warning if overdue */}
-        {isStopDate && (
+        {!isPaid && isStopDate && (
           <div style={S.stopWarning}>
             🚫 Your services have been stopped due to non-payment.
             Pay now to restore all features immediately.
           </div>
         )}
-        {isOverdue && !isStopDate && (
+        {!isPaid && isOverdue && !isStopDate && (
           <div style={S.overdueWarning}>
             ⚠️ Payment is overdue. Services will stop on{" "}
             {new Date(bill.stopDate).toLocaleDateString("en-IN")}.
@@ -133,19 +144,36 @@ function BillPopup({ bill, onPaid }) {
           </div>
         )}
 
-        {/* Pay Now button */}
-        <button
-          onClick={handlePayNow}
-          disabled={paying}
-          style={S.payBtn}
-        >
-          {paying ? "Opening payment..." : `💳 Pay Now ₹${bill.totalAmount}`}
-        </button>
+        {/* Pay Now button or Paid status info */}
+        {isPaid ? (
+          <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", padding: "14px", textAlign: "center", marginBottom: "12px" }}>
+            <p style={{ margin: "0 0 4px 0", fontWeight: "700", color: GREEN, fontSize: "15px" }}>
+              ✅ Bill Paid in Full
+            </p>
+            {bill.paidAt && (
+              <p style={{ margin: "2px 0", fontSize: "12px", color: "#15803d" }}>
+                Paid on: {new Date(bill.paidAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+              </p>
+            )}
+            {bill.razorpayPaymentId && (
+              <p style={{ margin: "2px 0 0 0", fontSize: "11px", color: "#6b7280" }}>
+                Ref ID: <code style={{ background: "#e2e8f0", padding: "2px 6px", borderRadius: "4px" }}>{bill.razorpayPaymentId}</code>
+              </p>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={handlePayNow}
+            disabled={paying}
+            style={S.payBtn}
+          >
+            {paying ? "Opening payment..." : `💳 Pay Now ₹${bill.totalAmount}`}
+          </button>
+        )}
 
         <p style={{ textAlign: "center", fontSize: "11px", color: "#9ca3af", margin: "8px 0 0 0" }}>
-          Generated: {new Date(bill.generatedDate).toLocaleDateString("en-IN")} •
-          Due: {new Date(bill.dueDate).toLocaleDateString("en-IN")} •
-          Grace till: {new Date(bill.stopDate).toLocaleDateString("en-IN")}
+          Generated: {bill.generatedDate ? new Date(bill.generatedDate).toLocaleDateString("en-IN") : "N/A"} •
+          Due: {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString("en-IN") : "N/A"}
         </p>
       </div>
     </div>
@@ -174,6 +202,12 @@ const S = {
         fontSize: "22px", color: DARK, margin: 0,
     },
     sub: { color: "#6b7280", fontSize: "13px", margin: "4px 0 0 0" },
+    paidBadge: {
+        background: "#f0fdf4", color: "#16a34a",
+        border: "1px solid #bbf7d0",
+        padding: "4px 10px", borderRadius: "8px",
+        fontSize: "12px", fontWeight: "600",
+    },
     dueBadge: {
         background: "#f0f7f4", color: GREEN,
         padding: "4px 10px", borderRadius: "8px",
