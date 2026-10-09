@@ -10,6 +10,7 @@ import API_URL from "../config";
 import { PAYG_PRICES } from "../utils/paygPricing";
 import { usePopup } from "../context/PopupContext";
 import { getUnpaidBill, getAllBills } from "../utils/billManager";
+import { generateStatementPDF } from "../utils/pdfGenerator";
 import BillBanner from "../components/BillBanner";
 import BillPopup from "../components/BillPopup";
 
@@ -559,15 +560,21 @@ function Subscription({ user }) {
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                      <span style={{ fontSize: "18px", fontWeight: "700", color: isPaid ? GREEN : DARK, fontFamily: "Playfair Display, serif" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "18px", fontWeight: "700", color: isPaid ? GREEN : DARK, fontFamily: "Playfair Display, serif", marginRight: "6px" }}>
                         ₹{b.totalAmount}
                       </span>
                       <button
                         onClick={() => setSelectedBillModal(b)}
-                        style={{ background: "#e0f2fe", color: "#0369a1", border: "none", padding: "8px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: FONT }}
+                        style={{ background: "#e0f2fe", color: "#0369a1", border: "none", padding: "8px 12px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: FONT }}
                       >
                         📄 View Statement
+                      </button>
+                      <button
+                        onClick={() => generateStatementPDF(b, auth.currentUser || {})}
+                        style={{ background: "#1a6985", color: "white", border: "none", padding: "8px 12px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: FONT, display: "flex", alignItems: "center", gap: "4px" }}
+                      >
+                        📥 PDF
                       </button>
                     </div>
                   </div>

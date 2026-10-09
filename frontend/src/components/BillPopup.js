@@ -6,6 +6,8 @@ import { markBillPaid } from "../utils/billManager";
 import API_URL from "../config";
 import { usePopup } from "../context/PopupContext";
 
+import { generateStatementPDF } from "../utils/pdfGenerator";
+
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
 const DARK = "#1b4332";
@@ -17,6 +19,10 @@ function BillPopup({ bill, onPaid, onClose }) {
     const isPaid = bill.status === "paid";
     const isOverdue = !isPaid && new Date() > new Date(bill.dueDate);
     const isStopDate = !isPaid && new Date() > new Date(bill.stopDate);
+
+    const handleDownloadPDF = () => {
+        generateStatementPDF(bill, auth.currentUser || {});
+    };
 
     const handlePayNow = async () => {
         setPaying(true);
@@ -171,7 +177,23 @@ function BillPopup({ bill, onPaid, onClose }) {
           </button>
         )}
 
-        <p style={{ textAlign: "center", fontSize: "11px", color: "#9ca3af", margin: "8px 0 0 0" }}>
+        {/* Download PDF Statement Action */}
+        <button
+          onClick={handleDownloadPDF}
+          style={{
+            width: "100%", padding: "11px",
+            background: "#1a6985", color: "white",
+            border: "none", borderRadius: "10px",
+            fontSize: "14px", fontWeight: "600",
+            cursor: "pointer", fontFamily: FONT,
+            marginTop: "10px", display: "flex",
+            alignItems: "center", justifyContent: "center", gap: "8px"
+          }}
+        >
+          📥 Download PDF Statement
+        </button>
+
+        <p style={{ textAlign: "center", fontSize: "11px", color: "#9ca3af", margin: "10px 0 0 0" }}>
           Generated: {bill.generatedDate ? new Date(bill.generatedDate).toLocaleDateString("en-IN") : "N/A"} •
           Due: {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString("en-IN") : "N/A"}
         </p>
