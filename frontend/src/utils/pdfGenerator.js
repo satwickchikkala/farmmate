@@ -67,10 +67,10 @@ export const generateStatementPDF = (bill, user = {}) => {
 
     // 3. 2-Column Details Box (Customer Info & Payment Details)
     y = 52;
-    doc.setDrawColor(229, 231, 235);
-    doc.setFillColor(249, 250, 251);
 
     // Left Box: Customer Info
+    doc.setDrawColor(229, 231, 235);
+    doc.setFillColor(255, 255, 255);
     doc.roundedRect(14, y, 88, 34, 2, 2, "FD");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
@@ -89,6 +89,8 @@ export const generateStatementPDF = (bill, user = {}) => {
     doc.text(`User ID: ${uid}`, 18, y + 26);
 
     // Right Box: Statement & Payment Details
+    doc.setDrawColor(229, 231, 235);
+    doc.setFillColor(255, 255, 255);
     doc.roundedRect(108, y, 88, 34, 2, 2, "FD");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
