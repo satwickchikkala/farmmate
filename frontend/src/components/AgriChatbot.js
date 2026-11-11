@@ -4,7 +4,7 @@ import axios from "axios";
 import API_URL from "../config";
 import { useLanguage } from "../context/LanguageContext";
 import { db } from "../firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
 
 const FONT = "DM Sans, sans-serif";
 const GREEN = "#2d6a4f";
@@ -14,164 +14,164 @@ const ACCENT = "#52b788";
 
 const I18N = {
   en: {
-    title: "FarmMate AgriBot",
-    subtitle: "AI Agricultural Advisor & Knowledge Base",
-    welcome: "🌱 Hello! I am FarmMate AgriBot, your personal farming advisor. Ask me anything about crop cultivation, fertilizer schedules, organic pest control, soil health, or government schemes like PM-KISAN!",
-    placeholder: "Ask a farming question...",
+    title: "KRISHMITRA",
+    subtitle: "Your Smart AI Agricultural Advisor",
+    welcome: "🌱 Hello! I am KRISHMITRA, your personal agricultural advisor. Ask me anything about your registered lands, active crops, fertilizer schedules, organic pest control, or government schemes like PM-KISAN!",
+    placeholder: "Ask about your lands, crops, fertilizers...",
     listening: "🎙️ Listening... speak now",
-    searching: "Searching agricultural research & guides...",
+    searching: "KRISHMITRA is checking your farm data & agricultural guides...",
     clearConfirm: "Clear conversation history?",
-    sources: "Sources & Guidelines",
+    sources: "Sources & Verified Guidelines",
     copied: "Copied!",
     copy: "Copy",
-    tooltip: "Need farming advice? Ask AgriBot!",
-    farmContextBadge: "Aware of your farm & active crops",
+    tooltip: "Need farming advice? Ask KRISHMITRA!",
+    farmContextBadge: "Connected to your real-time farm profile",
     voiceNotSupported: "Speech recognition is not supported in this browser.",
     errorReply: "I encountered an issue fetching agricultural advice. Please check your connection and try again.",
     suggestions: [
+      "🗺️ How many lands do I have?",
+      "🌿 What crops am I growing?",
+      "🧪 What is my soil type?",
       "🌾 What is the fertilizer schedule for Paddy?",
-      "🐛 How to control stem borer organically?",
-      "💰 How do I apply for PM-KISAN ₹6,000?",
-      "💧 What are the subsidies for Drip Irrigation?",
-      "🍂 Why are my tomato leaves curling?"
+      "💰 How do I apply for PM-KISAN ₹6,000?"
     ]
   },
   te: {
-    title: "ఫార్మ్‌మేట్ అగ్రిబాట్",
-    subtitle: "రైతు సహాయక ఏఐ అడ్వైజర్",
-    welcome: "🌱 నమస్కారం! నేను మీ ఫార్మ్‌మేట్ అగ్రిబాట్. పంటల సాగు, ఎరువుల మోతాదు, పురుగుల నివారణ, నేల రకాలు లేదా పీఎం-కిసాన్ పథకాల గురించి నన్ను ఏదైనా అడగవచ్చు!",
-    placeholder: "మీ వ్యవసాయ సందేహాన్ని అడగండి...",
+    title: "క్రిష్‌మిత్ర (KRISHMITRA)",
+    subtitle: "మీ స్మార్ట్ డిజిటల్ రైతు సలహాదారు",
+    welcome: "🌱 నమస్కారం! నేను మీ క్రిష్‌మిత్ర (KRISHMITRA). మీ నమోదైన భూములు, ప్రస్తుత పంటలు, ఎరువుల మోతాదు, పురుగుల నివారణ మరియు పీఎం-కిసాన్ పథకాల గురించి నన్ను ఏదైనా అడగవచ్చు!",
+    placeholder: "మీ భూములు, పంటలు లేదా ఎరువుల గురించి అడగండి...",
     listening: "🎙️ వింటున్నాను... మాట్లాడండి",
-    searching: "వ్యవసాయ మార్గదర్శకాలను శోధిస్తోంది...",
+    searching: "క్రిష్‌మిత్ర మీ వివరాలను మరియు మార్గదర్శకాలను శోధిస్తోంది...",
     clearConfirm: "సంభాషణను తొలగించాలా?",
     sources: "ఆధార గ్రంథాలు & మార్గదర్శకాలు",
     copied: "కాపీ చేయబడింది!",
     copy: "కాపీ",
-    tooltip: "వ్యవసాయ సలహా కావాలా? అడగండి!",
-    farmContextBadge: "మీ భూమి & పంట వివరాలతో అనుసంధానించబడింది",
+    tooltip: "వ్యవసాయ సలహా కావాలా? క్రిష్‌మిత్రను అడగండి!",
+    farmContextBadge: "మీ భూమి & పంట వివరాలతో ప్రత్యక్ష అనుసంధానం",
     voiceNotSupported: "మీ బ్రౌజర్‌లో వాయిస్ రికగ్నిషన్ సదుపాయం లేదు.",
     errorReply: "సలహా అందించడంలో సమస్య తలెత్తింది. దయచేసి మళ్లీ ప్రయత్నించండి.",
     suggestions: [
+      "🗺️ నాకు ఎన్ని భూములు ఉన్నాయి?",
+      "🌿 నేను ప్రస్తుతం ఏ పంటలు సాగు చేస్తున్నాను?",
+      "🧪 నా భూమి నేల రకం ఏమిటి?",
       "🌾 వరి పంటకు ఎరువుల మోతాదు మరియు సమయం ఏమిటి?",
-      "🐛 కాండం తొలిచే పురుగును సేంద్రీయంగా ఎలా నివారించాలి?",
-      "💰 పీఎం-కిసాన్ ₹6,000 పథకానికి ఎలా దరఖాస్తు చేయాలి?",
-      "💧 బిందు సేద్యం (డ్రిప్) సబ్సిడీ వివరాలు ఏమిటి?",
-      "🍂 టమాట ఆకులు ముడుచుకుపోవడానికి కారణం ఏమిటి?"
+      "💰 పీఎం-కిసాన్ ₹6,000 పథకానికి ఎలా దరఖాస్తు చేయాలి?"
     ]
   },
   hi: {
-    title: "फार्ममेट एग्रीबॉट",
-    subtitle: "किसान सलाहकार व कृषि ज्ञान केंद्र",
-    welcome: "🌱 नमस्ते! मैं फार्ममेट एग्रीबॉट हूँ। फसलों की खेती, खाद की मात्रा, जैविक कीट नियंत्रण, मिट्टी सुधार या पीएम-किसान जैसी सरकारी योजनाओं के बारे में कुछ भी पूछें!",
-    placeholder: "खेती से जुड़ा सवाल पूछें...",
+    title: "कृषिमित्र (KRISHMITRA)",
+    subtitle: "आपका स्मार्ट डिजिटल किसान सहायक",
+    welcome: "🌱 नमस्ते! मैं कृषिमित्र (KRISHMITRA) हूँ। आपके पंजीकृत खेत, वर्तमान फसलें, खाद की मात्रा, जैविक कीट नियंत्रण या सरकारी योजनाओं के बारे में कुछ भी पूछें!",
+    placeholder: "अपने खेत, फसल या खाद के बारे में पूछें...",
     listening: "🎙️ सुन रहा हूँ... बोलिए",
-    searching: "कृषि ज्ञान भंडार से उत्तर तैयार हो रहा है...",
+    searching: "कृषिमित्र आपके खेत की जानकारी और कृषि ज्ञान देख रहा है...",
     clearConfirm: "क्या आप पूरी बातचीत मिटाना चाहते हैं?",
     sources: "प्रामाणिक स्रोत व दिशा-निर्देश",
     copied: "कॉपी हो गया!",
     copy: "कॉपी",
-    tooltip: "खेती की सलाह चाहिए? एग्रीबॉट से पूछें!",
-    farmContextBadge: "आपके खेत व फसलों की जानकारी से युक्त",
+    tooltip: "खेती की सलाह चाहिए? कृषिमित्र से पूछें!",
+    farmContextBadge: "आपके खेतों और फसलों से सीधे जुड़ा हुआ",
     voiceNotSupported: "आपके ब्राउज़र में वॉइस इनपुट उपलब्ध नहीं है।",
     errorReply: "सलाह प्राप्त करने में त्रुटि हुई। कृपया दोबारा प्रयास करें।",
     suggestions: [
+      "🗺️ मेरे पास कुल कितने खेत हैं?",
+      "🌿 मैं अभी कौन सी फसलें उगा रहा हूँ?",
+      "🧪 मेरे खेत की मिट्टी का प्रकार क्या है?",
       "🌾 धान की फसल के लिए खाद का सही समय क्या है?",
-      "🐛 तना छेदक कीट की जैविक रोकथाम कैसे करें?",
-      "💰 पीएम-किसान ₹6,000 योजना के लिए कैसे आवेदन करें?",
-      "💧 ड्रिप सिंचाई पर कितनी सब्सिडी मिलती है?",
-      "🍂 टमाटर की पत्तियां मुड़ क्यों रही हैं?"
+      "💰 पीएम-किसान ₹6,000 योजना के लिए कैसे आवेदन करें?"
     ]
   },
   ta: {
-    title: "பார்ம்மேட் அக்ரிபாட்",
-    subtitle: "வேளாண் ஆலோசகர் & தகவல் மையம்",
-    welcome: "🌱 வணக்கம்! நான் உங்கள் பார்ம்மேட் அக்ரிபாட். பயிர் சாகுபடி, உர அட்டவணை, இயற்கை பூச்சி கட்டுப்பாடு அல்லது பிஎம்-கிசான் திட்டங்கள் பற்றி கேட்கலாம்!",
-    placeholder: "விவசாய கேள்வி கேளுங்கள்...",
+    title: "கிரிஷ்மித்ரா (KRISHMITRA)",
+    subtitle: "உங்கள் வேளாண் ஆலோசகர்",
+    welcome: "🌱 வணக்கம்! நான் உங்கள் கிரிஷ்மித்ரா (KRISHMITRA). உங்கள் நிலங்கள், தற்போதைய பயிர்கள், உர அட்டவணை அல்லது அரசு திட்டங்கள் பற்றி கேட்கலாம்!",
+    placeholder: "நிலம், பயிர் அல்லது விவசாயம் பற்றி கேட்கவும்...",
     listening: "🎙️ கேட்கிறேன்... பேசுங்கள்",
-    searching: "வேளாண் தகவல்களை தேடுகிறது...",
+    searching: "கிரிஷ்மித்ரா தகவல்களை சேகரிக்கிறது...",
     clearConfirm: "உரையாடலை அழிக்கவா?",
     sources: "வழிகாட்டுதல்கள் & ஆதாரங்கள்",
     copied: "நகலெடுக்கப்பட்டது!",
     copy: "நகல்",
-    tooltip: "விவசாய ஆலோசனை வேண்டுமா? கேளுங்கள்!",
+    tooltip: "விவசாய ஆலோசனை வேண்டுமா? கிரிஷ்மித்ராவிடம் கேளுங்கள்!",
     farmContextBadge: "உங்கள் பண்ணை விவரங்களுடன் இணைக்கப்பட்டுள்ளது",
     voiceNotSupported: "உங்கள் உலாவியில் குரல் உள்ளீடு ஆதரிக்கப்படவில்லை.",
     errorReply: "பதில் பெறுவதில் சிக்கல் ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.",
     suggestions: [
+      "🗺️ என்னிடம் எத்தனை நிலங்கள் உள்ளன?",
+      "🌿 நான் என்னென்ன பயிர்களை பயிரிடுகிறேன்?",
+      "🧪 எனது நிலத்தின் மண் வகை என்ன?",
       "🌾 நெல் பயிருக்கான உர அட்டவணை என்ன?",
-      "🐛 தண்டு துளைப்பானை இயற்கை முறையில் கட்டுப்படுத்துவது எப்படி?",
-      "💰 பிஎம்-கிசான் ₹6,000 திட்டத்திற்கு எவ்வாறு விண்ணப்பிப்பது?",
-      "💧 சொட்டு நீர் பாசன மானியம் விவரங்கள் என்ன?",
-      "🍂 தக்காளி இலைகள் சுருங்குவதை தடுப்பது எப்படி?"
+      "💰 பிஎம்-கிசான் திட்டத்திற்கு எவ்வாறு விண்ணப்பிப்பது?"
     ]
   },
   kn: {
-    title: "ಫಾರ್ಮ್‌ಮೇಟ್ ಅಗ್ರಿಬಾಟ್",
-    subtitle: "ರೈತ ಕೃಷಿ ಸಲಹೆಗಾರ",
-    welcome: "🌱 ನಮಸ್ಕಾರ! ನಾನು ನಿಮ್ಮ ಫಾರ್ಮ್‌ಮೇಟ್ ಅಗ್ರಿಬಾಟ್. ಬೆಳೆಗಳ ಮಾಹಿತಿ, ಗೊಬ್ಬರದ ಪ್ರಮಾಣ, ಕೀಟ ನಿಯಂತ್ರಣ ಮತ್ತು ಸರ್ಕಾರಿ ಯೋಜನೆಗಳ ಕುರಿತು ಏನನ್ನಾದರೂ ಕೇಳಿ!",
-    placeholder: "ಕೃಷಿ ಪ್ರಶ್ನೆಯನ್ನು ಕೇಳಿ...",
+    title: "ಕ್ರಿಷ್‌ಮಿತ್ರ (KRISHMITRA)",
+    subtitle: "ನಿಮ್ಮ ಡಿಜಿಟಲ್ ಕೃಷಿ ಸಲಹೆಗಾರ",
+    welcome: "🌱 ನಮಸ್ಕಾರ! ನಾನು ನಿಮ್ಮ ಕ್ರಿಷ್‌ಮಿತ್ರ (KRISHMITRA). ನಿಮ್ಮ ನೋಂದಾಯಿತ ಜಮೀನು, ಪ್ರಸ್ತುತ ಬೆಳೆಗಳು, ಗೊಬ್ಬರದ ಪ್ರಮಾಣ ಮತ್ತು ಸರ್ಕಾರಿ ಯೋಜನೆಗಳ ಕುರಿತು ಏನನ್ನಾದರೂ ಕೇಳಿ!",
+    placeholder: "ನಿಮ್ಮ ಜಮೀನು, ಬೆಳೆಗಳ ಬಗ್ಗೆ ಕೇಳಿ...",
     listening: "🎙️ ಆಲಿಸುತ್ತಿದೆ... ಮಾತನಾಡಿ",
-    searching: "ಕೃಷಿ ಮಾಹಿತಿಯನ್ನು ಹುಡುಕಲಾಗುತ್ತಿದೆ...",
+    searching: "ಕ್ರಿಷ್‌ಮಿತ್ರ ಮಾಹಿತಿಯನ್ನು ಹುಡುಕುತ್ತಿದೆ...",
     clearConfirm: "ಸಂಭಾಷಣೆಯನ್ನು ತೆರವುಗೊಳಿಸಬೇಕೇ?",
     sources: "ಆಧಾರಗಳು & ಮಾರ್ಗದರ್ಶಿಗಳು",
     copied: "ಕಾಪಿ ಮಾಡಲಾಗಿದೆ!",
     copy: "ಕಾಪಿ",
-    tooltip: "ಕೃಷಿ ಸಲಹೆ ಬೇಕೇ? ಅಗ್ರಿಬಾಟ್ ಕೇಳಿ!",
-    farmContextBadge: "ನಿಮ್ಮ ಜಮೀನು ಮತ್ತು ಬೆಳೆಗಳ ವಿವರ ತಿಳಿದಿದೆ",
+    tooltip: "ಕೃಷಿ ಸಲಹೆ ಬೇಕೇ? ಕ್ರಿಷ್‌ಮಿತ್ರ ಅವರನ್ನು ಕೇಳಿ!",
+    farmContextBadge: "ನಿಮ್ಮ ಜಮೀನಿನ ವಿವರಗಳೊಂದಿಗೆ ಸಂಪರ್ಕ ಹೊಂದಿದೆ",
     voiceNotSupported: "ನಿಮ್ಮ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಧ್ವನಿ ಗುರುತಿಸುವಿಕೆ ಸೌಲಭ್ಯವಿಲ್ಲ.",
     errorReply: "ಮಾಹಿತಿ ಪಡೆಯುವಲ್ಲಿ ದೋಷ ಸಂಭವಿಸಿದೆ. ದಯವಿಟ್ಟು ಪುನಃ ಪ್ರಯತ್ನಿಸಿ.",
     suggestions: [
+      "🗺️ ನನ್ನ ಬಳಿ ಎಷ್ಟು ಜಮೀನುಗಳಿವೆ?",
+      "🌿 ನಾನು ಪ್ರಸ್ತುತ ಯಾವ ಬೆಳೆಗಳನ್ನು ಬೆಳೆಯುತ್ತಿದ್ದೇನೆ?",
+      "🧪 ನನ್ನ ಜಮೀನಿನ ಮಣ್ಣಿನ ಪ್ರಕಾರ ಯಾವುದು?",
       "🌾 ಭತ್ತದ ಬೆಳೆಗೆ ಗೊಬ್ಬರ ಹಾಕುವ ವಿಧಾನ ತಿಳಿಸಿ?",
-      "🐛 ಕಾಂಡ ಕೊರೆಯುವ ಹುಳುವನ್ನು ಸಾವಯವವಾಗಿ ನಿಯಂತ್ರಿಸುವುದು ಹೇಗೆ?",
-      "💰 ಪಿಎಂ-ಕಿಸಾನ್ ₹6,000 ಯೋಜನೆಗೆ ಅರ್ಜಿ ಸಲ್ಲಿಸುವುದು ಹೇಗೆ?",
-      "💧 ಹನಿ ನೀರಾವರಿಗೆ ಎಷ್ಟು ಸಬ್ಸಿಡಿ ಸಿಗುತ್ತದೆ?",
-      "🍂 ಟೊಮೆಟೊ ಎಲೆಗಳು ಮುದುರಿಕೊಳ್ಳುವುದನ್ನು ತಡೆಯುವುದು ಹೇಗೆ?"
+      "💰 ಪಿಎಂ-ಕಿಸಾನ್ ಯೋಜನೆಗೆ ಅರ್ಜಿ ಸಲ್ಲಿಸುವುದು ಹೇಗೆ?"
     ]
   },
   ml: {
-    title: "ഫാംമേറ്റ് അഗ്രിബോട്ട്",
-    subtitle: "കർഷക സഹായി & ഉപദേശകൻ",
-    welcome: "🌱 നമസ്കാരം! ഞാൻ ഫാംമേറ്റ് അഗ്രിബോട്ട്. കൃഷിരീതികൾ, വളപ്രയോഗം, ജൈവ കീടനിയന്ത്രണം, സർക്കാരിന്റെ കർഷക പദ്ധതികൾ എന്നിവയെക്കുറിച്ച് ചോദിക്കാം!",
-    placeholder: "ഒരു കൃഷി സംശയം ചോദിക്കൂ...",
+    title: "കൃഷ്മിത്ര (KRISHMITRA)",
+    subtitle: "നിങ്ങളുടെ കാർഷിക സഹായി",
+    welcome: "🌱 നമസ്കാരം! ഞാൻ കൃഷ്മിത്ര (KRISHMITRA). നിങ്ങളുടെ ഭൂമി, കൃഷി ചെയ്യുന്ന വിളകൾ, വളപ്രയോഗം, കർഷക പദ്ധതികൾ എന്നിവയെക്കുറിച്ച് ചോദിക്കാം!",
+    placeholder: "ഭൂമി, വിളകൾ, കൃഷി സംശയങ്ങൾ ചോദിക്കൂ...",
     listening: "🎙️ കേൾക്കുന്നു... സംസാരിക്കൂ",
-    searching: "കാർഷിക വിവരങ്ങൾ ശേഖരിക്കുന്നു...",
+    searching: "കൃഷ്മിത്ര വിവരങ്ങൾ ശേഖരിക്കുന്നു...",
     clearConfirm: "സന്ദേശങ്ങൾ മായ്‌ക്കണോ?",
     sources: "ഉറവിടങ്ങളും മാർഗ്ഗനിർദ്ദേശങ്ങളും",
     copied: "പകർത്തി!",
     copy: "കോപ്പി",
-    tooltip: "കാർഷിക ഉപദേശം വേണോ? ചോദിക്കൂ!",
+    tooltip: "കാർഷിക ഉപദേശം വേണോ? കൃഷ്മിത്രയോട് ചോദിക്കൂ!",
     farmContextBadge: "നിങ്ങളുടെ കൃഷിയിട വിവരങ്ങളുമായി ബന്ധിപ്പിച്ചിരിക്കുന്നു",
     voiceNotSupported: "നിങ്ങളുടെ ബ്രൗസറിൽ വോയ്‌സ് ഇൻപുട്ട് ലഭ്യമല്ല.",
     errorReply: "വിവരങ്ങൾ ലഭിക്കുന്നതിൽ തടസ്സം നേരിട്ടു. വീണ്ടും ശ്രമിക്കുക.",
     suggestions: [
+      "🗺️ എനിക്ക് എത്ര സ്ഥലങ്ങളുണ്ട്?",
+      "🌿 ഞാൻ ഇപ്പോൾ എന്തൊക്കെ വിളകളാണ് കൃഷി ചെയ്യുന്നത്?",
+      "🧪 എന്റെ മണ്ണിന്റെ തരം ഏതാണ്?",
       "🌾 നെൽകൃഷിക്ക് വളപ്രയോഗ സമയം ഏതാണ്?",
-      "🐛 തണ്ടുതുരപ്പൻ പുഴുവിനെ ജൈവരീതിയിൽ എങ്ങനെ തടയാം?",
-      "💰 പിഎം-കിസാൻ ₹6,000 എങ്ങനെ അപേക്ഷിക്കാം?",
-      "💧 തുള്ളി നന സബ്‌സിഡി വിവരങ്ങൾ എന്തെല്ലാം?",
-      "🍂 തക്കാളിയുടെ ഇല ചുരുളൽ രോഗം എങ്ങനെ നിയന്ത്രിക്കാം?"
+      "💰 പിഎം-കിസാൻ സഹായത്തിന് എങ്ങനെ അപേക്ഷിക്കാം?"
     ]
   },
   bn: {
-    title: "ফার্মমেট এগ্রিবট",
-    subtitle: "কৃষি উপদেষ্টা ও তথ্য ভাণ্ডার",
-    welcome: "🌱 নমস্কার! আমি ফার্মমেট এগ্রিবট। ফসল চাষ, সার প্রয়োগ, জৈব বালাই দমন কিংবা পিএম-কিসানের মতো সরকারি প্রকল্প নিয়ে যেকোনো প্রশ্ন করুন!",
-    placeholder: "কৃষি সংক্রান্ত যেকোনো প্রশ্ন লিখুন...",
+    title: "কৃষিমিত্র (KRISHMITRA)",
+    subtitle: "আপনার স্মার্ট কৃষি উপদেষ্টা",
+    welcome: "🌱 নমস্কার! আমি কৃষিমিত্র (KRISHMITRA)। আপনার নিবন্ধিত জমি, বর্তমান ফসল, সার প্রয়োগ বা সরকারি প্রকল্প নিয়ে যেকোনো প্রশ্ন করুন!",
+    placeholder: "আপনার জমি, ফসল বা চাষাবাদ নিয়ে প্রশ্ন করুন...",
     listening: "🎙️ শুনছি... বলুন",
-    searching: "কৃষি নির্দেশিকা থেকে তথ্য অনুসন্ধান করা হচ্ছে...",
+    searching: "কৃষিমিত্র আপনার তথ্য অনুসন্ধান করছে...",
     clearConfirm: "পুরনো কথোপকথন মুছে ফেলতে চান?",
     sources: "তথ্যসূত্র ও নির্দেশিকা",
     copied: "কপি হয়েছে!",
     copy: "কপি",
-    tooltip: "কৃষি পরামর্শ প্রয়োজন? এগ্রিবটকে জিজ্ঞাসা করুন!",
-    farmContextBadge: "আপনার জমির তথ্যের সাথে সংযুক্ত",
+    tooltip: "কৃষি পরামর্শ প্রয়োজন? কৃষিমিত্রকে জিজ্ঞাসা করুন!",
+    farmContextBadge: "আপনার জমির তথ্যের সাথে সরাসরি যুক্ত",
     voiceNotSupported: "আপনার ব্রাউজারে ভয়েস সাপোর্ট নেই।",
     errorReply: "তথ্য পেতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
     suggestions: [
+      "🗺️ আমার কতগুলো জমি নথিভুক্ত আছে?",
+      "🌿 আমি বর্তমানে কী কী ফসল চাষ করছি?",
+      "🧪 আমার জমির মাটির ধরন কী?",
       "🌾 ধান চাষে সার প্রয়োগের সঠিক নিয়ম কী?",
-      "🐛 ধানের মাজরা পোকার জৈব নিয়ন্ত্রণ পদ্ধতি কী?",
-      "💰 পিএম-কিসান ₹৬,০০০ প্রকল্পের আবেদন কীভাবে করব?",
-      "💧 ড্রিপ সেচের সরকারি ভর্তুকি কত?",
-      "🍂 টমেটো পাতার কোঁকড়ানো রোগ কীভাবে রোধ করব?"
+      "💰 পিএম-কিসান প্রকল্পে কীভাবে আবেদন করবেন?"
     ]
   }
 };
@@ -186,11 +186,8 @@ const BROWSER_SPEECH_LANGS = {
   bn: "bn-IN"
 };
 
-// Safe markdown renderer for structured botanical/agricultural text
 function renderBotMarkdown(text) {
   if (!text) return null;
-
-  // Split lines
   const lines = text.split("\n");
   const elements = [];
 
@@ -202,7 +199,6 @@ function renderBotMarkdown(text) {
       return;
     }
 
-    // Headers
     if (trimmed.startsWith("### ")) {
       elements.push(
         <div key={idx} style={{ fontWeight: "700", color: DARK, fontSize: "14px", marginTop: "8px", marginBottom: "4px" }}>
@@ -220,7 +216,6 @@ function renderBotMarkdown(text) {
       return;
     }
 
-    // Bullet points
     if (trimmed.startsWith("- ") || trimmed.startsWith("* ") || trimmed.startsWith("• ")) {
       elements.push(
         <div key={idx} style={{ display: "flex", gap: "6px", alignItems: "flex-start", marginBottom: "4px", paddingLeft: "4px" }}>
@@ -233,7 +228,6 @@ function renderBotMarkdown(text) {
       return;
     }
 
-    // Numbered list: "1. " or "2. "
     const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
     if (numMatch) {
       elements.push(
@@ -247,7 +241,6 @@ function renderBotMarkdown(text) {
       return;
     }
 
-    // Regular paragraph
     elements.push(
       <p key={idx} style={{ margin: "0 0 6px 0", fontSize: "13px", color: "#374151", lineHeight: "1.5" }}>
         {formatInline(trimmed)}
@@ -258,7 +251,6 @@ function renderBotMarkdown(text) {
   return elements;
 }
 
-// Inline format for **bold** and `code`
 function formatInline(str) {
   if (!str) return "";
   const parts = [];
@@ -295,7 +287,7 @@ export default function AgriChatbot({ user }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState(() => {
     try {
-      const saved = sessionStorage.getItem("farmmate_chat_history");
+      const saved = sessionStorage.getItem("krishmitra_chat_history");
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -312,61 +304,104 @@ export default function AgriChatbot({ user }) {
   const inputRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // Auto-scroll to bottom of chat
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isOpen, loading]);
 
-  // Persist conversation to sessionStorage
   useEffect(() => {
     try {
-      sessionStorage.setItem("farmmate_chat_history", JSON.stringify(messages));
-    } catch (e) {
-      // storage full or disabled
-    }
+      sessionStorage.setItem("krishmitra_chat_history", JSON.stringify(messages));
+    } catch (e) {}
   }, [messages]);
 
-  // Auto-hide tooltip after 10s or when opened
   useEffect(() => {
     if (isOpen) {
       setShowTooltip(false);
     }
   }, [isOpen]);
 
-  // Fetch farmer context (lands & active crops) once
-  useEffect(() => {
+  // Load real-time profile, lands, and active timelines whenever user logs in or opens chat
+  const loadFarmerProfile = async () => {
     if (!user?.uid) return;
+    try {
+      const uid = user.uid;
 
-    let mounted = true;
-    async function loadFarmerProfile() {
-      try {
-        const landsSnap = await getDocs(query(collection(db, "lands"), where("userId", "==", user.uid)));
-        const lands = landsSnap.docs.map(d => {
-          const dt = d.data();
-          return { name: dt.name, soilType: dt.soilType, city: dt.city, size: dt.size, unit: dt.unit };
-        });
+      // 1. User doc details
+      const userDocRef = doc(db, "users", uid);
+      const userDocSnap = await getDoc(userDocRef);
+      const userData = userDocSnap.exists() ? userDocSnap.data() : {};
 
-        const timelinesSnap = await getDocs(query(collection(db, "timelines"), where("userId", "==", user.uid), where("status", "==", "active")));
-        const activeCrops = timelinesSnap.docs.map(d => {
-          const dt = d.data();
-          return { crop: dt.crop, startDate: dt.startDate };
-        });
+      // 2. User's lands
+      const landsSnap = await getDocs(query(collection(db, "lands"), where("userId", "==", uid)));
+      const landsList = landsSnap.docs.map(d => {
+        const dt = d.data();
+        return {
+          id: d.id,
+          landName: dt.landName || dt.name || "My Farm",
+          soilType: dt.soilType || "Not specified",
+          landSize: dt.landSize || dt.size || "",
+          landUnit: dt.landUnit || dt.unit || "acres",
+          city: dt.city || "",
+          landStatus: dt.landStatus || "Active",
+          temperature: dt.temperature,
+          humidity: dt.humidity,
+          description: dt.description,
+          notes: dt.notes || ""
+        };
+      });
 
-        if (mounted) {
-          setFarmContext({ lands, activeCrops });
-        }
-      } catch (err) {
-        console.warn("Could not preload farm context for chatbot:", err);
-      }
+      // 3. User's active crop timelines
+      const timelinesSnap = await getDocs(query(collection(db, "timelines"), where("userId", "==", uid), where("status", "==", "active")));
+      const todayStr = new Date().toISOString().split("T")[0];
+      const cropsList = timelinesSnap.docs.map(d => {
+        const dt = d.data();
+        const tasks = dt.tasks || [];
+        const todayTasks = tasks.filter(t => !t.completed && t.date === todayStr);
+        const pendingTasks = tasks.filter(t => !t.completed);
+        return {
+          id: d.id,
+          crop: dt.crop || "Unknown Crop",
+          landName: dt.landName || "",
+          startDate: dt.startDate || "",
+          harvestDate: dt.harvestDate || "",
+          totalDays: dt.totalDays || "",
+          summary: dt.summary || "",
+          todayTasks: todayTasks.map(t => t.title),
+          pendingCount: pendingTasks.length,
+          nextTask: pendingTasks[0] ? `${pendingTasks[0].title} (due ${pendingTasks[0].date})` : null
+        };
+      });
+
+      setFarmContext({
+        profile: {
+          name: userData.displayName || user.displayName || user.email?.split("@")[0] || "Farmer",
+          email: user.email || "",
+          phone: userData.phone || "",
+          state: userData.state || "",
+          district: userData.district || "",
+          plan: userData.plan || "free",
+        },
+        lands: landsList,
+        activeCrops: cropsList
+      });
+    } catch (err) {
+      console.warn("KRISHMITRA: Could not load farm profile:", err);
     }
-    loadFarmerProfile();
+  };
 
-    return () => { mounted = false; };
+  useEffect(() => {
+    loadFarmerProfile();
   }, [user]);
 
-  // Handle Speech Recognition setup
+  // Refresh profile when chat opens to ensure freshest land and crop counts
+  useEffect(() => {
+    if (isOpen) {
+      loadFarmerProfile();
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -433,7 +468,6 @@ export default function AgriChatbot({ user }) {
     setLoading(true);
 
     try {
-      // Prepare last 4 turns for context
       const convHistory = messages.slice(-4).map(m => ({
         role: m.role,
         text: m.text
@@ -457,7 +491,7 @@ export default function AgriChatbot({ user }) {
 
       setMessages([...updatedHistory, botMessage]);
     } catch (err) {
-      console.error("Chat error:", err);
+      console.error("KRISHMITRA Chat error:", err);
       const errorMessage = {
         role: "assistant",
         text: texts.errorReply,
@@ -473,7 +507,7 @@ export default function AgriChatbot({ user }) {
     if (window.confirm(texts.clearConfirm)) {
       setMessages([]);
       try {
-        sessionStorage.removeItem("farmmate_chat_history");
+        sessionStorage.removeItem("krishmitra_chat_history");
       } catch (e) {}
     }
   };
@@ -485,6 +519,9 @@ export default function AgriChatbot({ user }) {
   };
 
   const currentFlag = LANGUAGES?.find(l => l.code === lang)?.flag || "🇮🇳";
+  const landsCount = farmContext?.lands?.length || 0;
+  const cropsCount = farmContext?.activeCrops?.length || 0;
+  const farmerName = farmContext?.profile?.name || user?.displayName || "Farmer";
 
   return (
     <>
@@ -523,7 +560,7 @@ export default function AgriChatbot({ user }) {
         </button>
       </div>
 
-      {/* Chat Window Popup Docked to Bottom-Right */}
+      {/* KRISHMITRA Chat Window Popup */}
       {isOpen && (
         <div style={S.chatCard}>
           {/* Header */}
@@ -560,15 +597,13 @@ export default function AgriChatbot({ user }) {
             </div>
           </div>
 
-          {/* Farm Context Indicator */}
-          {farmContext?.lands?.length > 0 && (
-            <div style={S.contextPillBar}>
-              <span style={S.contextIcon}>📍</span>
-              <span style={S.contextText}>
-                {texts.farmContextBadge} ({farmContext.lands[0]?.name || "Farm"} - {farmContext.lands[0]?.soilType || "Soil"})
-              </span>
-            </div>
-          )}
+          {/* Farm Profile Live Status Bar */}
+          <div style={S.contextPillBar}>
+            <span style={S.contextIcon}>👨‍🌾</span>
+            <span style={S.contextText}>
+              <strong>{farmerName}</strong> • {landsCount} {landsCount === 1 ? "Land" : "Lands"} • {cropsCount} Active {cropsCount === 1 ? "Crop" : "Crops"}
+            </span>
+          </div>
 
           {/* Messages Area */}
           <div style={S.messagesBody}>
@@ -617,7 +652,6 @@ export default function AgriChatbot({ user }) {
                       <div style={S.botContent}>
                         {renderBotMarkdown(msg.text)}
 
-                        {/* Sources Citation Bar */}
                         {msg.sources && msg.sources.length > 0 && (
                           <div style={S.sourcesContainer}>
                             <div style={S.sourcesTitle}>
@@ -633,7 +667,6 @@ export default function AgriChatbot({ user }) {
                           </div>
                         )}
 
-                        {/* Copy button */}
                         <div style={S.botFooterBar}>
                           <span style={S.timestamp}>{msg.timestamp}</span>
                           <button
@@ -650,7 +683,6 @@ export default function AgriChatbot({ user }) {
               );
             })}
 
-            {/* Loading / Searching Indicator */}
             {loading && (
               <div style={{ ...S.msgRow, justifyContent: "flex-start" }}>
                 <div style={S.avatarSmall}>🌱</div>
@@ -670,7 +702,6 @@ export default function AgriChatbot({ user }) {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Listening Overlay Status */}
           {isListening && (
             <div style={S.listeningBanner}>
               <span style={S.micPulse}>🔴</span> {texts.listening}
@@ -894,21 +925,20 @@ const S = {
   contextPillBar: {
     background: "#f0fdf4",
     borderBottom: "1px solid #bbf7d0",
-    padding: "6px 14px",
+    padding: "8px 14px",
     display: "flex",
     alignItems: "center",
     gap: "6px",
-    fontSize: "11px",
+    fontSize: "11.5px",
     color: "#166534",
   },
   contextIcon: {
-    fontSize: "12px",
+    fontSize: "13px",
   },
   contextText: {
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-    fontWeight: "500",
   },
   messagesBody: {
     flex: 1,
