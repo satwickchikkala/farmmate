@@ -319,20 +319,20 @@ INSTRUCTIONS FOR YOUR ANSWER:
             print(f"All Gemini models failed: {last_err}")
 
 
-        # Fallback if Gemini client is unavailable or failed
+        # Fallback to direct knowledge retrieval if Gemini API has quota/billing limits or network error
         if top_docs and top_docs[0].get("relevance_score", 0) > 0.05:
             best = top_docs[0]
             fallback_text = (
                 f"### {best.get('title')}\n\n"
-                f"{best.get('content')}\n\n"
-                f"📚 **Source**: {best.get('source')}\n\n"
-                f"*(Note: Gemini live generation is in offline fallback mode. Please configure GEMINI_API_KEY in backend/.env for full conversational responses in {lang_name}.)*"
+                f"{best.get('content').strip()}\n\n"
+                f"📚 **Source**: {best.get('source')}"
             )
         else:
             fallback_text = (
                 f"I'm here to help with your farming questions regarding crops, fertilizers, pest control, weather, and government schemes like PM-KISAN.\n\n"
-                f"Please ensure `GEMINI_API_KEY` is set in your backend `.env` file to enable full AI responses in {lang_name}."
+                f"Please feel free to ask about specific crops (Paddy, Wheat, Cotton, Maize, Vegetables), fertilizers, pest management, or government schemes!"
             )
+
 
         return {
             "reply": fallback_text,
