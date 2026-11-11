@@ -620,5 +620,93 @@ def verify_payment():
         print("Razorpay verify error:", str(e))
         return jsonify({"success": False, "error": "Payment verification failed"}), 500
 
+# ----------------- AgriBot RAG Chatbot Routes -----------------
+try:
+    from rag_engine import rag_engine
+except ImportError:
+    from backend.rag_engine import rag_engine
+
+@app.route('/api/chat', methods=['POST'])
+def chat_with_agribot():
+    data = request.get_json() or {}
+    message = data.get('message', '').strip()
+    if not message:
+        return jsonify({"error": "Message is required"}), 400
+
+    language = data.get('language', 'en')
+    conversation_history = data.get('conversationHistory', [])
+    farm_context = data.get('farmContext', None)
+
+    try:
+        result = rag_engine.answer_query(
+            query=message,
+            language=language,
+            conversation_history=conversation_history,
+            farm_context=farm_context,
+            client=client
+        )
+        return jsonify(result)
+    except Exception as e:
+        print("AgriBot chat error:", str(e))
+        return jsonify({"error": "Failed to process farming query", "details": str(e)}), 500
+
+@app.route('/api/chat/suggestions', methods=['GET'])
+def get_chat_suggestions():
+    lang = request.args.get('language', 'en')
+    suggestions_by_lang = {
+        'en': [
+            "🌾 What is the fertilizer schedule for Paddy?",
+            "🐛 How do I control stem borer organically?",
+            "💰 How to register and apply for PM-KISAN ₹6,000?",
+            "💧 What are the subsidies for Drip Irrigation?",
+            "🍂 Why are my tomato leaves curling and yellowing?"
+        ],
+        'te': [
+            "🌾 వరి పంటకు ఎరువుల మోతాదు మరియు సమయం ఏమిటి?",
+            "🐛 కాండం తొలిచే పురుగును సేంద్రీయంగా ఎలా నివారించాలి?",
+            "💰 పీఎం-కిసాన్ ₹6,000 పథకానికి ఎలా దరఖాస్తు చేయాలి?",
+            "💧 బిందు సేద్యం (డ్రిప్) సబ్సిడీ వివరాలు ఏమిటి?",
+            "🍂 టమాట ఆకులు ముడుచుకుపోయి పసుపు రంగులోకి ఎందుకు మారుతున్నాయి?"
+        ],
+        'hi': [
+            "🌾 धान की फसल के लिए खाद व उर्वरक का सही समय क्या है?",
+            "🐛 तना छेदक कीट की जैविक रोकथाम कैसे करें?",
+            "💰 पीएम-किसान ₹6,000 योजना के लिए कैसे आवेदन करें?",
+            "💧 ड्रिप सिंचाई पर कितनी सब्सिडी मिलती है?",
+            "🍂 टमाटर की पत्तियां मुड़कर पीली क्यों हो रही हैं?"
+        ],
+        'ta': [
+            "🌾 நெல் பயிருக்கான உர அட்டவணை என்ன?",
+            "🐛 தண்டு துளைப்பானை இயற்கை முறையில் கட்டுப்படுத்துவது எப்படி?",
+            "💰 பிஎம்-கிசான் ₹6,000 திட்டத்திற்கு எவ்வாறு விண்ணப்பிப்பது?",
+            "💧 சொட்டு நீர் பாசன மானியம் பெறுவது எப்படி?",
+            "🍂 தக்காளி இலைகள் சுருங்குவதை தடுப்பது எப்படி?"
+        ],
+        'kn': [
+            "🌾 ಭತ್ತದ ಬೆಳೆಗೆ ಗೊಬ್ಬರ ಹಾಕುವ ವಿಧಾನ ಮತ್ತು ಪ್ರಮಾಣ ತಿಳಿಸಿ?",
+            "🐛 ಕಾಂಡ ಕೊರೆಯುವ ಹುಳುವನ್ನು ಸಾವಯವವಾಗಿ ನಿಯಂತ್ರಿಸುವುದು ಹೇಗೆ?",
+            "💰 ಪಿಎಂ-ಕಿಸಾನ್ ₹6,000 ಯೋಜನೆಗೆ ಅರ್ಜಿ ಸಲ್ಲಿಸುವುದು ಹೇಗೆ?",
+            "💧 ಹನಿ ನೀರಾವರಿಗೆ ಎಷ್ಟು ಸಬ್ಸಿಡಿ ಸಿಗುತ್ತದೆ?",
+            "🍂 ಟೊಮೆಟೊ ಎಲೆಗಳು ಮುದುರಿಕೊಳ್ಳುವುದನ್ನು ತಡೆಯುವುದು ಹೇಗೆ?"
+        ],
+        'ml': [
+            "🌾 നെൽകൃഷിക്ക് ആവശ്യമായ വളപ്രയോഗ സമയം ഏതാണ്?",
+            "🐛 തണ്ടുതുരപ്പൻ പുഴുവിനെ ജൈവരീതിയിൽ എങ്ങനെ നിയന്ത്രിക്കാം?",
+            "💰 പിഎം-കിസാൻ ₹6,000 സഹായത്തിന് എങ്ങനെ അപേക്ഷിക്കാം?",
+            "💧 തുള്ളി നന പദ്ധതിക്കുള്ള സബ്‌സിഡി വിവരങ്ങൾ എന്തെല്ലാം?",
+            "🍂 തക്കാളിയുടെ ഇല ചുരുളുന്ന രോഗം എങ്ങനെ തടയാം?"
+        ],
+        'bn': [
+            "🌾 ধান চাষের জন্য সার প্রয়োগের সঠিক সময়সূচী কী?",
+            "🐛 ধানের মাজরা পোকা জৈব উপায়ে কীভাবে দমন করব?",
+            "💰 পিএম-কিসান ₹৬,০০০ প্রকল্পের জন্য কীভাবে আবেদন করবেন?",
+            "💧 ড্রিপ সেচ ব্যবস্থার জন্য কী ধরনের ভর্তুকি পাওয়া যায়?",
+            "🍂 টমেটো গাছের পাতা কোঁকড়ানো রোগ কীভাবে রোধ করব?"
+        ]
+    }
+    items = suggestions_by_lang.get(lang, suggestions_by_lang['en'])
+    return jsonify({"suggestions": items})
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
+

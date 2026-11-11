@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 import Subscription from "./pages/Subscription";
 import { PlanProvider } from "./context/PlanContext";
 import { PopupProvider } from "./context/PopupContext";
+import AgriChatbot from "./components/AgriChatbot";
 
 // Google Fonts
 const fontLink = document.createElement("link");
@@ -282,6 +283,7 @@ function App() {
                 <Route path="/subscription" element={<Subscription user={user} />} />
               </Routes>
             </div>
+            <AgriChatbot user={user} />
           </BrowserRouter>
         </PlanProvider>
       </PopupProvider>
