@@ -530,6 +530,30 @@ def disease_health():
         "lastLoadError": model_load_error
     })
 
+@app.route('/health/ai', methods=['GET'])
+def ai_health():
+    key_exists = bool(GEMINI_API_KEY)
+    status = {
+        "geminiKeyPresent": key_exists,
+        "keyPrefix": (GEMINI_API_KEY[:4] + "...") if key_exists else None,
+        "clientReady": client is not None
+    }
+    if client:
+        for m in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]:
+            try:
+                res = client.models.generate_content(
+                    model=m,
+                    contents="Say hello in one word"
+                )
+                status[f"model_{m}"] = "working"
+                status["workingModel"] = m
+                status["sampleOutput"] = res.text.strip()
+                break
+            except Exception as e:
+                status[f"model_{m}_error"] = str(e)
+    return jsonify(status)
+
+
 @app.route('/create-order', methods=['POST'])
 def create_order():
     if not razorpay_client:

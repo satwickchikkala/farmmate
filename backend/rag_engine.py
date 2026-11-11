@@ -297,20 +297,27 @@ INSTRUCTIONS FOR YOUR ANSWER:
 """
 
         if client:
-            try:
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=system_prompt
-                )
-                reply_text = response.text.strip()
-                return {
-                    "reply": reply_text,
-                    "sources": sources,
-                    "matchedDocs": [d.get("title") for d in top_docs],
-                    "status": "success"
-                }
-            except Exception as e:
-                print(f"Gemini API generation error in RAG engine: {e}")
+            last_err = None
+            for model_name in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]:
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=system_prompt
+                    )
+                    reply_text = response.text.strip()
+                    return {
+                        "reply": reply_text,
+                        "sources": sources,
+                        "matchedDocs": [d.get("title") for d in top_docs],
+                        "model": model_name,
+                        "status": "success"
+                    }
+                except Exception as e:
+                    last_err = str(e)
+                    print(f"Gemini API model {model_name} failed: {e}")
+
+            print(f"All Gemini models failed: {last_err}")
+
 
         # Fallback if Gemini client is unavailable or failed
         if top_docs and top_docs[0].get("relevance_score", 0) > 0.05:
