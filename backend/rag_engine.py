@@ -48,10 +48,19 @@ def resolve_personal_query(query, farm_context, language='en'):
     farmer_name = profile.get("name") or "Farmer"
 
     # 1. Lands query (count, list, location, size)
-    is_lands_query = bool(
-        re.search(r'\b(how many|count of|number of|list|show|what are|tell me|where are|view)\s+.*?(lands?|farms?|acres?|bhoomi|bhoomulu|khet)', q_low)
-        or re.search(r'\b(my|our)\s+(lands?|farms?|khet|bhoomulu)\b', q_low)
-        or re.search(r'\b(mere khet|naa bhoomulu|na bhoomi|enni bhoomulu|kitne khet|khet kitne|nilangal|bhoomulu enni)\b', q_low)
+    native_lands_words = [
+        "భూమి", "భూములు", "పొలం", "పొలాలు",  # Telugu
+        "खेत", "जमीन", "भूमि",             # Hindi
+        "நிலம்", "நிலங்கள்", "பண்ணை",        # Tamil
+        "ಜಮೀನು", "ಭೂಮಿ", "ಗದ್ದೆ",           # Kannada
+        "ഭൂമി", "പാടം", "നിലം",             # Malayalam
+        "জমি", "ক্ষেত"                      # Bengali
+    ]
+    is_lands_query = (
+        any(w in q_low for w in native_lands_words)
+        or bool(re.search(r'\b(how many|count of|number of|list|show|what are|tell me|where are|view)\s+.*?(lands?|farms?|acres?|bhoomi|bhoomulu|khet)', q_low))
+        or bool(re.search(r'\b(my|our)\s+(lands?|farms?|khet|bhoomulu)\b', q_low))
+        or bool(re.search(r'\b(mere khet|naa bhoomulu|na bhoomi|enni bhoomulu|kitne khet|khet kitne|nilangal|bhoomulu enni)\b', q_low))
         or q_low in ["lands", "my land", "my farm", "lands count", "how many lands do i have", "how many lands", "how many lands do i have?"]
     )
 
@@ -100,12 +109,22 @@ def resolve_personal_query(query, farm_context, language='en'):
             return f"Hello {farmer_name}! You currently have **{total} registered land{'s' if total != 1 else ''}** in your KRISHMITRA profile:\n\n" + "\n\n".join(items)
 
     # 2. Crops query (active crops, present crops)
-    is_crops_query = bool(
-        re.search(r'\b(what|present|current|active|my|which)\s+.*crops?\b|crops?\s+(am i growing|do i have|list|details|growing)', q_low)
-        or re.search(r'\b(what crop|what crops|crops am i growing|what am i growing|my crop|my crops|growing right now|which crop|crops do i have)\b', q_low)
-        or re.search(r'\b(naa pantalu|panta details|mere fasal|fasal kaun si|koun si fasal|active pantalu)\b', q_low)
+    native_crops_words = [
+        "పంట", "పంటలు",           # Telugu
+        "फसल", "फसलें",             # Hindi
+        "பயிர்", "பயிர்கள்",        # Tamil
+        "ಬೆಳೆ", "ಬೆಳೆಗಳು",          # Kannada
+        "വിള", "വിളകൾ",            # Malayalam
+        "ফসল", "চাষ"               # Bengali
+    ]
+    is_crops_query = (
+        any(w in q_low for w in native_crops_words)
+        or bool(re.search(r'\b(what|present|current|active|my|which)\s+.*crops?\b|crops?\s+(am i growing|do i have|list|details|growing)', q_low))
+        or bool(re.search(r'\b(what crop|what crops|crops am i growing|what am i growing|my crop|my crops|growing right now|which crop|crops do i have)\b', q_low))
+        or bool(re.search(r'\b(naa pantalu|panta details|mere fasal|fasal kaun si|koun si fasal|active pantalu)\b', q_low))
         or q_low in ["crops", "my crops", "present crops", "active crops", "what crops do i have"]
     )
+
 
 
     if is_crops_query:
